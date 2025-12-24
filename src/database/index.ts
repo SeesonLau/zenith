@@ -2,6 +2,7 @@
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import schema from './schema';
+import migrations from '@/supabase/migration';
 import {
   HabitLog,
   FinanceLog,
@@ -15,10 +16,9 @@ import {
 // Configure SQLite adapter
 const adapter = new SQLiteAdapter({
   schema,
-  // Migrations will go here when you need to update the schema
-  // migrations,
+  migrations,
   dbName: 'zenith',
-  jsi: true, // JSI driver for better performance (React Native 0.71+)
+  jsi: true,
   onSetUpError: (error) => {
     console.error('Database setup error:', error);
   },

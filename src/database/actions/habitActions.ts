@@ -7,22 +7,34 @@ export async function startHabitTimer(
   activity: string,
   notes?: string
 ) {
-  const habitLogsCollection = database.get<HabitLog>('habit_logs');
+  return await database.write(async () => {
+    const habitLogsCollection = database.get<HabitLog>('habit_logs');
 
-  const newLog = await habitLogsCollection.create((log) => {
-    log.category = category;
-    log.activity = activity;
-    log.startedAt = new Date();
-    log.notes = notes;
-    log.isSynced = false;
+    const newLog = await habitLogsCollection.create((log) => {
+      log.category = category;
+      log.activity = activity;
+      log.startedAt = new Date();
+      log.notes = notes;
+      log.isSynced = false;
+    });
+
+    return newLog;
   });
-
-  return newLog;
 }
 
 export async function stopHabitTimer(logId: string) {
-  const habitLogsCollection = database.get<HabitLog>('habit_logs');
-  const log = await habitLogsCollection.find(logId);
-  await log.stopTimer();
-  return log;
+  return await database.write(async () => {
+    const habitLogsCollection = database.get<HabitLog>('habit_logs');
+    const log = await habitLogsCollection.find(logId);
+    
+    await log.update((record) => {
+      record.endedAt = new Date();
+      record.duration = Math.floor(
+        (record.endedAt.getTime() - record.startedAt.getTime()) / 1000
+      );
+      record.isSynced = false;
+    });
+
+    return log;
+  });
 }

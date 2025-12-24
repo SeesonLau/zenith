@@ -21,8 +21,18 @@ export async function startLeisureTimer(
 }
 
 export async function stopLeisureTimer(logId: string) {
-  const leisureLogsCollection = database.get<LeisureLog>('leisure_logs');
-  const log = await leisureLogsCollection.find(logId);
-  await log.stopTimer();
-  return log;
+  return await database.write(async () => {
+    const leisureLogsCollection = database.get<LeisureLog>('leisure_logs');
+    const log = await leisureLogsCollection.find(logId);
+    
+    await log.update((record) => {
+      record.endedAt = new Date();
+      record.duration = Math.floor(
+        (record.endedAt.getTime() - record.startedAt.getTime()) / 1000
+      );
+      record.isSynced = false;
+    });
+
+    return log;
+  });
 }

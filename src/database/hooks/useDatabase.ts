@@ -24,6 +24,26 @@ export function useRunningHabitTimers() {
   return timers;
 }
 
+// Hook to get all completed habit logs
+export function useCompletedHabitLogs() {
+  const [logs, setLogs] = useState<HabitLog[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<HabitLog>('habit_logs')
+      .query(
+        Q.where('ended_at', Q.notEq(null)),
+        Q.sortBy('started_at', Q.desc)
+      )
+      .observe()
+      .subscribe(setLogs);
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return logs;
+}
+
 // Hook to get all running leisure timers
 export function useRunningLeisureTimers() {
   const [timers, setTimers] = useState<LeisureLog[]>([]);

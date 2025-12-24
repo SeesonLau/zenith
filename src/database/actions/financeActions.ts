@@ -12,21 +12,23 @@ export async function createFinanceLog(data: {
   location?: string;
   notes?: string;
 }) {
-  const financeLogsCollection = database.get<FinanceLog>('finance_logs');
+  return await database.write(async () => {
+    const financeLogsCollection = database.get<FinanceLog>('finance_logs');
 
-  const newLog = await financeLogsCollection.create((log) => {
-    log.transactionType = data.transactionType;
-    log.item = data.item;
-    log.quantity = data.quantity;
-    log.cost = data.cost;
-    log.totalCost = data.quantity * data.cost;
-    log.currency = data.currency || 'PHP';
-    log.typeCategory = data.typeCategory;
-    log.location = data.location;
-    log.notes = data.notes;
-    log.transactionDate = new Date();
-    log.isSynced = false;
+    const newLog = await financeLogsCollection.create((log) => {
+      log.transactionType = data.transactionType;
+      log.item = data.item;
+      log.quantity = data.quantity;
+      log.cost = data.cost;
+      log.totalCost = data.quantity * data.cost;
+      log.currency = data.currency || 'PHP';
+      log.typeCategory = data.typeCategory;
+      log.location = data.location;
+      log.notes = data.notes;
+      log.transactionDate = new Date();
+      log.isSynced = false;
+    });
+
+    return newLog;
   });
-
-  return newLog;
 }
