@@ -1,262 +1,259 @@
-// app/finance/analytics.tsx
+// app/finance/analytics.tsx (CREATE NEW)
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useFinanceLogs } from '@/src/database/hooks/useDatabase';
+import { database } from '@/src/database';
+import { Q } from '@nozbe/watermelondb';
+import type FinanceLog from '@/src/database/models/FinanceLog';
 import { formatCurrency } from '@/src/utils/formatters';
 import { getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpers';
-import type { CurrencyCode } from '@/src/types/database.types';
+import { getFinanceCategoryConfig, getTransactionTypeConfig } from '@/src/lib/constants';
+import type { FinanceTypeCategory, CurrencyCode } from '@/src/types/database.types';
 
 export default function FinanceAnalyticsScreen() {
   const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [logs, setLogs] = useState<FinanceLog[]>([]);
 
-  const startDate = getStartOfMonth(selectedMonth);
-  const endDate = getEndOfMonth(selectedMonth);
-  const logs = useFinanceLogs(startDate, endDate);
+  // Load logs for selected month
+  React.useEffect(() => {
+    const startDate = getStartOfMonth(selectedMonth);
+    const endDate = getEndOfMonth(selectedMonth);
 
-  // Calculate statistics
+    const subscription = database
+      .get<FinanceLog>('finance_logs')
+      .query(
+        Q.where('transaction_date', Q.gte(startDate.getTime())),
+        Q.where('transaction_date', Q.lte(endDate.getTime())),
+        Q.sortBy('transaction_date', Q.desc)
+      )
+      .observe()
+      .subscribe(setLogs);
+
+    return () => subscription.unsubscribe();
+  }, [selectedMonth]);
+
+  // Calculate analytics
   const analytics = useMemo(() => {
-    const income = logs.filter((l) => l.transactionType === 'income');
-    const expenses = logs.filter((l) => l.transactionType === 'expense');
+    const income = logs
+      .filter((log) => log.transactionType === 'income')
+      .reduce((sum, log) => sum + log.totalCost, 0);
 
-    const totalIncome = income.reduce((sum, l) => sum + l.totalCost, 0);
-    const totalExpenses = expenses.reduce((sum, l) => sum + l.totalCost, 0);
-    const balance = totalIncome - totalExpenses;
+    const expenses = logs
+      .filter((log) => log.transactionType === 'expense')
+      .reduce((sum, log) => sum + log.totalCost, 0);
+
+    const balance = income - expenses;
 
     // By category
-    const categoryStats: Record<string, { total: number; count: number }> = {};
-    expenses.forEach((log) => {
-      if (!categoryStats[log.typeCategory]) {
-        categoryStats[log.typeCategory] = { total: 0, count: 0 };
-      }
-      categoryStats[log.typeCategory].total += log.totalCost;
-      categoryStats[log.typeCategory].count++;
-    });
+    const byCategory: Record<string, number> = {};
+    logs
+      .filter((log) => log.transactionType === 'expense')
+      .forEach((log) => {
+        byCategory[log.typeCategory] = (byCategory[log.typeCategory] || 0) + log.totalCost;
+      });
 
-    // Top categories
-    const topCategories = Object.entries(categoryStats)
-      .sort(([, a], [, b]) => b.total - a.total)
-      .slice(0, 5);
+    // Largest transaction
+    const largestExpense = logs
+      .filter((log) => log.transactionType === 'expense')
+      .sort((a, b) => b.totalCost - a.totalCost)[0];
 
-    // Average transaction
-    const avgIncome = income.length > 0 ? totalIncome / income.length : 0;
-    const avgExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
+    const largestIncome = logs
+      .filter((log) => log.transactionType === 'income')
+      .sort((a, b) => b.totalCost - a.totalCost)[0];
 
-    // Largest transactions
-    const largestIncome = income.sort((a, b) => b.totalCost - a.totalCost)[0];
-    const largestExpense = expenses.sort((a, b) => b.totalCost - a.totalCost)[0];
+    // Average
+    const avgTransaction = logs.length > 0 
+      ? (income + expenses) / logs.length 
+      : 0;
 
     return {
-      totalIncome,
-      totalExpenses,
+      income,
+      expenses,
       balance,
-      topCategories,
-      avgIncome,
-      avgExpense,
-      largestIncome,
+      byCategory,
       largestExpense,
-      incomeCount: income.length,
-      expenseCount: expenses.length,
+      largestIncome,
+      avgTransaction,
+      totalTransactions: logs.length,
     };
   }, [logs]);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+  const handlePreviousMonth = () => {
+    setSelectedMonth(addMonths(selectedMonth, -1));
   };
 
-  const changeMonth = (delta: number) => {
-    setSelectedMonth(addMonths(selectedMonth, delta));
+  const handleNextMonth = () => {
+    setSelectedMonth(addMonths(selectedMonth, 1));
   };
 
-  const getPercentage = (value: number, total: number) => {
-    if (total === 0) return 0;
-    return Math.round((value / total) * 100);
-  };
+  const monthName = selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <View className="flex-1 bg-slate-900">
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#38bdf8" />
-        }
-      >
-        <View className="p-6">
-          {/* Header */}
-          <View className="flex-row items-center mb-6 mt-4">
-            <Pressable onPress={() => router.back()} className="mr-4">
-              <Ionicons name="arrow-back" size={28} color="white" />
-            </Pressable>
-            <Text className="text-2xl font-bold text-white flex-1">Analytics</Text>
-          </View>
+    <ScrollView className="flex-1 bg-slate-900">
+      <View className="p-6">
+        {/* Header */}
+        <View className="flex-row items-center mb-6 mt-4">
+          <Pressable onPress={() => router.back()} className="mr-4">
+            <Ionicons name="arrow-back" size={28} color="white" />
+          </Pressable>
+          <Text className="text-2xl font-bold text-white flex-1">Analytics</Text>
+        </View>
 
-          {/* Month Selector */}
-          <View className="flex-row items-center justify-between bg-slate-800 border border-slate-700 rounded-xl p-4 mb-6">
-            <Pressable onPress={() => changeMonth(-1)} className="p-2">
-              <Ionicons name="chevron-back" size={24} color="white" />
+        {/* Month Navigator */}
+        <View className="card p-4 mb-6">
+          <View className="flex-row items-center justify-between">
+            <Pressable
+              onPress={handlePreviousMonth}
+              className="bg-slate-700 rounded-lg p-3"
+            >
+              <Ionicons name="chevron-back" size={20} color="white" />
             </Pressable>
-            <Text className="text-white text-lg font-semibold">
-              {selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+
+            <Text className="text-white text-xl font-bold">{monthName}</Text>
+
+            <Pressable
+              onPress={handleNextMonth}
+              className="bg-slate-700 rounded-lg p-3"
+              disabled={selectedMonth >= new Date()}
+            >
+              <Ionicons name="chevron-forward" size={20} color="white" />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Summary Cards */}
+        <View className="mb-6">
+          {/* Balance */}
+          <View className="gradient-green border border-green-700 rounded-2xl p-6 mb-4">
+            <Text className="text-green-400 text-sm mb-1">Balance</Text>
+            <Text className="text-white text-4xl font-bold">
+              {formatCurrency(analytics.balance)}
             </Text>
-            <Pressable onPress={() => changeMonth(1)} className="p-2">
-              <Ionicons name="chevron-forward" size={24} color="white" />
-            </Pressable>
           </View>
 
-          {/* Summary Cards */}
-          <View className="mb-6">
-            <View className="bg-gradient-to-br from-sky-900/30 to-sky-800/20 border border-sky-700 rounded-2xl p-6 mb-4">
-              <Text className="text-sky-400 text-sm mb-1">Net Balance</Text>
-              <Text className="text-white text-4xl font-bold mb-2">
-                {formatCurrency(analytics.balance)}
+          {/* Income & Expenses */}
+          <View className="flex-row gap-3 mb-4">
+            <View className="flex-1 card p-4">
+              <View className="flex-row items-center mb-2">
+                <View className="bg-green-500 rounded-full w-8 h-8 items-center justify-center mr-2">
+                  <Ionicons name="arrow-down" size={16} color="white" />
+                </View>
+                <Text className="text-slate-400 text-sm">Income</Text>
+              </View>
+              <Text className="text-white text-2xl font-bold">
+                {formatCurrency(analytics.income)}
               </Text>
-              <View className="flex-row items-center">
-                <Ionicons
-                  name={analytics.balance >= 0 ? 'trending-up' : 'trending-down'}
-                  size={16}
-                  color={analytics.balance >= 0 ? '#22c55e' : '#ef4444'}
-                />
-                <Text className={`ml-1 text-sm ${analytics.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {analytics.balance >= 0 ? 'Surplus' : 'Deficit'}
-                </Text>
-              </View>
             </View>
 
-            <View className="flex-row gap-3 mb-4">
-              <View className="flex-1 bg-green-900/30 border border-green-700 rounded-xl p-4">
-                <Text className="text-green-400 text-xs mb-1">Total Income</Text>
-                <Text className="text-white text-2xl font-bold mb-1">
-                  {formatCurrency(analytics.totalIncome)}
-                </Text>
-                <Text className="text-green-300 text-xs">
-                  {analytics.incomeCount} transactions
-                </Text>
-              </View>
-              <View className="flex-1 bg-red-900/30 border border-red-700 rounded-xl p-4">
-                <Text className="text-red-400 text-xs mb-1">Total Expenses</Text>
-                <Text className="text-white text-2xl font-bold mb-1">
-                  {formatCurrency(analytics.totalExpenses)}
-                </Text>
-                <Text className="text-red-300 text-xs">
-                  {analytics.expenseCount} transactions
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Top Categories */}
-          <View className="mb-6">
-            <Text className="text-white text-xl font-semibold mb-4">Top Spending Categories</Text>
-            {analytics.topCategories.length === 0 ? (
-              <View className="bg-slate-800 border border-slate-700 rounded-xl p-6 items-center">
-                <Ionicons name="analytics-outline" size={40} color="#64748b" />
-                <Text className="text-slate-400 mt-2">No expense data yet</Text>
-              </View>
-            ) : (
-              <View className="space-y-3">
-                {analytics.topCategories.map(([category, data], index) => {
-                  const percentage = getPercentage(data.total, analytics.totalExpenses);
-                  return (
-                    <View key={category} className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                      <View className="flex-row items-center justify-between mb-2">
-                        <View className="flex-row items-center flex-1">
-                          <View className="bg-red-500 rounded-full w-8 h-8 items-center justify-center mr-3">
-                            <Text className="text-white text-xs font-bold">#{index + 1}</Text>
-                          </View>
-                          <View className="flex-1">
-                            <Text className="text-white font-semibold">{category}</Text>
-                            <Text className="text-slate-400 text-xs">{data.count} transactions</Text>
-                          </View>
-                        </View>
-                        <View className="items-end">
-                          <Text className="text-white font-bold">{formatCurrency(data.total)}</Text>
-                          <Text className="text-red-400 text-xs">{percentage}%</Text>
-                        </View>
-                      </View>
-                      <View className="bg-slate-700 h-2 rounded-full overflow-hidden">
-                        <View className="bg-red-500 h-full" style={{ width: `${percentage}%` }} />
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-
-          {/* Averages */}
-          <View className="mb-6">
-            <Text className="text-white text-xl font-semibold mb-4">Averages</Text>
-            <View className="flex-row gap-3">
-              <View className="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-4">
-                <Ionicons name="arrow-down" size={20} color="#22c55e" />
-                <Text className="text-slate-400 text-xs mt-2">Avg Income</Text>
-                <Text className="text-white text-xl font-bold">
-                  {formatCurrency(analytics.avgIncome)}
-                </Text>
-              </View>
-              <View className="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-4">
-                <Ionicons name="arrow-up" size={20} color="#ef4444" />
-                <Text className="text-slate-400 text-xs mt-2">Avg Expense</Text>
-                <Text className="text-white text-xl font-bold">
-                  {formatCurrency(analytics.avgExpense)}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Largest Transactions */}
-          <View className="mb-6">
-            <Text className="text-white text-xl font-semibold mb-4">Largest Transactions</Text>
-            <View className="space-y-3">
-              {analytics.largestIncome && (
-                <View className="bg-green-900/20 border border-green-700 rounded-xl p-4">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text className="text-green-400 text-xs mb-1">Largest Income</Text>
-                      <Text className="text-white font-semibold">{analytics.largestIncome.item}</Text>
-                      <Text className="text-slate-400 text-xs">{analytics.largestIncome.typeCategory}</Text>
-                    </View>
-                    <Text className="text-green-400 text-xl font-bold">
-                      +{formatCurrency(analytics.largestIncome.totalCost, analytics.largestIncome.currency as CurrencyCode)}
-                    </Text>
-                  </View>
+            <View className="flex-1 card p-4">
+              <View className="flex-row items-center mb-2">
+                <View className="bg-red-500 rounded-full w-8 h-8 items-center justify-center mr-2">
+                  <Ionicons name="arrow-up" size={16} color="white" />
                 </View>
-              )}
-              {analytics.largestExpense && (
-                <View className="bg-red-900/20 border border-red-700 rounded-xl p-4">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text className="text-red-400 text-xs mb-1">Largest Expense</Text>
-                      <Text className="text-white font-semibold">{analytics.largestExpense.item}</Text>
-                      <Text className="text-slate-400 text-xs">{analytics.largestExpense.typeCategory}</Text>
-                    </View>
-                    <Text className="text-red-400 text-xl font-bold">
-                      -{formatCurrency(analytics.largestExpense.totalCost, analytics.largestExpense.currency as CurrencyCode)}
-                    </Text>
-                  </View>
-                </View>
-              )}
+                <Text className="text-slate-400 text-sm">Expenses</Text>
+              </View>
+              <Text className="text-white text-2xl font-bold">
+                {formatCurrency(analytics.expenses)}
+              </Text>
             </View>
           </View>
 
-          {/* Info Card */}
-          <View className="bg-sky-900/20 border border-sky-700 rounded-xl p-4">
-            <View className="flex-row items-start">
-              <Ionicons name="information-circle" size={20} color="#38bdf8" style={{ marginRight: 8, marginTop: 2 }} />
-              <View className="flex-1">
-                <Text className="text-sky-300 text-sm font-semibold mb-1">Analytics Insight</Text>
-                <Text className="text-sky-200 text-xs">
-                  This analysis is based on {logs.length} transactions from {selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.
-                </Text>
-              </View>
+          {/* Additional Stats */}
+          <View className="flex-row gap-3">
+            <View className="flex-1 card p-4">
+              <Text className="text-slate-400 text-xs mb-1">Transactions</Text>
+              <Text className="text-white text-xl font-bold">{analytics.totalTransactions}</Text>
+            </View>
+            <View className="flex-1 card p-4">
+              <Text className="text-slate-400 text-xs mb-1">Average</Text>
+              <Text className="text-white text-xl font-bold">
+                {formatCurrency(analytics.avgTransaction)}
+              </Text>
             </View>
           </View>
         </View>
-      </ScrollView>
-    </View>
+
+        {/* Expenses by Category */}
+        <View className="card p-5 mb-6">
+          <Text className="text-white font-semibold text-lg mb-4">Expenses by Category</Text>
+          {Object.entries(analytics.byCategory)
+            .sort(([, a], [, b]) => b - a)
+            .map(([category, amount]) => {
+              const config = getFinanceCategoryConfig(category as FinanceTypeCategory);
+              const percentage = (amount / analytics.expenses) * 100;
+
+              return (
+                <View key={category} className="mb-4">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-row items-center">
+                      <View className={`${config.color} rounded-full w-8 h-8 items-center justify-center mr-2`}>
+                        <Ionicons name={config.icon as any} size={16} color="white" />
+                      </View>
+                      <Text className="text-white font-medium">{category}</Text>
+                    </View>
+                    <Text className="text-slate-400 text-sm">
+                      {formatCurrency(amount)} • {percentage.toFixed(0)}%
+                    </Text>
+                  </View>
+                  <View className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <View
+                      className="bg-red-500"
+                      style={{ width: `${percentage}%`, height: '100%' }}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+        </View>
+
+        {/* Largest Transactions */}
+        <View className="card p-5 mb-6">
+          <Text className="text-white font-semibold text-lg mb-4">Largest Transactions</Text>
+          
+          {analytics.largestIncome && (
+            <View className="mb-4">
+              <Text className="text-slate-400 text-xs mb-2 uppercase">Largest Income</Text>
+              <View className="bg-green-900/20 border border-green-700 rounded-lg p-3">
+                <Text className="text-white font-semibold">{analytics.largestIncome.item}</Text>
+                <Text className="text-green-400 font-bold text-xl mt-1">
+                  {formatCurrency(analytics.largestIncome.totalCost, analytics.largestIncome.currency as CurrencyCode)}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {analytics.largestExpense && (
+            <View>
+              <Text className="text-slate-400 text-xs mb-2 uppercase">Largest Expense</Text>
+              <View className="bg-red-900/20 border border-red-700 rounded-lg p-3">
+                <Text className="text-white font-semibold">{analytics.largestExpense.item}</Text>
+                <Text className="text-red-400 font-bold text-xl mt-1">
+                  {formatCurrency(analytics.largestExpense.totalCost, analytics.largestExpense.currency as CurrencyCode)}
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Insights */}
+        <View className="bg-sky-900/20 border border-sky-700 rounded-xl p-4">
+          <View className="flex-row items-start">
+            <Ionicons name="bulb" size={20} color="#0ea5e9" style={{ marginRight: 8, marginTop: 2 }} />
+            <View className="flex-1">
+              <Text className="text-sky-300 text-sm font-semibold mb-1">Financial Insight</Text>
+              <Text className="text-sky-200 text-xs">
+                {analytics.balance > 0
+                  ? `Great job! You have a positive balance of ${formatCurrency(analytics.balance)} this month.`
+                  : analytics.balance === 0
+                  ? 'You broke even this month. Consider saving more next month.'
+                  : `You overspent by ${formatCurrency(Math.abs(analytics.balance))}. Review your expenses to find savings opportunities.`}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }

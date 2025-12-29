@@ -1,8 +1,10 @@
--- supabase/migrations/04-sync-functions.sql
--- WatermelonDB Sync Functions for Supabase
+-- supabase/migrations/04-sync-functions.sql (UPDATED)
+-- Drop existing functions first
+DROP FUNCTION IF EXISTS pull_changes;
+DROP FUNCTION IF EXISTS push_changes;
 
 -- ==========================================
--- PULL CHANGES FUNCTION
+-- PULL CHANGES FUNCTION (UPDATED)
 -- ==========================================
 CREATE OR REPLACE FUNCTION pull_changes(
   last_pulled_at BIGINT,
@@ -17,47 +19,60 @@ AS $$
 DECLARE
   result JSONB;
   current_timestamp BIGINT;
+  last_pulled BIGINT;
 BEGIN
   current_timestamp := EXTRACT(EPOCH FROM NOW())::BIGINT * 1000;
+  
+  -- Handle null last_pulled_at
+  last_pulled := COALESCE(last_pulled_at, 0);
   
   -- Build changes object for each table
   result := jsonb_build_object(
     'changes', jsonb_build_object(
       'habit_logs', (
         SELECT jsonb_build_object(
-          'created', COALESCE(jsonb_agg(to_jsonb(h.*)) FILTER (WHERE h.created_at > last_pulled_at AND h.deleted_at IS NULL), '[]'::jsonb),
-          'updated', COALESCE(jsonb_agg(to_jsonb(h.*)) FILTER (WHERE h.updated_at > last_pulled_at AND h.created_at <= last_pulled_at AND h.deleted_at IS NULL), '[]'::jsonb),
-          'deleted', COALESCE(jsonb_agg(h.id) FILTER (WHERE h.deleted_at > last_pulled_at), '[]'::jsonb)
+          'created', COALESCE(jsonb_agg(to_jsonb(h.*)) FILTER (WHERE h.created_at > last_pulled AND (h.deleted_at IS NULL OR h.deleted_at = 0)), '[]'::jsonb),
+          'updated', COALESCE(jsonb_agg(to_jsonb(h.*)) FILTER (WHERE h.updated_at > last_pulled AND h.created_at <= last_pulled AND (h.deleted_at IS NULL OR h.deleted_at = 0)), '[]'::jsonb),
+          'deleted', COALESCE(jsonb_agg(h.id) FILTER (WHERE h.deleted_at > last_pulled AND h.deleted_at IS NOT NULL), '[]'::jsonb)
         )
         FROM habit_logs h
-        WHERE h.device_id != device_id_param OR h.device_id IS NULL
+        WHERE (h.device_id != device_id_param OR h.device_id IS NULL)
       ),
       'finance_logs', (
         SELECT jsonb_build_object(
-          'created', COALESCE(jsonb_agg(to_jsonb(f.*)) FILTER (WHERE f.created_at > last_pulled_at AND f.deleted_at IS NULL), '[]'::jsonb),
-          'updated', COALESCE(jsonb_agg(to_jsonb(f.*)) FILTER (WHERE f.updated_at > last_pulled_at AND f.created_at <= last_pulled_at AND f.deleted_at IS NULL), '[]'::jsonb),
-          'deleted', COALESCE(jsonb_agg(f.id) FILTER (WHERE f.deleted_at > last_pulled_at), '[]'::jsonb)
+          'created', COALESCE(jsonb_agg(to_jsonb(f.*)) FILTER (WHERE f.created_at > last_pulled AND (f.deleted_at IS NULL OR f.deleted_at = 0)), '[]'::jsonb),
+          'updated', COALESCE(jsonb_agg(to_jsonb(f.*)) FILTER (WHERE f.updated_at > last_pulled AND f.created_at <= last_pulled AND (f.deleted_at IS NULL OR f.deleted_at = 0)), '[]'::jsonb),
+          'deleted', COALESCE(jsonb_agg(f.id) FILTER (WHERE f.deleted_at > last_pulled AND f.deleted_at IS NOT NULL), '[]'::jsonb)
         )
         FROM finance_logs f
-        WHERE f.device_id != device_id_param OR f.device_id IS NULL
+        WHERE (f.device_id != device_id_param OR f.device_id IS NULL)
       ),
       'diary_entries', (
         SELECT jsonb_build_object(
-          'created', COALESCE(jsonb_agg(to_jsonb(d.*)) FILTER (WHERE d.created_at > last_pulled_at AND d.deleted_at IS NULL), '[]'::jsonb),
-          'updated', COALESCE(jsonb_agg(to_jsonb(d.*)) FILTER (WHERE d.updated_at > last_pulled_at AND d.created_at <= last_pulled_at AND d.deleted_at IS NULL), '[]'::jsonb),
-          'deleted', COALESCE(jsonb_agg(d.id) FILTER (WHERE d.deleted_at > last_pulled_at), '[]'::jsonb)
+          'created', COALESCE(jsonb_agg(to_jsonb(d.*)) FILTER (WHERE d.created_at > last_pulled AND (d.deleted_at IS NULL OR d.deleted_at = 0)), '[]'::jsonb),
+          'updated', COALESCE(jsonb_agg(to_jsonb(d.*)) FILTER (WHERE d.updated_at > last_pulled AND d.created_at <= last_pulled AND (d.deleted_at IS NULL OR d.deleted_at = 0)), '[]'::jsonb),
+          'deleted', COALESCE(jsonb_agg(d.id) FILTER (WHERE d.deleted_at > last_pulled AND d.deleted_at IS NOT NULL), '[]'::jsonb)
         )
         FROM diary_entries d
-        WHERE d.device_id != device_id_param OR d.device_id IS NULL
+        WHERE (d.device_id != device_id_param OR d.device_id IS NULL)
+      ),
+      'diary_images', (
+        SELECT jsonb_build_object(
+          'created', COALESCE(jsonb_agg(to_jsonb(di.*)) FILTER (WHERE di.created_at > last_pulled AND (di.deleted_at IS NULL OR di.deleted_at = 0)), '[]'::jsonb),
+          'updated', COALESCE(jsonb_agg(to_jsonb(di.*)) FILTER (WHERE di.updated_at > last_pulled AND di.created_at <= last_pulled AND (di.deleted_at IS NULL OR di.deleted_at = 0)), '[]'::jsonb),
+          'deleted', COALESCE(jsonb_agg(di.id) FILTER (WHERE di.deleted_at > last_pulled AND di.deleted_at IS NOT NULL), '[]'::jsonb)
+        )
+        FROM diary_images di
+        WHERE (di.device_id != device_id_param OR di.device_id IS NULL)
       ),
       'leisure_logs', (
         SELECT jsonb_build_object(
-          'created', COALESCE(jsonb_agg(to_jsonb(l.*)) FILTER (WHERE l.created_at > last_pulled_at AND l.deleted_at IS NULL), '[]'::jsonb),
-          'updated', COALESCE(jsonb_agg(to_jsonb(l.*)) FILTER (WHERE l.updated_at > last_pulled_at AND l.created_at <= last_pulled_at AND l.deleted_at IS NULL), '[]'::jsonb),
-          'deleted', COALESCE(jsonb_agg(l.id) FILTER (WHERE l.deleted_at > last_pulled_at), '[]'::jsonb)
+          'created', COALESCE(jsonb_agg(to_jsonb(l.*)) FILTER (WHERE l.created_at > last_pulled AND (l.deleted_at IS NULL OR l.deleted_at = 0)), '[]'::jsonb),
+          'updated', COALESCE(jsonb_agg(to_jsonb(l.*)) FILTER (WHERE l.updated_at > last_pulled AND l.created_at <= last_pulled AND (l.deleted_at IS NULL OR l.deleted_at = 0)), '[]'::jsonb),
+          'deleted', COALESCE(jsonb_agg(l.id) FILTER (WHERE l.deleted_at > last_pulled AND l.deleted_at IS NOT NULL), '[]'::jsonb)
         )
         FROM leisure_logs l
-        WHERE l.device_id != device_id_param OR l.device_id IS NULL
+        WHERE (l.device_id != device_id_param OR l.device_id IS NULL)
       )
     ),
     'timestamp', current_timestamp
@@ -68,7 +83,7 @@ END;
 $$;
 
 -- ==========================================
--- PUSH CHANGES FUNCTION
+-- PUSH CHANGES FUNCTION (UPDATED)
 -- ==========================================
 CREATE OR REPLACE FUNCTION push_changes(
   changes JSONB,
@@ -93,9 +108,9 @@ BEGIN
       FOR record IN SELECT * FROM jsonb_array_elements(table_changes->'created')
       LOOP
         EXECUTE format(
-          'INSERT INTO %I SELECT * FROM jsonb_populate_record(NULL::%I, $1) ON CONFLICT (id) DO NOTHING',
+          'INSERT INTO %I SELECT * FROM jsonb_populate_record(NULL::%I, $1) ON CONFLICT (id) DO UPDATE SET device_id = $2',
           table_name, table_name
-        ) USING record || jsonb_build_object('device_id', device_id_param);
+        ) USING record, device_id_param;
       END LOOP;
     END IF;
     
@@ -103,19 +118,20 @@ BEGIN
     IF table_changes ? 'updated' THEN
       FOR record IN SELECT * FROM jsonb_array_elements(table_changes->'updated')
       LOOP
+        record_id := record->>'id';
         EXECUTE format(
-          'UPDATE %I SET %s WHERE id = $1',
+          'UPDATE %I SET %s, device_id = $2 WHERE id = $3',
           table_name,
           (
-            SELECT string_agg(format('%I = $2->>%L', key, key), ', ')
+            SELECT string_agg(format('%I = $1->>%L', key, key), ', ')
             FROM jsonb_object_keys(record) key
             WHERE key != 'id'
           )
-        ) USING record->>'id', record;
+        ) USING record, device_id_param, record_id;
       END LOOP;
     END IF;
     
-    -- Process deleted records
+    -- Process deleted records (soft delete)
     IF table_changes ? 'deleted' THEN
       FOR record_id IN SELECT * FROM jsonb_array_elements_text(table_changes->'deleted')
       LOOP

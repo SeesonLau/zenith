@@ -68,3 +68,4 @@ export function formatTime(date: Date): string {
 export function formatNumber(num: number): string {
   return num.toLocaleString('en-US');
 }
+

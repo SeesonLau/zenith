@@ -18,7 +18,7 @@ export default class FinanceLog extends Model {
   @field('is_synced') isSynced!: boolean;
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
-
+  @field('device_id') deviceId?: string;
   // Getter for formatted total cost
   get formattedTotal(): string {
     return `${this.currency} ${this.totalCost.toFixed(2)}`;

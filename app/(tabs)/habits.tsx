@@ -1,38 +1,26 @@
-// app/(tabs)/habits.tsx
+// app/(tabs)/habits.tsx (UPDATED)
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRunningHabitTimers } from '@/src/database/hooks/useDatabase';
 import { stopHabitTimer } from '@/src/database/actions/habitActions';
-import { formatDurationHMS, formatTime } from '@/src/utils/formatters';
+import { formatDurationHMS } from '@/src/utils/formatters';
 import { getRelativeTime } from '@/src/utils/dateHelpers';
+import { getHabitConfig } from '@/src/lib/constants';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import type { HabitCategory } from '@/src/types/database.types';
-
-const CATEGORY_COLORS: Record<HabitCategory, string> = {
-  Productivity: 'bg-purple-500',
-  'Self-Care': 'bg-green-500',
-  Logistics: 'bg-blue-500',
-  Enjoyment: 'bg-pink-500',
-  Nothing: 'bg-gray-500',
-};
-
-const CATEGORY_ICONS: Record<HabitCategory, any> = {
-  Productivity: 'briefcase',
-  'Self-Care': 'heart',
-  Logistics: 'car',
-  Enjoyment: 'happy',
-  Nothing: 'time',
-};
+import { useCompletedHabitLogs } from '@/src/database/hooks/useDatabase'; 
 
 export default function HabitsScreen() {
   const router = useRouter();
   const runningTimers = useRunningHabitTimers();
   const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const completedLogs = useCompletedHabitLogs();
+  const recentLogs = completedLogs.slice(0, 5);
 
   // Update elapsed times every second
   useEffect(() => {
@@ -58,7 +46,6 @@ export default function HabitsScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Timers are automatically refreshed via WatermelonDB observables
     setTimeout(() => setRefreshing(false), 500);
   };
 
@@ -108,68 +95,124 @@ export default function HabitsScreen() {
               />
             ) : (
               <View className="space-y-3">
-                {runningTimers.map((timer) => (
-                  <View
-                    key={timer.id}
-                    className={`rounded-2xl p-5 border-2 ${CATEGORY_COLORS[timer.category as HabitCategory]} border-opacity-30`}
-                    style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)' }}
-                  >
-                    {/* Header */}
-                    <View className="flex-row items-center justify-between mb-3">
-                      <View className="flex-row items-center flex-1">
-                        <View
-                          className={`${CATEGORY_COLORS[timer.category as HabitCategory]} rounded-full w-10 h-10 items-center justify-center mr-3`}
-                        >
-                          <Ionicons
-                            name={CATEGORY_ICONS[timer.category as HabitCategory]}
-                            size={20}
-                            color="white"
-                          />
-                        </View>
-                        <View className="flex-1">
-                          <Text className="text-slate-400 text-xs uppercase tracking-wider">
-                            {timer.category}
-                          </Text>
-                          <Text className="text-white text-lg font-bold">
-                            {timer.activity}
-                          </Text>
+                {runningTimers.map((timer) => {
+                  const config = getHabitConfig(timer.category as HabitCategory);
+                  
+                  return (
+                    <View
+                      key={timer.id}
+                      className={`rounded-2xl p-5 border-2 ${config.borderColor} border-opacity-30`}
+                      style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)' }}
+                    >
+                      {/* Header */}
+                      <View className="flex-row items-center justify-between mb-3">
+                        <View className="flex-row items-center flex-1">
+                          <View
+                            className={`${config.color} rounded-full w-10 h-10 items-center justify-center mr-3`}
+                          >
+                            <Ionicons
+                              name={config.icon as any}
+                              size={20}
+                              color="white"
+                            />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-slate-400 text-xs uppercase tracking-wider">
+                              {timer.category}
+                            </Text>
+                            <Text className="text-white text-lg font-bold">
+                              {timer.activity}
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
 
-                    {/* Timer Display */}
-                    <View className="bg-slate-800/70 rounded-xl p-4 mb-3">
-                      <Text className="text-sky-400 text-4xl font-mono font-bold text-center">
-                        {formatDurationHMS(elapsedTimes[timer.id] || 0)}
-                      </Text>
-                      <Text className="text-slate-500 text-xs text-center mt-1">
-                        Started {getRelativeTime(timer.startedAt)}
-                      </Text>
-                    </View>
-
-                    {/* Notes */}
-                    {timer.notes && (
-                      <View className="bg-slate-800/50 rounded-lg p-3 mb-3">
-                        <Text className="text-slate-400 text-sm">{timer.notes}</Text>
+                      {/* Timer Display */}
+                      <View className="glass rounded-xl p-4 mb-3">
+                        <Text className="text-sky-400 text-4xl font-mono font-bold text-center">
+                          {formatDurationHMS(elapsedTimes[timer.id] || 0)}
+                        </Text>
+                        <Text className="text-slate-500 text-xs text-center mt-1">
+                          Started {getRelativeTime(timer.startedAt)}
+                        </Text>
                       </View>
-                    )}
 
-                    {/* Actions */}
-                    <Button
-                      onPress={() => handleStopTimer(timer.id)}
-                      title="Stop Timer"
-                      icon="stop"
-                      variant="danger"
-                      fullWidth
-                    />
-                  </View>
-                ))}
+                      {/* Notes */}
+                      {timer.notes && (
+                        <View className="bg-slate-800/50 rounded-lg p-3 mb-3">
+                          <Text className="text-slate-400 text-sm">{timer.notes}</Text>
+                        </View>
+                      )}
+
+                      {/* Actions */}
+                      <Button
+                        onPress={() => handleStopTimer(timer.id)}
+                        title="Stop Timer"
+                        icon="stop"
+                        variant="danger"
+                        fullWidth
+                      />
+                    </View>
+                  );
+                })}
               </View>
             )}
           </View>
 
+          {/* Recent History Section - ADD THIS */}
+          {recentLogs.length > 0 && (
+            <View className="mb-6">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-semibold text-white">Recent Sessions</Text>
+                <Pressable onPress={() => router.push('/habit/history')}>
+                  <Text className="text-sky-400 text-sm">View All</Text>
+                </Pressable>
+              </View>
+
+              <View className="space-y-2">
+                {recentLogs.map((log) => {
+                  const config = getHabitConfig(log.category as HabitCategory);
+
+                  return (
+                    <Pressable
+                      key={log.id}
+                      onPress={() => router.push(`/habit/${log.id}`)}
+                      className="card p-4 active:bg-slate-700"
+                    >
+                      <View className="flex-row items-center">
+                        <View className={`${config.color} rounded-full w-10 h-10 items-center justify-center mr-3`}>
+                          <Ionicons name={config.icon as any} size={20} color="white" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-white font-semibold text-base">
+                            {log.activity}
+                          </Text>
+                          <View className="flex-row items-center gap-2 mt-1">
+                            <View className={`${config.bgColor} px-2 py-0.5 rounded`}>
+                              <Text className={`${config.textColor} text-xs`}>
+                                {log.category}
+                              </Text>
+                            </View>
+                            <Text className="text-slate-500 text-xs">
+                              {formatDurationHMS(log.duration || 0)}
+                            </Text>
+                            <Text className="text-slate-600 text-xs">•</Text>
+                            <Text className="text-slate-500 text-xs">
+                              {getRelativeTime(log.startedAt)}
+                            </Text>
+                          </View>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#64748b" />
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           {/* Quick Stats */}
-          <View className="bg-slate-800 border border-slate-700 rounded-2xl p-5 mb-6">
+          <View className="card p-5 mb-6">
             <Text className="text-white font-semibold text-lg mb-3">Today's Activity</Text>
             <View className="flex-row justify-around">
               <View className="items-center">

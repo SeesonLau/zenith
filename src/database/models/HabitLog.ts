@@ -14,6 +14,7 @@ export default class HabitLog extends Model {
   @field('is_synced') isSynced!: boolean;
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
+  @field('device_id') deviceId?: string; 
 
   @writer async stopTimer() {
     if (this.endedAt) {
@@ -21,7 +22,7 @@ export default class HabitLog extends Model {
     }
     const now = new Date();
     const durationInSeconds = Math.floor((now.getTime() - this.startedAt.getTime()) / 1000);
-    
+
     await this.update((log) => {
       log.endedAt = now;
       log.duration = durationInSeconds;

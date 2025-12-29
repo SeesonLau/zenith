@@ -119,6 +119,7 @@ export type DiaryImageData = {
 // ==========================================
 export type LeisureType = 
   | 'Manga'
+  | 'Mangah' 
   | 'Manhwah'
   | 'Manhuah'
   | 'Fanart'
@@ -311,6 +312,7 @@ export const CURRENCIES: CurrencyCode[] = [
 
 export const LEISURE_TYPES: LeisureType[] = [
   'Manga',
+  'Mangah',
   'Manhwah',
   'Manhuah',
   'Fanart',

@@ -1,22 +1,22 @@
-// src/database/index.ts
+// src/database/index.ts (COMPLETE VERSION WITH MIGRATIONS)
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
-import schema from './schema';
-import migrations from '@/supabase/migration';
-import {
-  HabitLog,
-  FinanceLog,
-  DiaryEntry,
-  DiaryImage,
-  LeisureLog,
-  UserPreference,
-  SyncMetadata,
-} from './models';
+import { schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
+import { schema } from './schema';
+import migrations from './migrations';  
 
-// Configure SQLite adapter
+// Import all models
+import HabitLog from './models/HabitLog';
+import FinanceLog from './models/FinanceLog';
+import DiaryEntry from './models/DiaryEntry';
+import DiaryImage from './models/DiaryImage';
+import LeisureLog from './models/LeisureLog';
+import UserPreference from './models/UserPreference';
+import SyncMetadata from './models/SyncMetadata';
+
 const adapter = new SQLiteAdapter({
   schema,
-  migrations,
+  migrations,  // ADDED: Enable migrations
   dbName: 'zenith',
   jsi: true,
   onSetUpError: (error) => {
@@ -24,7 +24,6 @@ const adapter = new SQLiteAdapter({
   },
 });
 
-// Create and export database instance
 export const database = new Database({
   adapter,
   modelClasses: [
@@ -38,4 +37,9 @@ export const database = new Database({
   ],
 });
 
-export default database;
+export * from './models';
+export * from './actions/habitActions';
+export * from './actions/financeActions';
+export * from './actions/diaryActions';
+export * from './actions/leisureActions';
+export * from './actions/imageActions';

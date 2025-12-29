@@ -20,3 +20,12 @@
     "expo-env.d.ts"
   ]
 }
+
+/*
+
+usbipd list
+usbipd attach --wsl --busid <BUSID>
+
+npx expo start --tunnel
+
+*/

@@ -1,246 +1,229 @@
-// app/habit/history.tsx
+// app/habit/history.tsx (UPDATED WITH ANALYTICS)
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCompletedHabitLogs } from '@/src/database/hooks/useDatabase';
-import { formatDurationHMS } from '@/src/utils/formatters';
-import { formatDate, getStartOfDay, getEndOfDay, isToday, isYesterday } from '@/src/utils/dateHelpers';
-import EmptyState from '@/src/components/common/EmptyState';
-import Button from '@/src/components/common/Button';
+import { getHabitConfig } from '@/src/lib/constants';
+import { formatDurationHMS, formatDuration } from '@/src/utils/formatters';
+import { formatDate, getStartOfWeek, getEndOfWeek } from '@/src/utils/dateHelpers';
 import type { HabitCategory } from '@/src/types/database.types';
-
-const CATEGORY_COLORS: Record<HabitCategory, string> = {
-  Productivity: 'bg-purple-500',
-  'Self-Care': 'bg-green-500',
-  Logistics: 'bg-blue-500',
-  Enjoyment: 'bg-pink-500',
-  Nothing: 'bg-gray-500',
-};
-
-const CATEGORY_ICONS: Record<HabitCategory, any> = {
-  Productivity: 'briefcase',
-  'Self-Care': 'heart',
-  Logistics: 'car',
-  Enjoyment: 'happy',
-  Nothing: 'time',
-};
+import Button from '@/src/components/common/Button';
 
 export default function HabitHistoryScreen() {
   const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
   const completedLogs = useCompletedHabitLogs();
 
-  // Group by date
-  const groupedLogs = useMemo(() => {
-    const groups: Record<string, typeof completedLogs> = {};
+  // Filter logs by period
+  const filteredLogs = useMemo(() => {
+    if (selectedPeriod === 'all') return completedLogs;
 
-    completedLogs.forEach((log) => {
-      let dateKey: string;
-      if (isToday(log.startedAt)) {
-        dateKey = 'Today';
-      } else if (isYesterday(log.startedAt)) {
-        dateKey = 'Yesterday';
-      } else {
-        dateKey = formatDate(log.startedAt, 'short');
-      }
+    const now = new Date();
+    const startDate = selectedPeriod === 'week' 
+      ? getStartOfWeek(now)
+      : new Date(now.getFullYear(), now.getMonth(), 1);
 
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(log);
+    return completedLogs.filter((log) => log.startedAt >= startDate);
+  }, [completedLogs, selectedPeriod]);
+
+  // Calculate analytics
+  const analytics = useMemo(() => {
+    const totalDuration = filteredLogs.reduce((sum, log) => sum + (log.duration || 0), 0);
+    const totalSessions = filteredLogs.length;
+
+    // By category
+    const byCategory: Record<string, number> = {};
+    filteredLogs.forEach((log) => {
+      byCategory[log.category] = (byCategory[log.category] || 0) + (log.duration || 0);
     });
 
-    return Object.entries(groups).sort((a, b) => {
-      if (a[0] === 'Today') return -1;
-      if (b[0] === 'Today') return 1;
-      if (a[0] === 'Yesterday') return -1;
-      if (b[0] === 'Yesterday') return 1;
-      return new Date(b[0]).getTime() - new Date(a[0]).getTime();
-    });
-  }, [completedLogs]);
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    const totalSessions = completedLogs.length;
-    const totalTime = completedLogs.reduce((sum, log) => sum + (log.duration || 0), 0);
-    const categoryCounts: Record<string, number> = {};
-    
-    completedLogs.forEach((log) => {
-      categoryCounts[log.category] = (categoryCounts[log.category] || 0) + 1;
+    // By activity
+    const byActivity: Record<string, number> = {};
+    filteredLogs.forEach((log) => {
+      byActivity[log.activity] = (byActivity[log.activity] || 0) + (log.duration || 0);
     });
 
-    const topCategory = Object.entries(categoryCounts).sort(([, a], [, b]) => b - a)[0];
+    // Most frequent
+    const mostFrequent = Object.entries(byActivity).sort(([, a], [, b]) => b - a)[0];
+
+    // Average session duration
+    const averageSession = totalSessions > 0 ? totalDuration / totalSessions : 0;
 
     return {
+      totalDuration,
       totalSessions,
-      totalTime,
-      avgSessionTime: totalSessions > 0 ? totalTime / totalSessions : 0,
-      topCategory: topCategory ? topCategory[0] : null,
-      topCategoryCount: topCategory ? topCategory[1] : 0,
+      byCategory,
+      byActivity,
+      mostFrequentActivity: mostFrequent?.[0] || 'None',
+      mostFrequentDuration: mostFrequent?.[1] || 0,
+      averageSession,
     };
-  }, [completedLogs]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
-  };
+  }, [filteredLogs]);
 
   return (
-    <View className="flex-1 bg-slate-900">
-      <ScrollView
-        className="flex-1"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#38bdf8" />
-        }
-      >
-        <View className="p-6">
-          {/* Header */}
-          <View className="flex-row items-center mb-6 mt-4">
-            <Pressable onPress={() => router.back()} className="mr-4">
-              <Ionicons name="arrow-back" size={28} color="white" />
-            </Pressable>
-            <Text className="text-2xl font-bold text-white flex-1">History</Text>
-          </View>
-
-          {/* Stats Cards */}
-          {completedLogs.length > 0 && (
-            <View className="mb-6">
-              <View className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700 rounded-2xl p-6 mb-4">
-                <Text className="text-purple-400 text-sm mb-1">Total Time Tracked</Text>
-                <Text className="text-white text-4xl font-bold mb-2">
-                  {formatDurationHMS(stats.totalTime)}
-                </Text>
-                <Text className="text-purple-300 text-sm">
-                  Across {stats.totalSessions} completed sessions
-                </Text>
-              </View>
-
-              <View className="flex-row gap-3 mb-4">
-                <View className="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-4">
-                  <Ionicons name="analytics" size={20} color="#38bdf8" />
-                  <Text className="text-slate-400 text-xs mt-2">Avg Session</Text>
-                  <Text className="text-white text-xl font-bold">
-                    {formatDurationHMS(stats.avgSessionTime)}
-                  </Text>
-                </View>
-                <View className="flex-1 bg-slate-800 border border-slate-700 rounded-xl p-4">
-                  <Ionicons name="star" size={20} color="#fbbf24" />
-                  <Text className="text-slate-400 text-xs mt-2">Top Category</Text>
-                  <Text className="text-white text-sm font-bold">
-                    {stats.topCategory || 'N/A'}
-                  </Text>
-                  <Text className="text-slate-500 text-xs">
-                    {stats.topCategoryCount} sessions
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* History List */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-semibold text-white">Completed Sessions</Text>
-              <View className="bg-slate-800 px-3 py-1 rounded-full">
-                <Text className="text-slate-300 font-semibold">{completedLogs.length}</Text>
-              </View>
-            </View>
-
-            {completedLogs.length === 0 ? (
-              <EmptyState
-                icon="time-outline"
-                title="No History Yet"
-                description="Completed habit sessions will appear here. Start a timer to begin tracking!"
-                action={
-                  <Button
-                    onPress={() => router.push('/habit/start')}
-                    title="Start Timer"
-                    icon="play"
-                    variant="primary"
-                  />
-                }
-              />
-            ) : (
-              <View className="space-y-4">
-                {groupedLogs.map(([date, dateLogs]) => (
-                  <View key={date}>
-                    <View className="flex-row items-center justify-between mb-2">
-                      <Text className="text-slate-500 text-sm font-semibold uppercase">{date}</Text>
-                      <Text className="text-slate-600 text-xs">
-                        {dateLogs.length} {dateLogs.length === 1 ? 'session' : 'sessions'}
-                      </Text>
-                    </View>
-                    <View className="space-y-2">
-                      {dateLogs.map((log) => (
-                        <Pressable
-                          key={log.id}
-                          onPress={() => router.push(`/habit/${log.id}`)}
-                          className="bg-slate-800 border border-slate-700 rounded-xl p-4 active:bg-slate-700"
-                        >
-                          <View className="flex-row items-center">
-                            <View className={`${CATEGORY_COLORS[log.category as HabitCategory]} rounded-full w-12 h-12 items-center justify-center mr-4`}>
-                              <Ionicons
-                                name={CATEGORY_ICONS[log.category as HabitCategory]}
-                                size={24}
-                                color="white"
-                              />
-                            </View>
-                            <View className="flex-1">
-                              <Text className="text-white font-semibold text-base mb-1">
-                                {log.activity}
-                              </Text>
-                              <View className="flex-row items-center">
-                                <View className="bg-slate-700 px-2 py-1 rounded mr-2">
-                                  <Text className="text-slate-300 text-xs">{log.category}</Text>
-                                </View>
-                                {log.notes && (
-                                  <View className="flex-row items-center">
-                                    <Ionicons name="document-text-outline" size={12} color="#64748b" />
-                                    <Text className="text-slate-500 text-xs ml-1" numberOfLines={1}>
-                                      {log.notes}
-                                    </Text>
-                                  </View>
-                                )}
-                              </View>
-                            </View>
-                            <View className="items-end">
-                              <Text className="text-sky-400 text-xl font-bold font-mono">
-                                {formatDurationHMS(log.duration || 0)}
-                              </Text>
-                              {log.endedAt && (
-                                <Text className="text-slate-500 text-xs">
-                                  {formatDate(log.endedAt, 'short')}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-
-          {/* Info Card */}
-          {completedLogs.length > 0 && (
-            <View className="bg-purple-900/20 border border-purple-700 rounded-xl p-4">
-              <View className="flex-row items-start">
-                <Ionicons name="information-circle" size={20} color="#a78bfa" style={{ marginRight: 8, marginTop: 2 }} />
-                <View className="flex-1">
-                  <Text className="text-purple-300 text-sm font-semibold mb-1">Keep Going!</Text>
-                  <Text className="text-purple-200 text-xs">
-                    You've tracked {stats.totalSessions} sessions across all your activities. 
-                    Remember, the layered time system lets you track multiple activities simultaneously!
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
+    <ScrollView className="flex-1 bg-slate-900">
+      <View className="p-6">
+        {/* Header */}
+        <View className="flex-row items-center mb-6 mt-4">
+          <Pressable onPress={() => router.back()} className="mr-4">
+            <Ionicons name="arrow-back" size={28} color="white" />
+          </Pressable>
+          <Text className="text-2xl font-bold text-white flex-1">Habit History</Text>
         </View>
-      </ScrollView>
+
+        {/* Period Selector */}
+        <View className="flex-row gap-2 mb-6">
+          {(['week', 'month', 'all'] as const).map((period) => (
+            <Pressable
+              key={period}
+              onPress={() => setSelectedPeriod(period)}
+              className={`
+                flex-1 py-3 rounded-xl
+                ${selectedPeriod === period ? 'bg-purple-500' : 'bg-slate-800'}
+              `}
+            >
+              <Text
+                className={`
+                  text-center font-semibold capitalize
+                  ${selectedPeriod === period ? 'text-white' : 'text-slate-400'}
+                `}
+              >
+                {period === 'all' ? 'All Time' : `This ${period}`}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Summary Stats */}
+        <View className="card p-5 mb-6">
+          <Text className="text-white font-semibold text-lg mb-4">Summary</Text>
+          <View className="flex-row flex-wrap gap-4">
+            <StatBox
+              label="Total Time"
+              value={formatDuration(analytics.totalDuration)}
+              icon="time"
+              color="text-sky-400"
+            />
+            <StatBox
+              label="Sessions"
+              value={analytics.totalSessions.toString()}
+              icon="list"
+              color="text-purple-400"
+            />
+            <StatBox
+              label="Avg Session"
+              value={formatDuration(Math.floor(analytics.averageSession))}
+              icon="analytics"
+              color="text-green-400"
+            />
+            <StatBox
+              label="Top Activity"
+              value={analytics.mostFrequentActivity}
+              icon="star"
+              color="text-yellow-400"
+            />
+          </View>
+        </View>
+
+        {/* By Category */}
+        <View className="card p-5 mb-6">
+          <Text className="text-white font-semibold text-lg mb-4">Time by Category</Text>
+          {Object.entries(analytics.byCategory)
+            .sort(([, a], [, b]) => b - a)
+            .map(([category, duration]) => {
+              const config = getHabitConfig(category as HabitCategory);
+              const percentage = (duration / analytics.totalDuration) * 100;
+
+              return (
+                <View key={category} className="mb-4">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <View className="flex-row items-center">
+                      <View className={`${config.color} rounded-full w-8 h-8 items-center justify-center mr-2`}>
+                        <Ionicons name={config.icon as any} size={16} color="white" />
+                      </View>
+                      <Text className="text-white font-medium">{category}</Text>
+                    </View>
+                    <Text className="text-slate-400 text-sm">
+                      {formatDuration(duration)} • {percentage.toFixed(0)}%
+                    </Text>
+                  </View>
+                  <View className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <View
+                      className={config.color}
+                      style={{ width: `${percentage}%`, height: '100%' }}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+        </View>
+
+        {/* Top Activities */}
+        <View className="card p-5 mb-6">
+          <Text className="text-white font-semibold text-lg mb-4">Top Activities</Text>
+          {Object.entries(analytics.byActivity)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([activity, duration], index) => (
+              <View key={activity} className="flex-row items-center py-3 border-b border-slate-700 last:border-b-0">
+                <View className="bg-slate-700 rounded-full w-8 h-8 items-center justify-center mr-3">
+                  <Text className="text-white font-bold text-sm">{index + 1}</Text>
+                </View>
+                <Text className="text-white flex-1">{activity}</Text>
+                <Text className="text-slate-400 text-sm">{formatDuration(duration)}</Text>
+              </View>
+            ))}
+        </View>
+
+        {/* Recent Sessions */}
+        <View className="mb-6">
+          <Text className="text-xl font-semibold text-white mb-4">Recent Sessions</Text>
+          {filteredLogs.slice(0, 10).map((log) => {
+            const config = getHabitConfig(log.category as HabitCategory);
+
+            return (
+              <Pressable
+                key={log.id}
+                onPress={() => router.push(`/habit/${log.id}`)}
+                className="card p-4 mb-3 active:bg-slate-700"
+              >
+                <View className="flex-row items-center">
+                  <View className={`${config.color} rounded-full w-10 h-10 items-center justify-center mr-3`}>
+                    <Ionicons name={config.icon as any} size={20} color="white" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-white font-semibold">{log.activity}</Text>
+                    <Text className="text-slate-400 text-xs">
+                      {formatDate(log.startedAt, 'short')} • {formatDurationHMS(log.duration || 0)}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#64748b" />
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+interface StatBoxProps {
+  label: string;
+  value: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}
+
+function StatBox({ label, value, icon, color }: StatBoxProps) {
+  return (
+    <View className="flex-1 min-w-[45%] bg-slate-800/50 rounded-xl p-4">
+      <View className="flex-row items-center mb-2">
+        <Ionicons name={icon} size={16} color="#64748b" />
+        <Text className="text-slate-400 text-xs ml-2">{label}</Text>
+      </View>
+      <Text className={`${color} font-bold text-xl`}>{value}</Text>
     </View>
   );
 }

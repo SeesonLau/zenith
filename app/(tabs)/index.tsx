@@ -1,37 +1,17 @@
-import { Pressable, Text, View, Alert, ScrollView } from 'react-native';
-import { syncWithSupabase } from '@/src/database/sync/supabaseSync';
+// app/(tabs)/index.tsx
+import { Pressable, Text, View, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import SyncStatus from '@/src/components/common/SyncStatus';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const handleSync = async () => {
-    setIsSyncing(true);
-    
-    try {
-      const result = await syncWithSupabase();
-      
-      if (result.success) {
-        Alert.alert('Success', 'Data synced successfully! ✅');
-      } else {
-        Alert.alert('Sync Failed', 'Check console for details');
-      }
-    } catch (error) {
-      console.error('Sync error:', error);
-      Alert.alert('Error', 'Sync failed. See console for details.');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   return (
     <ScrollView className="flex-1 bg-slate-900">
       <View className="p-6">
         {/* Header */}
-        <View className="mb-8 mt-4">
+        <View className="mb-6 mt-4">
           <Text className="text-4xl font-bold text-white mb-2">
             Zenith
           </Text>
@@ -40,69 +20,68 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {/* Sync Status Component */}
+        <View className="mb-6">
+          <SyncStatus />
+        </View>
+
         {/* Status Card */}
-        <View className="bg-green-900/20 border-green-700 rounded-2xl p-6 mb-6 border">
+        <View className="card p-5 mb-6 border-green-700 bg-green-900/10">
           <View className="flex-row items-center">
             <View className="bg-green-500 rounded-full w-12 h-12 items-center justify-center mr-4">
               <Ionicons name="checkmark-circle" size={24} color="white" />
             </View>
             <View className="flex-1">
               <Text className="text-green-400 font-semibold text-lg">
-                Ready to Sync
+                System Ready
               </Text>
               <Text className="text-slate-400 text-sm">
-                No authentication required
+                Auto-sync enabled • Offline-first
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <Text className="text-white font-semibold text-lg mb-4">
-          Quick Actions
-        </Text>
-
-        {/* Sync Button */}
-        <Pressable
-          onPress={handleSync}
-          disabled={isSyncing}
-          className={`rounded-xl p-5 mb-3 flex-row items-center ${
-            isSyncing ? 'bg-sky-600' : 'bg-sky-500 active:bg-sky-600'
-          }`}
-        >
-          <View className="bg-white/20 rounded-full w-10 h-10 items-center justify-center mr-4">
-            <Ionicons 
-              name={isSyncing ? "sync" : "cloud-upload-outline"} 
-              size={20} 
-              color="white" 
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="text-white font-bold text-lg">
-              {isSyncing ? 'Syncing...' : 'Sync Data'}
-            </Text>
-            <Text className="text-sky-100 text-sm">
-              Push and pull changes from cloud
-            </Text>
-          </View>
-        </Pressable>
-
         {/* Module Cards */}
-        <Text className="text-white font-semibold text-lg mb-4 mt-6">
+        <Text className="text-white font-semibold text-lg mb-4">
           Modules
         </Text>
 
         <View className="space-y-3">
           {[
-            { name: 'Habits', icon: 'hourglass-outline', route: '/habits', color: 'bg-purple-500' },
-            { name: 'Finance', icon: 'wallet-outline', route: '/finance', color: 'bg-green-500' },
-            { name: 'Diary', icon: 'book-outline', route: '/diary', color: 'bg-blue-500' },
-            { name: 'Leisure', icon: 'game-controller-outline', route: '/leisure', color: 'bg-pink-500' },
+            { 
+              name: 'Habits', 
+              icon: 'hourglass-outline', 
+              route: '/habits', 
+              color: 'bg-purple-500',
+              description: 'Track your daily activities'
+            },
+            { 
+              name: 'Finance', 
+              icon: 'wallet-outline', 
+              route: '/finance', 
+              color: 'bg-green-500',
+              description: 'Manage your transactions'
+            },
+            { 
+              name: 'Diary', 
+              icon: 'book-outline', 
+              route: '/diary', 
+              color: 'bg-sky-500',
+              description: 'Journal your thoughts'
+            },
+            { 
+              name: 'Leisure', 
+              icon: 'game-controller-outline', 
+              route: '/leisure', 
+              color: 'bg-pink-500',
+              description: 'Log entertainment time'
+            },
           ].map((module) => (
             <Pressable
               key={module.name}
               onPress={() => router.push(module.route as any)}
-              className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex-row items-center active:bg-slate-700"
+              className="card p-4 flex-row items-center active:bg-slate-700"
             >
               <View className={`${module.color} rounded-full w-12 h-12 items-center justify-center mr-4`}>
                 <Ionicons name={module.icon as any} size={24} color="white" />
@@ -111,21 +90,35 @@ export default function HomeScreen() {
                 <Text className="text-white font-semibold text-lg">
                   {module.name}
                 </Text>
+                <Text className="text-slate-400 text-sm">
+                  {module.description}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#64748b" />
             </Pressable>
           ))}
         </View>
 
-        {/* Status Info */}
+        {/* App Info */}
         <View className="mt-8 bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+          <View className="flex-row items-center justify-center mb-2">
+            <Ionicons name="shield-checkmark" size={16} color="#22c55e" />
+            <Text className="text-green-400 text-sm font-semibold ml-2">
+              Offline-First Architecture
+            </Text>
+          </View>
           <Text className="text-slate-400 text-xs text-center">
-            ✅ Offline-first • 🔓 No authentication required
+            All data stored locally with automatic cloud backup
           </Text>
           <Text className="text-slate-500 text-xs text-center mt-1">
-            All data stored locally and synced to your personal Supabase
+            Syncs every 5 minutes when online
           </Text>
         </View>
+
+        {/* Version Info */}
+        <Text className="text-slate-600 text-xs text-center mt-6">
+          Zenith v1.0.0 
+        </Text>
       </View>
     </ScrollView>
   );

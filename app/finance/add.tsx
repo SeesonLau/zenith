@@ -1,5 +1,4 @@
 // app/finance/add.tsx
-// app/finance/add.tsx
 import React, { useState } from 'react';
 import {
   View,

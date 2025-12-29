@@ -1,6 +1,4 @@
-// ==========================================
-// src/components/common/FloatingActionButton.tsx
-// ==========================================
+// src/components/common/FloatingActionButton.tsx (UPDATED)
 import React from 'react';
 import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,7 +20,7 @@ export default function FloatingActionButton({
       onPress={onPress}
       className={`
         ${color} active:opacity-80
-        absolute bottom-6 right-6
+        absolute bottom-6 left-6
         w-16 h-16 rounded-full
         items-center justify-center
         shadow-lg

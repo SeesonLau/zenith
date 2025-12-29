@@ -1,4 +1,4 @@
-// app/(tabs)/finance.tsx
+// app/(tabs)/finance.tsx (UPDATED - Keep most of it, just update the icon imports)
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,11 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFinanceLogs } from '@/src/database/hooks/useDatabase';
 import { formatCurrency } from '@/src/utils/formatters';
 import { formatDate, getStartOfMonth, getEndOfMonth } from '@/src/utils/dateHelpers';
+import { getTransactionTypeConfig } from '@/src/lib/constants';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import StatCard from '@/src/components/finance/StatCard';
-import type { CurrencyCode } from '@/src/types/database.types'
+import type { CurrencyCode } from '@/src/types/database.types';
 
 export default function FinanceScreen() {
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function FinanceScreen() {
           {/* Summary Cards */}
           <View className="mb-6">
             {/* Balance Card */}
-            <View className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-700 rounded-2xl p-6 mb-4">
+            <View className="gradient-green border border-green-700 rounded-2xl p-6 mb-4">
               <Text className="text-green-400 text-sm mb-1">Current Balance</Text>
               <Text className="text-white text-4xl font-bold mb-2">
                 {formatCurrency(stats.balance)}
@@ -151,73 +152,65 @@ export default function FinanceScreen() {
                       {date}
                     </Text>
                     <View className="space-y-2">
-                      {dateLogs.map((log) => (
-                        <Pressable
-                          key={log.id}
-                          onPress={() => router.push(`/finance/${log.id}`)}
-                          className="bg-slate-800 border border-slate-700 rounded-xl p-4 active:bg-slate-700"
-                        >
-                          <View className="flex-row items-center">
-                            <View
-                              className={`${
-                                log.transactionType === 'income' ? 'bg-green-500' : 'bg-red-500'
-                              } rounded-full w-12 h-12 items-center justify-center mr-4`}
-                            >
-                              <Ionicons
-                                name={
-                                  log.transactionType === 'income'
-                                    ? 'arrow-down'
-                                    : 'arrow-up'
-                                }
-                                size={20}
-                                color="white"
-                              />
-                            </View>
-                            <View className="flex-1">
-                              <Text className="text-white font-semibold text-base mb-1">
-                                {log.item}
-                              </Text>
-                              <View className="flex-row items-center">
-                                <View className="bg-slate-700 px-2 py-1 rounded mr-2">
-                                  <Text className="text-slate-300 text-xs">
-                                    {log.typeCategory}
-                                  </Text>
-                                </View>
-                                {log.location && (
-                                  <View className="flex-row items-center">
-                                    <Ionicons
-                                      name="location"
-                                      size={12}
-                                      color="#64748b"
-                                    />
-                                    <Text className="text-slate-500 text-xs ml-1">
-                                      {log.location}
+                      {dateLogs.map((log) => {
+                        const typeConfig = getTransactionTypeConfig(log.transactionType);
+                        
+                        return (
+                          <Pressable
+                            key={log.id}
+                            onPress={() => router.push(`/finance/${log.id}`)}
+                            className="card p-4 active:bg-slate-700"
+                          >
+                            <View className="flex-row items-center">
+                              <View
+                                className={`${typeConfig.color} rounded-full w-12 h-12 items-center justify-center mr-4`}
+                              >
+                                <Ionicons
+                                  name={typeConfig.icon}
+                                  size={20}
+                                  color="white"
+                                />
+                              </View>
+                              <View className="flex-1">
+                                <Text className="text-white font-semibold text-base mb-1">
+                                  {log.item}
+                                </Text>
+                                <View className="flex-row items-center">
+                                  <View className="bg-slate-700 px-2 py-1 rounded mr-2">
+                                    <Text className="text-slate-300 text-xs">
+                                      {log.typeCategory}
                                     </Text>
                                   </View>
-                                )}
+                                  {log.location && (
+                                    <View className="flex-row items-center">
+                                      <Ionicons
+                                        name="location"
+                                        size={12}
+                                        color="#64748b"
+                                      />
+                                      <Text className="text-slate-500 text-xs ml-1">
+                                        {log.location}
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                              </View>
+                              <View className="items-end">
+                                <Text
+                                  className={`font-bold text-lg ${typeConfig.textColor}`}
+                                >
+                                  {log.transactionType === 'income' ? '+' : '-'}
+                                  {formatCurrency(log.totalCost, log.currency as CurrencyCode)}
+                                </Text>
+                                <Text className="text-slate-500 text-xs">
+                                  {log.quantity > 1 &&
+                                    `${log.quantity}x ${formatCurrency(log.cost, log.currency as CurrencyCode)}`}
+                                </Text>
                               </View>
                             </View>
-                            <View className="items-end">
-                              <Text
-                              className={`font-bold text-lg ${
-                                log.transactionType === 'income'
-                                  ? 'text-green-400'
-                                  : 'text-red-400'
-                              }`}
-                            >
-                              {log.transactionType === 'income' ? '+' : '-'}
-                              {/* Add 'as CurrencyCode' cast here */}
-                              {formatCurrency(log.totalCost, log.currency as CurrencyCode)}
-                            </Text>
-                            <Text className="text-slate-500 text-xs">
-                              {log.quantity > 1 &&
-                                /* Add 'as CurrencyCode' cast here too */
-                                `${log.quantity}x ${formatCurrency(log.cost, log.currency as CurrencyCode)}`}
-                            </Text>
-                            </View>
-                          </View>
-                        </Pressable>
-                      ))}
+                          </Pressable>
+                        );
+                      })}
                     </View>
                   </View>
                 ))}

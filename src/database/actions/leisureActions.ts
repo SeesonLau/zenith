@@ -1,23 +1,27 @@
-// src/database/actions/leisureActions.ts
+// src/database/actions/leisureActions.ts (COMPLETE FIX)
 import { database } from '../index';
 import LeisureLog from '../models/LeisureLog';
+import { getDeviceId } from '@/src/lib/supabase';
 
 export async function startLeisureTimer(
-  type: 'Manga' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Real' | 'AV',
+  type: 'Manga' | 'Mangah' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Real' | 'AV',
   title?: string,
   notes?: string
 ) {
-  const leisureLogsCollection = database.get<LeisureLog>('leisure_logs');
+  const deviceId = await getDeviceId();
+  
+  return await database.write(async () => {
+    const leisureLogsCollection = database.get<LeisureLog>('leisure_logs');
 
-  const newLog = await leisureLogsCollection.create((log) => {
-    log.type = type;
-    log.title = title;
-    log.notes = notes;
-    log.startedAt = new Date();
-    log.isSynced = false;
+    return await leisureLogsCollection.create((log) => {
+      log.type = type;
+      log.title = title;
+      log.notes = notes;
+      log.startedAt = new Date();
+      log.isSynced = false;
+      log.deviceId = deviceId;
+    });
   });
-
-  return newLog;
 }
 
 export async function stopLeisureTimer(logId: string) {

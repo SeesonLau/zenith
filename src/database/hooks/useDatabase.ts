@@ -1,4 +1,4 @@
-// src/database/hooks/useDatabase.ts
+// src/database/hooks/useDatabase.ts (ADD IMPORT AND FIX HOOK)
 import { useEffect, useState } from 'react';
 import { database } from '../index';
 import { Q } from '@nozbe/watermelondb';
@@ -6,22 +6,25 @@ import type HabitLog from '../models/HabitLog';
 import type FinanceLog from '../models/FinanceLog';
 import type DiaryEntry from '../models/DiaryEntry';
 import type LeisureLog from '../models/LeisureLog';
+import type DiaryImage from '../models/DiaryImage';  // ADDED: Import DiaryImage
 
-// Hook to get all running habit timers
-export function useRunningHabitTimers() {
-  const [timers, setTimers] = useState<HabitLog[]>([]);
+// ... existing hooks ...
+
+// FIXED: Add this hook at the end of the file
+export function useDiaryImages(entryId: string) {
+  const [images, setImages] = useState<DiaryImage[]>([]);
 
   useEffect(() => {
     const subscription = database
-      .get<HabitLog>('habit_logs')
-      .query(Q.where('ended_at', null))
+      .get<DiaryImage>('diary_images')
+      .query(Q.where('diary_entry_id', entryId))
       .observe()
-      .subscribe(setTimers);
+      .subscribe(setImages);
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [entryId]);
 
-  return timers;
+  return images;
 }
 
 // Hook to get all completed habit logs
@@ -42,6 +45,23 @@ export function useCompletedHabitLogs() {
   }, []);
 
   return logs;
+}
+
+// Hook to get all running habit timers
+export function useRunningHabitTimers() {
+  const [timers, setTimers] = useState<HabitLog[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<HabitLog>('habit_logs')
+      .query(Q.where('ended_at', null))
+      .observe()
+      .subscribe(setTimers);
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return timers;
 }
 
 // Hook to get all running leisure timers
@@ -102,6 +122,44 @@ export function useDiaryEntries(year: number, month: number) {
 
     return () => subscription.unsubscribe();
   }, [year, month]);
+
+  return entries;
+}
+
+// Hook to get completed leisure logs
+export function useCompletedLeisureLogs(limit: number = 20) {
+  const [logs, setLogs] = useState<LeisureLog[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<LeisureLog>('leisure_logs')
+      .query(
+        Q.where('ended_at', Q.notEq(null)),
+        Q.sortBy('started_at', Q.desc),
+        Q.take(limit)
+      )
+      .observe()
+      .subscribe(setLogs);
+
+    return () => subscription.unsubscribe();
+  }, [limit]);
+
+  return logs;
+}
+
+// Hook to get all diary entries (without date filter)
+export function useAllDiaryEntries() {
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<DiaryEntry>('diary_entries')
+      .query(Q.sortBy('entry_date', Q.desc))
+      .observe()
+      .subscribe(setEntries);
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return entries;
 }

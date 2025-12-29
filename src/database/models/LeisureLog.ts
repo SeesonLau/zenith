@@ -5,7 +5,7 @@ import { field, date, readonly, writer } from '@nozbe/watermelondb/decorators';
 export default class LeisureLog extends Model {
   static table = 'leisure_logs';
 
-  @field('type') type!: 'Manga' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Real' | 'AV';
+  @field('type') type!: 'Manga' | 'Mangah' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Real' | 'AV';
   @field('title') title?: string;
   @date('started_at') startedAt!: Date;
   @date('ended_at') endedAt?: Date;
@@ -14,7 +14,7 @@ export default class LeisureLog extends Model {
   @field('is_synced') isSynced!: boolean;
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
-
+@field('device_id') deviceId?: string;
   @writer async stopTimer() {
     if (this.endedAt) {
       throw new Error('Timer already stopped');
