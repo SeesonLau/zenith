@@ -26,6 +26,6 @@
 usbipd list
 usbipd attach --wsl --busid <BUSID>
 
-npx expo start --tunnel
+npx expo start --tunnel --clear --reset-cache
 
 */

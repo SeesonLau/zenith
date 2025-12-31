@@ -1,28 +1,43 @@
-// app/(tabs)/diary.tsx (FIXED - Add type casting for mood)
-import React, { useState } from 'react';
-import { View, Text, ScrollView, RefreshControl } from 'react-native';
+// app/(tabs)/diary.tsx - INLINE STYLES VERSION
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDiaryEntries } from '@/src/database/hooks/useDatabase';
+import { addMonths } from '@/src/utils/dateHelpers';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import DiaryCard from '@/src/components/diary/DiaryCard';
-import type { MoodType } from '@/src/types/database.types'; // ADDED: Import MoodType
+import type { MoodType } from '@/src/types/database.types';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function DiaryScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const entries = useDiaryEntries(selectedDate.getFullYear(), selectedDate.getMonth());
+
+  useEffect(() => {
+    console.log('📔 DIARY DEBUG: Entries Count:', entries.length);
+  }, [entries]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 500);
   };
 
-  // Calculate stats
+  const handlePreviousMonth = () => {
+    setSelectedDate(addMonths(selectedDate, -1));
+  };
+
+  const handleNextMonth = () => {
+    setSelectedDate(addMonths(selectedDate, 1));
+  };
+
   const totalWords = entries.reduce((sum, entry) => sum + entry.wordCount, 0);
   const thisWeekEntries = entries.filter((entry) => {
     const weekAgo = new Date();
@@ -30,40 +45,101 @@ export default function DiaryScreen() {
     return entry.entryDate >= weekAgo;
   });
 
+  const currentStreak = thisWeekEntries.length;
+  const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
   return (
-    <View className="flex-1 bg-slate-900">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0ea5e9" />
         }
       >
-        <View className="p-6">
+        <View style={{ padding: 24 }}>
           {/* Header */}
-          <View className="mb-6 mt-4">
-            <Text className="text-3xl font-bold text-white mb-2">My Diary</Text>
-            <Text className="text-slate-400 text-base">
-              Document your thoughts and memories
+          <View style={{ marginBottom: 24, marginTop: 16 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 8 }}>
+              My Diary
             </Text>
           </View>
 
+          {/* Month Navigator */}
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 16,
+            padding: 16,
+            marginBottom: 16
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Pressable
+                onPress={handlePreviousMonth}
+                style={{ backgroundColor: colors.bgSurfaceHover, borderRadius: 8, padding: 12 }}
+              >
+                <Ionicons name="chevron-back" size={20} color="#64748b" />
+              </Pressable>
+
+              <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
+                {monthName}
+              </Text>
+
+              <Pressable
+                onPress={handleNextMonth}
+                style={{ backgroundColor: colors.bgSurfaceHover, borderRadius: 8, padding: 12 }}
+              >
+                <Ionicons name="chevron-forward" size={20} color="#64748b" />
+              </Pressable>
+            </View>
+          </View>
+
           {/* Quick Stats */}
-          <View className="card p-5 mb-6">
-            <Text className="text-white font-semibold text-lg mb-3">This Month</Text>
-            <View className="flex-row justify-around">
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Entries</Text>
-                <Text className="text-white text-2xl font-bold">{entries.length}</Text>
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 24
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 18 }}>
+                This Month
+              </Text>
+              {currentStreak > 0 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0ea5e920', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+                  <Ionicons name="flame" size={14} color="#0ea5e9" />
+                  <Text style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
+                    {currentStreak} day streak
+                  </Text>
+                </View>
+              )}
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                  Entries
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+                  {entries.length}
+                </Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">This Week</Text>
-                <Text className="text-white text-2xl font-bold">{thisWeekEntries.length}</Text>
+              <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                  This Week
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+                  {thisWeekEntries.length}
+                </Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Total Words</Text>
-                <Text className="text-white text-2xl font-bold">
+              <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                  Total Words
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
                   {(totalWords / 1000).toFixed(1)}k
                 </Text>
               </View>
@@ -71,11 +147,22 @@ export default function DiaryScreen() {
           </View>
 
           {/* Entries List */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-semibold text-white">Recent Entries</Text>
-              <View className="bg-slate-800 px-3 py-1 rounded-full">
-                <Text className="text-slate-300 font-semibold">{entries.length}</Text>
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+                Recent Entries
+              </Text>
+              <View style={{
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 12
+              }}>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 14 }}>
+                  {entries.length}
+                </Text>
               </View>
             </View>
 
@@ -94,7 +181,7 @@ export default function DiaryScreen() {
                 }
               />
             ) : (
-              <View>
+              <View style={{ gap: 12 }}>
                 {entries.map((entry) => (
                   <DiaryCard
                     key={entry.id}
@@ -104,7 +191,7 @@ export default function DiaryScreen() {
                     entryDate={entry.entryDate}
                     mood={entry.mood as MoodType | undefined}  
                     wordCount={entry.wordCount}
-                    imageCount={0} // Will implement image count later
+                    imageCount={0}
                     onPress={() => router.push(`/diary/${entry.id}`)}
                   />
                 ))}
@@ -123,26 +210,8 @@ export default function DiaryScreen() {
             />
           )}
 
-          {/* Info Card */}
-          <View className="bg-sky-900/20 border border-sky-700 rounded-xl p-4 mt-6">
-            <View className="flex-row items-start">
-              <Ionicons
-                name="information-circle"
-                size={20}
-                color="#0ea5e9"
-                style={{ marginRight: 8, marginTop: 2 }}
-              />
-              <View className="flex-1">
-                <Text className="text-sky-300 text-sm font-semibold mb-1">
-                  Daily Journaling
-                </Text>
-                <Text className="text-sky-200 text-xs">
-                  Regular journaling can improve mental clarity, reduce stress, and help you track
-                  personal growth over time.
-                </Text>
-              </View>
-            </View>
-          </View>
+          {/* Bottom Padding for FAB */}
+          <View style={{ height: 128 }} />
         </View>
       </ScrollView>
 
@@ -150,8 +219,8 @@ export default function DiaryScreen() {
       <FloatingActionButton
         onPress={() => router.push('/diary/new')}
         icon="create"
-        color="bg-sky-500"
+        color="bg-sky-600"
       />
-    </View>
+    </SafeAreaView>
   );
 }

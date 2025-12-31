@@ -134,62 +134,78 @@ export const FINANCE_CONFIG = {
 // ==========================================
 export const LEISURE_CONFIG = {
   types: {
-    Manga: {
+      Manga: {
       color: 'bg-purple-500',
       textColor: 'text-purple-400',
       borderColor: 'border-purple-500',
       bgColor: 'bg-purple-900/20',
-      icon: 'book' as const,
-      emoji: '📚',
+      icon: 'book-open' as const,
+      emoji: '📘',
     },
-    Mangah: {                          
+    
+    Mangah: {
       color: 'bg-green-500',
       textColor: 'text-green-400',
       borderColor: 'border-green-500',
       bgColor: 'bg-green-900/20',
-      icon: 'book' as const,
+      icon: 'book-open' as const,
       emoji: '📗',
     },
+
     Manhwah: {
       color: 'bg-blue-500',
       textColor: 'text-blue-400',
       borderColor: 'border-blue-500',
       bgColor: 'bg-blue-900/20',
-      icon: 'book' as const,
-      emoji: '📘',
+      icon: 'book-open' as const,
+      emoji: '📙',
     },
+
     Manhuah: {
       color: 'bg-red-500',
       textColor: 'text-red-400',
       borderColor: 'border-red-500',
       bgColor: 'bg-red-900/20',
-      icon: 'book' as const,
+      icon: 'book-open' as const,
       emoji: '📕',
     },
+
     Fanart: {
       color: 'bg-pink-500',
       textColor: 'text-pink-400',
       borderColor: 'border-pink-500',
       bgColor: 'bg-pink-900/20',
-      icon: 'brush' as const,
+      icon: 'palette' as const,
       emoji: '🎨',
     },
-    Real: {
+
+    Acquainted: {
       color: 'bg-orange-500',
       textColor: 'text-orange-400',
       borderColor: 'border-orange-500',
       bgColor: 'bg-orange-900/20',
-      icon: 'videocam' as const,
-      emoji: '🎬',
+      icon: 'people' as const,
+      emoji: '🙂',
     },
-    AV: {
+
+    Stranger: {
+      color: 'bg-orange-500',
+      textColor: 'text-orange-400',
+      borderColor: 'border-orange-500',
+      bgColor: 'bg-orange-900/20',
+      icon: 'person-outline' as const,
+      emoji: '👤',
+    },
+
+    Sensual: {
       color: 'bg-red-600',
       textColor: 'text-red-400',
       borderColor: 'border-red-600',
       bgColor: 'bg-red-900/30',
-      icon: 'film' as const,
-      emoji: '🔞',
+      icon: 'heart' as const,
+      emoji: '💖',
     },
+
   } as const satisfies Record<LeisureType, {
     color: string;
     textColor: string;

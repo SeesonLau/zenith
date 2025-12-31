@@ -1,9 +1,12 @@
-//app/(tabs)/_layout.tsx
+// app/(tabs)/_layout.tsx (ANDROID SAFE AREAS)
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -11,6 +14,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#0f172a', // Slate-900
           borderTopColor: '#1e293b',  // Slate-800
+          // CRITICAL: Add bottom padding for Android navigation bar
+          paddingBottom: insets.bottom,
+          height: 56 + insets.bottom, // Standard tab height + safe area
         },
         tabBarActiveTintColor: '#38bdf8', // Sky-400
         tabBarInactiveTintColor: '#64748b', // Slate-500

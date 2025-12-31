@@ -1,8 +1,8 @@
-// app/(tabs)/leisure.tsx
+// app/(tabs)/leisure.tsx - INLINE STYLES VERSION
 import React, { useState } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRunningLeisureTimers } from '@/src/database/hooks/useDatabase';
 import { stopLeisureTimer } from '@/src/database/actions/leisureActions';
 import { database } from '@/src/database';
@@ -13,14 +13,15 @@ import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import LeisureTimerCard from '@/src/components/leisure/LeisureTimerCard';
 import CompletedLeisureCard from '@/src/components/leisure/CompletedLeisureCard';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function LeisureScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const runningTimers = useRunningLeisureTimers();
   const [refreshing, setRefreshing] = useState(false);
   const [completedSessions, setCompletedSessions] = useState<LeisureLog[]>([]);
 
-  // Load completed sessions
   React.useEffect(() => {
     const subscription = database
       .get<LeisureLog>('leisure_logs')
@@ -48,7 +49,6 @@ export default function LeisureScreen() {
     setTimeout(() => setRefreshing(false), 500);
   };
 
-  // Calculate stats
   const totalDuration = completedSessions.reduce((sum, log) => sum + (log.duration || 0), 0);
   const todaysSessions = completedSessions.filter((log) => {
     const today = new Date();
@@ -60,66 +60,89 @@ export default function LeisureScreen() {
   });
 
   return (
-    <View className="flex-1 bg-slate-900">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0ea5e9" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ec4899" />
         }
       >
-        <View className="p-6">
+        <View style={{ padding: 24 }}>
           {/* Header */}
-          <View className="mb-6 mt-4">
-            <Text className="text-3xl font-bold text-white mb-2">Leisure Tracker</Text>
-            <Text className="text-slate-400 text-base">
-              Track your media consumption time
+          <View style={{ marginBottom: 24, marginTop: 16 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 8 }}>
+              Leisure Tracker
             </Text>
           </View>
 
           {/* Active Sessions */}
           {runningTimers.length > 0 && (
-            <View className="mb-6">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-semibold text-white">Active Session</Text>
-                <View className="bg-slate-800 px-3 py-1 rounded-full">
-                  <Text className="text-slate-300 font-semibold">{runningTimers.length}</Text>
+            <View style={{ marginBottom: 24 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ width: 8, height: 8, backgroundColor: '#ec4899', borderRadius: 4, marginRight: 8 }} />
+                  <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+                    Active Session
+                  </Text>
+                </View>
+                <View style={{ backgroundColor: '#ec489920', borderWidth: 1, borderColor: '#ec489980', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+                  <Text style={{ color: '#ec4899', fontWeight: 'bold', fontSize: 14 }}>{runningTimers.length}</Text>
                 </View>
               </View>
 
-              {runningTimers.map((timer) => (
-                <LeisureTimerCard
-                  key={timer.id}
-                  id={timer.id}
-                  type={timer.type}
-                  title={timer.title}
-                  notes={timer.notes}
-                  startedAt={timer.startedAt}
-                  onStop={handleStopTimer}
-                  onPress={() => router.push(`/leisure/${timer.id}`)}
-                />
-              ))}
+              <View style={{ gap: 12 }}>
+                {runningTimers.map((timer) => (
+                  <LeisureTimerCard
+                    key={timer.id}
+                    id={timer.id}
+                    type={timer.type}
+                    title={timer.title}
+                    notes={timer.notes}
+                    startedAt={timer.startedAt}
+                    onStop={handleStopTimer}
+                    onPress={() => router.push(`/leisure/${timer.id}`)}
+                  />
+                ))}
+              </View>
             </View>
           )}
 
           {/* Quick Stats */}
-          <View className="card p-5 mb-6">
-            <Text className="text-white font-semibold text-lg mb-3">Today's Stats</Text>
-            <View className="flex-row justify-around">
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Sessions</Text>
-                <Text className="text-white text-2xl font-bold">{todaysSessions.length}</Text>
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 24
+          }}>
+            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 18, marginBottom: 12 }}>
+              Today's Stats
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                  Sessions
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+                  {todaysSessions.length}
+                </Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Total Time</Text>
-                <Text className="text-white text-2xl font-bold">
+              <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                  Total Time
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
                   {Math.floor(todaysSessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60)}m
                 </Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">All Time</Text>
-                <Text className="text-white text-2xl font-bold">
+              <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
+              <View style={{ alignItems: 'center', flex: 1 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                  All Time
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
                   {Math.floor(totalDuration / 3600)}h
                 </Text>
               </View>
@@ -127,11 +150,22 @@ export default function LeisureScreen() {
           </View>
 
           {/* Recent Sessions */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-semibold text-white">Recent Sessions</Text>
-              <View className="bg-slate-800 px-3 py-1 rounded-full">
-                <Text className="text-slate-300 font-semibold">{completedSessions.length}</Text>
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+                Recent Sessions
+              </Text>
+              <View style={{
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+                borderRadius: 12
+              }}>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 14 }}>
+                  {completedSessions.length}
+                </Text>
               </View>
             </View>
 
@@ -150,7 +184,7 @@ export default function LeisureScreen() {
                 }
               />
             ) : (
-              <View>
+              <View style={{ gap: 8 }}>
                 {completedSessions.map((session) => (
                   <CompletedLeisureCard
                     key={session.id}
@@ -166,27 +200,6 @@ export default function LeisureScreen() {
               </View>
             )}
           </View>
-
-          {/* Info Card */}
-          <View className="bg-sky-900/20 border border-sky-700 rounded-xl p-4">
-            <View className="flex-row items-start">
-              <Ionicons
-                name="information-circle"
-                size={20}
-                color="#0ea5e9"
-                style={{ marginRight: 8, marginTop: 2 }}
-              />
-              <View className="flex-1">
-                <Text className="text-sky-300 text-sm font-semibold mb-1">
-                  Leisure Tracking
-                </Text>
-                <Text className="text-sky-200 text-xs">
-                  Monitor your media consumption habits. Track what you watch, read, or view to
-                  better understand your leisure patterns.
-                </Text>
-              </View>
-            </View>
-          </View>
         </View>
       </ScrollView>
 
@@ -194,8 +207,8 @@ export default function LeisureScreen() {
       <FloatingActionButton
         onPress={() => router.push('/leisure/start')}
         icon="play"
-        color="bg-sky-500"
+        color="bg-pink-600"
       />
-    </View>
+    </SafeAreaView>
   );
 }

@@ -1,6 +1,4 @@
-// ==========================================
-// src/components/common/Button.tsx
-// ==========================================
+// src/components/common/Button.tsx (THEME-AWARE)
 import React from 'react';
 import { Pressable, Text, ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +20,10 @@ interface ButtonProps {
   className?: string;
 }
 
+/**
+ * Theme-aware button component
+ * Uses semantic colors that adapt to Slate/White mode
+ */
 export default function Button({
   onPress,
   title,
@@ -36,10 +38,18 @@ export default function Button({
 }: ButtonProps) {
   const variantStyles = {
     primary: 'bg-sky-500 active:bg-sky-600',
-    secondary: 'bg-slate-700 active:bg-slate-600',
+    secondary: 'bg-surface active:bg-surface-hover border border-surface-border',
     success: 'bg-green-500 active:bg-green-600',
     danger: 'bg-red-500 active:bg-red-600',
-    ghost: 'bg-transparent active:bg-slate-800',
+    ghost: 'bg-transparent active:bg-surface-hover',
+  };
+
+  const textVariantStyles = {
+    primary: 'text-white',
+    secondary: 'text-primary',
+    success: 'text-white',
+    danger: 'text-white',
+    ghost: 'text-primary',
   };
 
   const sizeStyles = {
@@ -52,6 +62,12 @@ export default function Button({
     sm: 'text-sm',
     md: 'text-base',
     lg: 'text-lg',
+  };
+
+  const iconSizes = {
+    sm: 16,
+    md: 20,
+    lg: 24,
   };
 
   const isDisabled = disabled || loading;
@@ -70,17 +86,30 @@ export default function Button({
       `}
     >
       {loading ? (
-        <ActivityIndicator size="small" color="white" />
+        <ActivityIndicator 
+          size="small" 
+          color={variant === 'secondary' || variant === 'ghost' ? '#38bdf8' : 'white'} 
+        />
       ) : (
         <>
           {icon && iconPosition === 'left' && (
-            <Ionicons name={icon as any} size={20} color="white" style={{ marginRight: 8 }} />
+            <Ionicons 
+              name={icon as any} 
+              size={iconSizes[size]} 
+              color={variant === 'secondary' || variant === 'ghost' ? '#38bdf8' : 'white'} 
+              style={{ marginRight: 8 }} 
+            />
           )}
-          <Text className={`text-white font-semibold ${textSizeStyles[size]}`}>
+          <Text className={`${textVariantStyles[variant]} font-semibold ${textSizeStyles[size]}`}>
             {title}
           </Text>
           {icon && iconPosition === 'right' && (
-            <Ionicons name={icon as any} size={20} color="white" style={{ marginLeft: 8 }} />
+            <Ionicons 
+              name={icon as any} 
+              size={iconSizes[size]} 
+              color={variant === 'secondary' || variant === 'ghost' ? '#38bdf8' : 'white'} 
+              style={{ marginLeft: 8 }} 
+            />
           )}
         </>
       )}

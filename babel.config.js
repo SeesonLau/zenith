@@ -1,4 +1,4 @@
-// babel.config.js
+//babel.config.js
 module.exports = function (api) {
   api.cache(true);
   return {
@@ -12,3 +12,5 @@ module.exports = function (api) {
     ],
   };
 };
+
+// This is correct, since nativewind/babel is not a plugin

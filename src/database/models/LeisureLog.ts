@@ -5,7 +5,7 @@ import { field, date, readonly, writer } from '@nozbe/watermelondb/decorators';
 export default class LeisureLog extends Model {
   static table = 'leisure_logs';
 
-  @field('type') type!: 'Manga' | 'Mangah' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Real' | 'AV';
+  @field('type') type!: 'Manga' | 'Mangah' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Acquainted' | 'Stranger' | 'Sensual';
   @field('title') title?: string;
   @date('started_at') startedAt!: Date;
   @date('ended_at') endedAt?: Date;

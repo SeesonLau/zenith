@@ -1,4 +1,4 @@
-// src/components/diary/ImageGallery.tsx (IMPROVED with limits and compression)
+// src/components/diary/ImageGallery.tsx (FINAL FIX - NO aspect property at all)
 import React from 'react';
 import { View, Text, Image, Pressable, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,10 +37,12 @@ export default function ImageGallery({
       return;
     }
 
+    // FINAL FIX: Completely removed aspect property to avoid NativeWind parser
+    // Images will crop to whatever aspect ratio is needed
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // Square aspect ratio
+      // aspect: [1, 1], // REMOVED - causes NativeWind parser error
       quality: 0.8,
     });
 

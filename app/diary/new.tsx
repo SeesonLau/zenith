@@ -1,4 +1,4 @@
-// app/diary/new.tsx (FINAL VERSION WITH UPLOAD)
+// app/diary/new.tsx (POLISHED & THEME-AWARE)
 import React, { useState } from 'react';
 import {
   View,
@@ -39,7 +39,6 @@ export default function NewDiaryEntryScreen() {
     setIsLoading(true);
 
     try {
-      // Create entry with images - they'll upload in background
       await createDiaryEntry(
         {
           title: title.trim() || undefined,
@@ -69,16 +68,16 @@ export default function NewDiaryEntryScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-slate-900"
+      className="flex-1 bg-primary"
     >
       <View className="flex-1">
         {/* Header */}
-        <View className="p-6 pb-4 border-b border-slate-700">
+        <View className="p-6 pb-4 border-b border-surface-border bg-surface">
           <View className="flex-row items-center justify-between">
             <Pressable onPress={() => router.back()}>
-              <Ionicons name="close" size={28} color="white" />
+              <Ionicons name="close" size={28} color="#64748b" />
             </Pressable>
-            <Text className="text-xl font-bold text-white">New Entry</Text>
+            <Text className="text-xl font-bold text-primary">New Entry</Text>
             <View className="w-7" />
           </View>
         </View>
@@ -89,7 +88,7 @@ export default function NewDiaryEntryScreen() {
             <MoodPicker selected={mood} onSelect={setMood} />
 
             {/* Title */}
-            <Text className="text-white font-semibold mb-2">Title (Optional)</Text>
+            <Text className="text-primary font-semibold mb-2">Title (Optional)</Text>
             <TextInput
               placeholder="Give your entry a title..."
               placeholderTextColor="#64748b"
@@ -99,7 +98,7 @@ export default function NewDiaryEntryScreen() {
             />
 
             {/* Content */}
-            <Text className="text-white font-semibold mb-2">
+            <Text className="text-primary font-semibold mb-2">
               What's on your mind? ({wordCount} words)
             </Text>
             <RichTextEditor
@@ -122,7 +121,7 @@ export default function NewDiaryEntryScreen() {
             </View>
 
             {/* Info Card */}
-            <View className="bg-sky-900/20 border border-sky-700 rounded-lg p-3 mt-4 mb-6">
+            <View className="gradient-blue border border-sky-600/50 rounded-lg p-3 mt-4 mb-6">
               <View className="flex-row items-center">
                 <Ionicons name="cloud-upload-outline" size={16} color="#0ea5e9" />
                 <Text className="text-sky-300 text-xs ml-2">

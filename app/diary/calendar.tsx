@@ -1,15 +1,19 @@
-// app/diary/calendar.tsx
+// app/diary/calendar.tsx 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDiaryEntries } from '@/src/database/hooks/useDatabase';
-import { formatDate, addMonths } from '@/src/utils/dateHelpers';
+import { addMonths } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CELL_SIZE = (SCREEN_WIDTH - 48 - 8) / 7; // (screen - padding - gaps) / 7 days
 
 export default function DiaryCalendarScreen() {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date(2024, 11, 1)); // December 2024
   
   const entries = useDiaryEntries(selectedDate.getFullYear(), selectedDate.getMonth());
 
@@ -34,155 +38,145 @@ export default function DiaryCalendarScreen() {
     entryMap.set(dateKey, (entryMap.get(dateKey) || 0) + 1);
   });
 
-  return (
-    <ScrollView className="flex-1 bg-slate-900">
-      <View className="p-6">
-        {/* Header */}
-        <View className="flex-row items-center mb-6 mt-4">
-          <Pressable onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={28} color="white" />
-          </Pressable>
-          <Text className="text-2xl font-bold text-white flex-1">Calendar View</Text>
-        </View>
+  const monthYear = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-        {/* Month Navigator */}
-        <View className="card p-4 mb-6">
-          <View className="flex-row items-center justify-between">
+  return (
+    <SafeAreaView edges={['top']} className="flex-1 bg-primary">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="p-6">
+          {/* Header */}
+          <View className="flex-row items-center mb-6 mt-4">
+            <Pressable onPress={() => router.back()} className="mr-4">
+              <Ionicons name="arrow-back" size={28} color="#64748b" />
+            </Pressable>
+            <Text className="text-2xl font-bold text-primary flex-1">Calendar</Text>
+          </View>
+
+          {/* Month Navigator */}
+          <View className="flex-row items-center justify-between mb-6">
             <Pressable
               onPress={handlePreviousMonth}
-              className="bg-slate-700 rounded-lg p-3"
+              className="bg-surface-hover rounded-full w-10 h-10 items-center justify-center"
             >
-              <Ionicons name="chevron-back" size={20} color="white" />
+              <Ionicons name="chevron-back" size={20} color="#38bdf8" />
             </Pressable>
 
-            <Text className="text-white text-xl font-bold">
-              {formatDate(selectedDate, 'long').split(',')[0]}
-            </Text>
+            <Text className="text-primary text-xl font-bold">{monthYear}</Text>
 
             <Pressable
               onPress={handleNextMonth}
-              className="bg-slate-700 rounded-lg p-3"
+              className="bg-surface-hover rounded-full w-10 h-10 items-center justify-center"
             >
-              <Ionicons name="chevron-forward" size={20} color="white" />
+              <Ionicons name="chevron-forward" size={20} color="#38bdf8" />
             </Pressable>
           </View>
-        </View>
 
-        {/* Calendar Grid */}
-        <View className="card p-4 mb-6">
-          {/* Day Headers */}
-          <View className="flex-row mb-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <View key={day} className="flex-1 items-center">
-                <Text className="text-slate-500 text-xs font-semibold">{day}</Text>
-              </View>
-            ))}
-          </View>
+          {/* Calendar Grid */}
+          <View className="card p-4 mb-4">
+            <View className="flex-row flex-wrap">
+              {/* Empty cells for days before month starts */}
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <View 
+                  key={`empty-${i}`} 
+                  style={{ width: CELL_SIZE, height: CELL_SIZE, padding: 4 }}
+                />
+              ))}
 
-          {/* Calendar Days */}
-          <View className="flex-row flex-wrap">
-            {/* Empty cells for days before month starts */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <View key={`empty-${i}`} className="w-[14.28%] aspect-square p-1" />
-            ))}
+              {/* Actual days */}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const date = new Date(year, month, day);
+                const dateKey = date.toDateString();
+                const entryCount = entryMap.get(dateKey) || 0;
+                const isToday = dateKey === new Date().toDateString();
 
-            {/* Actual days */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const date = new Date(year, month, day);
-              const dateKey = date.toDateString();
-              const entryCount = entryMap.get(dateKey) || 0;
-              const isToday = dateKey === new Date().toDateString();
-
-              return (
-                <Pressable
-                  key={day}
-                  onPress={() => {
-                    // Navigate to entries for this day if any exist
-                    if (entryCount > 0) {
-                      // Could implement day-specific view
-                      console.log(`Selected date: ${dateKey}`);
-                    }
-                  }}
-                  className="w-[14.28%] aspect-square p-1"
-                >
-                  <View
-                    className={`
-                      flex-1 items-center justify-center rounded-lg
-                      ${isToday ? 'bg-sky-500' : entryCount > 0 ? 'bg-green-500/30' : 'bg-slate-800'}
-                    `}
+                return (
+                  <Pressable
+                    key={day}
+                    onPress={() => {
+                      if (entryCount > 0) {
+                        console.log(`Selected date: ${dateKey}`);
+                      }
+                    }}
+                    style={{ width: CELL_SIZE, height: CELL_SIZE, padding: 4 }}
                   >
-                    <Text
+                    <View
                       className={`
-                        font-semibold
-                        ${isToday ? 'text-white' : entryCount > 0 ? 'text-green-400' : 'text-slate-400'}
+                        flex-1 items-center justify-center rounded-lg
+                        ${isToday ? 'bg-sky-500' : entryCount > 0 ? 'bg-green-500/30 border border-green-500' : 'bg-surface'}
                       `}
                     >
-                      {day}
-                    </Text>
-                    {entryCount > 0 && (
-                      <View className="absolute bottom-1">
-                        <View className="bg-green-400 rounded-full w-1 h-1" />
-                      </View>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Legend */}
-        <View className="card p-4 mb-6">
-          <Text className="text-white font-semibold mb-3">Legend</Text>
-          <View className="space-y-2">
-            <View className="flex-row items-center">
-              <View className="bg-sky-500 w-6 h-6 rounded mr-3" />
-              <Text className="text-slate-300 text-sm">Today</Text>
-            </View>
-            <View className="flex-row items-center">
-              <View className="bg-green-500/30 w-6 h-6 rounded mr-3" />
-              <Text className="text-slate-300 text-sm">Has entries</Text>
-            </View>
-            <View className="flex-row items-center">
-              <View className="bg-slate-800 w-6 h-6 rounded mr-3" />
-              <Text className="text-slate-300 text-sm">No entries</Text>
+                      <Text
+                        className={`
+                          font-bold text-sm
+                          ${isToday ? 'text-white' : entryCount > 0 ? 'text-green-400' : 'text-secondary'}
+                        `}
+                      >
+                        {day}
+                      </Text>
+                      {entryCount > 1 && (
+                        <Text className="text-green-400 text-[10px] font-bold">
+                          {entryCount}
+                        </Text>
+                      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
-        </View>
 
-        {/* Stats */}
-        <View className="card p-4 mb-6">
-          <Text className="text-white font-semibold mb-3">This Month</Text>
-          <View className="flex-row justify-around">
-            <View className="items-center">
-              <Text className="text-slate-400 text-xs mb-1">Entries</Text>
-              <Text className="text-white text-2xl font-bold">{entries.length}</Text>
+          {/* Legend - COMPACT */}
+          <View className="flex-row items-center justify-around mb-6 px-4">
+            <View className="flex-row items-center">
+              <View className="bg-sky-500 w-5 h-5 rounded mr-2" />
+              <Text className="text-secondary text-xs">Today</Text>
             </View>
-            <View className="w-px bg-slate-700" />
-            <View className="items-center">
-              <Text className="text-slate-400 text-xs mb-1">Days Active</Text>
-              <Text className="text-white text-2xl font-bold">{entryMap.size}</Text>
+            <View className="flex-row items-center">
+              <View className="bg-green-500/30 border border-green-500 w-5 h-5 rounded mr-2" />
+              <Text className="text-secondary text-xs">Has entries</Text>
             </View>
-            <View className="w-px bg-slate-700" />
-            <View className="items-center">
-              <Text className="text-slate-400 text-xs mb-1">Streak</Text>
-              <Text className="text-white text-2xl font-bold">
-                {Math.floor((entryMap.size / daysInMonth) * 100)}%
-              </Text>
+            <View className="flex-row items-center">
+              <View className="bg-surface w-5 h-5 rounded mr-2" />
+              <Text className="text-secondary text-xs">Empty</Text>
             </View>
           </View>
-        </View>
 
-        {/* New Entry Button */}
-        <Button
-          onPress={() => router.push('/diary/new')}
-          title="Write New Entry"
-          icon="create"
-          variant="primary"
-          fullWidth
-        />
-      </View>
-    </ScrollView>
+          {/* Stats - COMPACT */}
+          <View className="card p-4 mb-6">
+            <View className="flex-row justify-around">
+              <View className="items-center">
+                <Text className="text-primary text-2xl font-bold">{entries.length}</Text>
+                <Text className="text-secondary text-xs mt-1">Entries</Text>
+              </View>
+              <View className="w-px bg-surface-border" />
+              <View className="items-center">
+                <Text className="text-primary text-2xl font-bold">{entryMap.size}</Text>
+                <Text className="text-secondary text-xs mt-1">Active Days</Text>
+              </View>
+              <View className="w-px bg-surface-border" />
+              <View className="items-center">
+                <Text className="text-primary text-2xl font-bold">
+                  {Math.floor((entryMap.size / daysInMonth) * 100)}%
+                </Text>
+                <Text className="text-secondary text-xs mt-1">Completion</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* New Entry Button */}
+          <Button
+            onPress={() => router.push('/diary/new')}
+            title="Write New Entry"
+            icon="create"
+            variant="primary"
+            fullWidth
+          />
+
+          {/* Bottom Padding for FAB */}
+          <View className="h-24" />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

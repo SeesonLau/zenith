@@ -1,4 +1,4 @@
-// src/components/diary/DiaryCard.tsx (IMPROVED - Fixed Height & Truncation)
+// src/components/diary/DiaryCard.tsx (FIXED - Theme-Aware)
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,24 +28,23 @@ export default function DiaryCard({
   onPress,
 }: DiaryCardProps) {
   const moodConfig = mood ? getMoodConfig(mood) : null;
-  // IMPROVED: Fixed character limit for consistent card size
   const excerpt = content.length > 100 ? `${content.substring(0, 100)}...` : content;
 
   return (
     <Pressable
       onPress={onPress}
-      className="card p-4 mb-3 active:bg-slate-700"
+      className="card p-4 mb-3 active:opacity-90"
     >
       {/* Header */}
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-3">
           {title && (
-            <Text className="text-white font-bold text-lg mb-1" numberOfLines={1}>
+            <Text className="text-primary font-bold text-lg mb-1" numberOfLines={1}>
               {title}
             </Text>
           )}
           <View className="flex-row items-center flex-wrap gap-2">
-            <Text className="text-slate-400 text-xs">
+            <Text className="text-secondary text-xs">
               {formatDate(entryDate, 'medium')} • {formatTime(entryDate)}
             </Text>
             {moodConfig && (
@@ -66,24 +65,24 @@ export default function DiaryCard({
         )}
       </View>
 
-      {/* Content Preview - IMPROVED: Fixed 3 lines */}
+      {/* Content Preview - Fixed 3 lines */}
       <View style={{ height: 60 }}>
-        <Text className="text-slate-300 text-sm leading-5" numberOfLines={3}>
+        <Text className="text-secondary text-sm leading-5" numberOfLines={3}>
           {excerpt}
         </Text>
       </View>
 
       {/* Footer */}
-      <View className="flex-row items-center justify-between pt-3 border-t border-slate-700 mt-2">
+      <View className="flex-row items-center justify-between pt-3 border-t border-surface-border mt-2">
         <View className="flex-row items-center gap-4">
           <View className="flex-row items-center">
             <Ionicons name="document-text-outline" size={14} color="#64748b" />
-            <Text className="text-slate-500 text-xs ml-1">{wordCount} words</Text>
+            <Text className="text-tertiary text-xs ml-1">{wordCount} words</Text>
           </View>
           {imageCount > 0 && (
             <View className="flex-row items-center">
               <Ionicons name="image-outline" size={14} color="#64748b" />
-              <Text className="text-slate-500 text-xs ml-1">{imageCount}</Text>
+              <Text className="text-tertiary text-xs ml-1">{imageCount}</Text>
             </View>
           )}
         </View>

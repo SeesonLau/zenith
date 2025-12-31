@@ -1,9 +1,10 @@
-// app/(tabs)/habits.tsx (UPDATED)
+// app/(tabs)/habits.tsx - INLINE STYLES VERSION
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useRunningHabitTimers } from '@/src/database/hooks/useDatabase';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRunningHabitTimers, useCompletedHabitLogs } from '@/src/database/hooks/useDatabase';
 import { stopHabitTimer } from '@/src/database/actions/habitActions';
 import { formatDurationHMS } from '@/src/utils/formatters';
 import { getRelativeTime } from '@/src/utils/dateHelpers';
@@ -12,17 +13,17 @@ import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import type { HabitCategory } from '@/src/types/database.types';
-import { useCompletedHabitLogs } from '@/src/database/hooks/useDatabase'; 
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function HabitsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const runningTimers = useRunningHabitTimers();
   const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
   const [refreshing, setRefreshing] = useState(false);
   const completedLogs = useCompletedHabitLogs();
   const recentLogs = completedLogs.slice(0, 5);
 
-  // Update elapsed times every second
   useEffect(() => {
     const interval = setInterval(() => {
       const newElapsedTimes: Record<string, number> = {};
@@ -50,32 +51,32 @@ export default function HabitsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-900">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#38bdf8" />
         }
       >
-        <View className="p-6">
+        <View style={{ padding: 24 }}>
           {/* Header */}
-          <View className="mb-6 mt-4">
-            <Text className="text-3xl font-bold text-white mb-2">Habit Tracker</Text>
-            <Text className="text-slate-400 text-base">
-              Layered time system • Track multiple activities simultaneously
+          <View style={{ marginBottom: 24, marginTop: 16 }}>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 8 }}>
+              Habit Tracker
             </Text>
           </View>
 
           {/* Active Timers Section */}
-          <View className="mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-xl font-semibold text-white">
-                Active Timers
-              </Text>
-              <View className="bg-slate-800 px-3 py-1 rounded-full">
-                <Text className="text-slate-300 font-semibold">
-                  {runningTimers.length}
+          <View style={{ marginBottom: 24 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ width: 8, height: 8, backgroundColor: '#22c55e', borderRadius: 4, marginRight: 8 }} />
+                <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+                  Active Timers
                 </Text>
+              </View>
+              <View style={{ backgroundColor: '#22c55e20', borderWidth: 1, borderColor: '#22c55e80', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+                <Text style={{ color: '#22c55e', fontWeight: 'bold', fontSize: 14 }}>{runningTimers.length}</Text>
               </View>
             </View>
 
@@ -94,53 +95,58 @@ export default function HabitsScreen() {
                 }
               />
             ) : (
-              <View className="space-y-3">
+              <View style={{ gap: 12 }}>
                 {runningTimers.map((timer) => {
                   const config = getHabitConfig(timer.category as HabitCategory);
                   
                   return (
                     <View
                       key={timer.id}
-                      className={`rounded-2xl p-5 border-2 ${config.borderColor} border-opacity-30`}
-                      style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)' }}
+                      style={{
+                        backgroundColor: colors.bgSurface,
+                        borderWidth: 2,
+                        borderColor: colors.moduleHabits,
+                        borderRadius: 16,
+                        padding: 20
+                      }}
                     >
+                      {/* Active Indicator */}
+                      <View style={{ position: 'absolute', top: 16, right: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: '#22c55e20', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                        <View style={{ width: 6, height: 6, backgroundColor: '#22c55e', borderRadius: 3, marginRight: 6 }} />
+                        <Text style={{ color: '#22c55e', fontSize: 12, fontWeight: '600' }}>ACTIVE</Text>
+                      </View>
+
                       {/* Header */}
-                      <View className="flex-row items-center justify-between mb-3">
-                        <View className="flex-row items-center flex-1">
-                          <View
-                            className={`${config.color} rounded-full w-10 h-10 items-center justify-center mr-3`}
-                          >
-                            <Ionicons
-                              name={config.icon as any}
-                              size={20}
-                              color="white"
-                            />
-                          </View>
-                          <View className="flex-1">
-                            <Text className="text-slate-400 text-xs uppercase tracking-wider">
-                              {timer.category}
-                            </Text>
-                            <Text className="text-white text-lg font-bold">
-                              {timer.activity}
-                            </Text>
-                          </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                        <View style={{ backgroundColor: config.color, borderRadius: 24, width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                          <Ionicons name={config.icon as any} size={24} color="white" />
+                        </View>
+                        <View style={{ flex: 1, paddingRight: 80 }}>
+                          <Text style={{ color: colors.textTertiary, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                            {timer.category}
+                          </Text>
+                          <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
+                            {timer.activity}
+                          </Text>
                         </View>
                       </View>
 
                       {/* Timer Display */}
-                      <View className="glass rounded-xl p-4 mb-3">
-                        <Text className="text-sky-400 text-4xl font-mono font-bold text-center">
+                      <View style={{ backgroundColor: colors.bgSurfaceHover, borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#0ea5e950' }}>
+                        <Text style={{ color: '#0ea5e9', fontSize: 36, fontFamily: 'monospace', fontWeight: 'bold', textAlign: 'center' }}>
                           {formatDurationHMS(elapsedTimes[timer.id] || 0)}
                         </Text>
-                        <Text className="text-slate-500 text-xs text-center mt-1">
+                        <Text style={{ color: colors.textTertiary, fontSize: 12, textAlign: 'center', marginTop: 4 }}>
                           Started {getRelativeTime(timer.startedAt)}
                         </Text>
                       </View>
 
                       {/* Notes */}
                       {timer.notes && (
-                        <View className="bg-slate-800/50 rounded-lg p-3 mb-3">
-                          <Text className="text-slate-400 text-sm">{timer.notes}</Text>
+                        <View style={{ backgroundColor: colors.bgSurfaceHover, borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                            {timer.notes}
+                          </Text>
                         </View>
                       )}
 
@@ -159,17 +165,19 @@ export default function HabitsScreen() {
             )}
           </View>
 
-          {/* Recent History Section - ADD THIS */}
+          {/* Recent History Section */}
           {recentLogs.length > 0 && (
-            <View className="mb-6">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-semibold text-white">Recent Sessions</Text>
+            <View style={{ marginBottom: 24 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+                  Recent Sessions
+                </Text>
                 <Pressable onPress={() => router.push('/habit/history')}>
-                  <Text className="text-sky-400 text-sm">View All</Text>
+                  <Text style={{ color: '#0ea5e9', fontSize: 14, fontWeight: '600' }}>View All →</Text>
                 </Pressable>
               </View>
 
-              <View className="space-y-2">
+              <View style={{ gap: 8 }}>
                 {recentLogs.map((log) => {
                   const config = getHabitConfig(log.category as HabitCategory);
 
@@ -177,27 +185,33 @@ export default function HabitsScreen() {
                     <Pressable
                       key={log.id}
                       onPress={() => router.push(`/habit/${log.id}`)}
-                      className="card p-4 active:bg-slate-700"
+                      style={{
+                        backgroundColor: colors.bgSurface,
+                        borderWidth: 1,
+                        borderColor: colors.borderSurface,
+                        borderRadius: 16,
+                        padding: 16
+                      }}
                     >
-                      <View className="flex-row items-center">
-                        <View className={`${config.color} rounded-full w-10 h-10 items-center justify-center mr-3`}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ backgroundColor: config.color, borderRadius: 20, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
                           <Ionicons name={config.icon as any} size={20} color="white" />
                         </View>
-                        <View className="flex-1">
-                          <Text className="text-white font-semibold text-base">
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 16 }}>
                             {log.activity}
                           </Text>
-                          <View className="flex-row items-center gap-2 mt-1">
-                            <View className={`${config.bgColor} px-2 py-0.5 rounded`}>
-                              <Text className={`${config.textColor} text-xs`}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <View style={{ backgroundColor: config.bgColor, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                              <Text style={{ color: config.textColor, fontSize: 12, fontWeight: '500' }}>
                                 {log.category}
                               </Text>
                             </View>
-                            <Text className="text-slate-500 text-xs">
+                            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
                               {formatDurationHMS(log.duration || 0)}
                             </Text>
-                            <Text className="text-slate-600 text-xs">•</Text>
-                            <Text className="text-slate-500 text-xs">
+                            <Text style={{ color: colors.textTertiary, fontSize: 12 }}>•</Text>
+                            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
                               {getRelativeTime(log.startedAt)}
                             </Text>
                           </View>
@@ -212,50 +226,36 @@ export default function HabitsScreen() {
           )}
 
           {/* Quick Stats */}
-          <View className="card p-5 mb-6">
-            <Text className="text-white font-semibold text-lg mb-3">Today's Activity</Text>
-            <View className="flex-row justify-around">
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Sessions</Text>
-                <Text className="text-white text-2xl font-bold">
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 24
+          }}>
+            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 18, marginBottom: 12 }}>
+              Today's Activity
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>Sessions</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>
                   {runningTimers.length}
                 </Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Categories</Text>
-                <Text className="text-white text-2xl font-bold">
+              <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>Categories</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>
                   {new Set(runningTimers.map((t) => t.category)).size}
                 </Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-slate-400 text-xs mb-1">Total Time</Text>
-                <Text className="text-white text-2xl font-bold">
-                  {Math.floor(
-                    Object.values(elapsedTimes).reduce((a, b) => a + b, 0) / 60
-                  )}m
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Info Card */}
-          <View className="bg-purple-900/20 border border-purple-700 rounded-xl p-4">
-            <View className="flex-row items-start">
-              <Ionicons
-                name="information-circle"
-                size={20}
-                color="#a78bfa"
-                style={{ marginRight: 8, marginTop: 2 }}
-              />
-              <View className="flex-1">
-                <Text className="text-purple-300 text-sm font-semibold mb-1">
-                  Layered Time System
-                </Text>
-                <Text className="text-purple-200 text-xs">
-                  Unlike traditional trackers, you can run multiple timers simultaneously. Perfect
-                  for tracking overlapping activities like traveling while reading.
+              <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4 }}>Total Time</Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>
+                  {Math.floor(Object.values(elapsedTimes).reduce((a, b) => a + b, 0) / 60)}m
                 </Text>
               </View>
             </View>
@@ -267,8 +267,8 @@ export default function HabitsScreen() {
       <FloatingActionButton
         onPress={() => router.push('/habit/start')}
         icon="add"
-        color="bg-purple-500"
+        color="bg-purple-600"
       />
-    </View>
+    </SafeAreaView>
   );
 }

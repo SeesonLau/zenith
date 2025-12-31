@@ -14,7 +14,7 @@ export type HabitActivity = {
   Productivity: 'Working' | 'Studying' | 'Personal Project';
   'Self-Care': 'Sleeping' | 'Exercise' | 'Eating' | 'Cooking' | 'Bathing' | 'Peace';
   Logistics: 'Errands' | 'Chores' | 'Travel';
-  Enjoyment: 'Socializing' | 'Romance' | 'Gaming' | 'Watching Videos' | 'Reading' | 'Leisure';
+  Enjoyment: 'Socializing' | 'Romance' | 'Gaming' | 'Music'| 'Watching Videos' | 'Reading' | 'Leisure';
   Nothing: 'Doomscrolling' | 'Procrastinating';
 };
 
@@ -123,8 +123,12 @@ export type LeisureType =
   | 'Manhwah'
   | 'Manhuah'
   | 'Fanart'
-  | 'Real'
-  | 'AV';
+  | 'Acquainted'
+  | 'Stranger'
+  | 'Sensual';
+
+
+  
 
 export type LeisureLogData = {
   id: string;
@@ -280,7 +284,7 @@ export const HABIT_ACTIVITIES: Record<keyof HabitActivity, readonly string[]> = 
   Productivity: ['Working', 'Studying', 'Personal Project'],
   'Self-Care': ['Sleeping', 'Exercise', 'Eating', 'Cooking', 'Bathing', 'Peace'],
   Logistics: ['Errands', 'Chores', 'Travel'],
-  Enjoyment: ['Socializing', 'Romance', 'Gaming', 'Watching Videos', 'Reading', 'Leisure'],
+  Enjoyment: ['Socializing', 'Romance', 'Gaming', 'Music', 'Watching Videos', 'Reading', 'Leisure'],
   Nothing: ['Doomscrolling', 'Procrastinating'],
 } as const;
 
@@ -316,8 +320,9 @@ export const LEISURE_TYPES: LeisureType[] = [
   'Manhwah',
   'Manhuah',
   'Fanart',
-  'Real',
-  'AV',
+  'Acquainted',
+  'Stranger',
+  'Sensual',
 ];
 
 export const MOOD_OPTIONS: MoodType[] = [
