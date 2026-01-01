@@ -1,4 +1,4 @@
-// src/database/actions/habitActions.ts (COMPLETE FIX)
+// src/database/actions/habitActions.ts (FIXED VERSION)
 import { database } from '../index';
 import HabitLog from '../models/HabitLog';
 import { getDeviceId } from '@/src/lib/supabase';
@@ -28,7 +28,27 @@ export async function stopHabitTimer(logId: string) {
   return await database.write(async () => {
     const habitLogsCollection = database.get<HabitLog>('habit_logs');
     const log = await habitLogsCollection.find(logId);
-    await log.stopTimer();
+    
+    // Calculate duration
+    const now = new Date();
+    const startTime = log.startedAt;
+    const durationInSeconds = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+    
+    // Update the log
+    await log.update((record) => {
+      record.endedAt = now;
+      record.duration = durationInSeconds;
+      record.isSynced = false;
+    });
+    
     return log;
+  });
+}
+
+export async function deleteHabitLog(logId: string) {
+  return await database.write(async () => {
+    const habitLogsCollection = database.get<HabitLog>('habit_logs');
+    const log = await habitLogsCollection.find(logId);
+    await log.markAsDeleted();
   });
 }
