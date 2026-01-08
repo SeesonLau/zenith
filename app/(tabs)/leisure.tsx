@@ -1,5 +1,5 @@
-// app/(tabs)/leisure.tsx
-import React, { useState } from 'react';
+// app/(tabs)/leisure.tsx - COMPACT VERSION
+import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import LeisureTimerCard from '@/src/components/leisure/LeisureTimerCard';
 import CompletedLeisureCard from '@/src/components/leisure/CompletedLeisureCard';
+import { formatDate } from '@/src/utils/dateHelpers';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function LeisureScreen() {
@@ -35,6 +36,23 @@ export default function LeisureScreen() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Group completed sessions by date (like finance transactions)
+  const groupedSessions = useMemo(() => {
+    const groups: Record<string, typeof completedSessions> = {};
+
+    completedSessions.forEach((session) => {
+      const dateKey = formatDate(session.startedAt, 'short');
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(session);
+    });
+
+    return Object.entries(groups).sort(
+      ([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime()
+    );
+  }, [completedSessions]);
 
   const handleStartTimer = async () => {
     try {
@@ -79,30 +97,50 @@ export default function LeisureScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ec4899" />
         }
       >
-        <View style={{ padding: 24 }}>
+        <View style={{ padding: 20 }}>
           {/* Header */}
-          <View style={{ marginBottom: 24, marginTop: 16 }}>
-            <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 8 }}>
+          <View style={{ marginBottom: 16, marginTop: 12 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 4 }}>
               Leisure Tracker
             </Text>
           </View>
 
           {/* Active Sessions */}
           {runningTimers.length > 0 && (
-            <View style={{ marginBottom: 24 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <View style={{ marginBottom: 16 }}>
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                marginBottom: 12 
+              }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={{ width: 8, height: 8, backgroundColor: '#ec4899', borderRadius: 4, marginRight: 8 }} />
-                  <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+                  <View style={{ 
+                    width: 6, 
+                    height: 6, 
+                    backgroundColor: '#ec4899', 
+                    borderRadius: 3, 
+                    marginRight: 6 
+                  }} />
+                  <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
                     Active Session
                   </Text>
                 </View>
-                <View style={{ backgroundColor: '#ec489920', borderWidth: 1, borderColor: '#ec489980', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
-                  <Text style={{ color: '#ec4899', fontWeight: 'bold', fontSize: 14 }}>{runningTimers.length}</Text>
+                <View style={{
+                  backgroundColor: colors.bgSurface,
+                  borderWidth: 1,
+                  borderColor: colors.borderSurface,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                  borderRadius: 10
+                }}>
+                  <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 12 }}>
+                    {runningTimers.length}
+                  </Text>
                 </View>
               </View>
 
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 10 }}>
                 {runningTimers.map((timer) => (
                   <LeisureTimerCard
                     key={timer.id}
@@ -124,58 +162,63 @@ export default function LeisureScreen() {
             backgroundColor: colors.bgSurface,
             borderWidth: 1,
             borderColor: colors.borderSurface,
-            borderRadius: 16,
-            padding: 20,
-            marginBottom: 24
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 16
           }}>
-            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 18, marginBottom: 12 }}>
+            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 12 }}>
               Today's Stats
             </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4, fontWeight: '500' }}>
                   Sessions
                 </Text>
-                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: 'bold' }}>
                   {todaysSessions.length}
                 </Text>
               </View>
               <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4, fontWeight: '500' }}>
                   Total Time
                 </Text>
-                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: 'bold' }}>
                   {Math.floor(todaysSessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60)}m
                 </Text>
               </View>
               <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4, fontWeight: '500' }}>
                   All Time
                 </Text>
-                <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
+                <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: 'bold' }}>
                   {Math.floor(totalDuration / 3600)}h
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Recent Sessions */}
-          <View style={{ marginBottom: 24 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
+          {/* Recent Sessions - Grouped by Date */}
+          <View style={{ marginBottom: 20 }}>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: 12 
+            }}>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
                 Recent Sessions
               </Text>
               <View style={{
                 backgroundColor: colors.bgSurface,
                 borderWidth: 1,
                 borderColor: colors.borderSurface,
-                paddingHorizontal: 12,
-                paddingVertical: 4,
-                borderRadius: 12
+                paddingHorizontal: 10,
+                paddingVertical: 3,
+                borderRadius: 10
               }}>
-                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 14 }}>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 12 }}>
                   {completedSessions.length}
                 </Text>
               </View>
@@ -196,22 +239,41 @@ export default function LeisureScreen() {
                 }
               />
             ) : (
-              <View style={{ gap: 8 }}>
-                {completedSessions.map((session) => (
-                  <CompletedLeisureCard
-                    key={session.id}
-                    id={session.id}
-                    type={session.type}
-                    title={session.title}
-                    startedAt={session.startedAt}
-                    duration={session.duration || 0}
-                    notes={session.notes}
-                    onPress={() => router.push(`/leisure/${session.id}`)}
-                  />
+              <View style={{ gap: 12 }}>
+                {groupedSessions.map(([date, dateSessions]) => (
+                  <View key={date}>
+                    <Text style={{
+                      color: colors.textTertiary,
+                      fontSize: 11,
+                      fontWeight: '600',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5
+                    }}>
+                      {date}
+                    </Text>
+                    <View style={{ gap: 6 }}>
+                      {dateSessions.map((session) => (
+                        <CompletedLeisureCard
+                          key={session.id}
+                          id={session.id}
+                          type={session.type}
+                          title={session.title}
+                          startedAt={session.startedAt}
+                          duration={session.duration || 0}
+                          notes={session.notes}
+                          onPress={() => router.push(`/leisure/${session.id}`)}
+                        />
+                      ))}
+                    </View>
+                  </View>
                 ))}
               </View>
             )}
           </View>
+
+          {/* Bottom Padding for FAB */}
+          <View style={{ height: 100 }} />
         </View>
       </ScrollView>
 

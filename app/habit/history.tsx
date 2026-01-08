@@ -1,17 +1,19 @@
-// app/habit/history.tsx (UPDATED WITH ANALYTICS)
+// app/habit/history.tsx - COMPACT VERSION
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCompletedHabitLogs } from '@/src/database/hooks/useDatabase';
 import { getHabitConfig } from '@/src/lib/constants';
 import { formatDurationHMS, formatDuration } from '@/src/utils/formatters';
-import { formatDate, getStartOfWeek, getEndOfWeek } from '@/src/utils/dateHelpers';
+import { formatDate, getStartOfWeek, getStartOfMonth } from '@/src/utils/dateHelpers';
 import type { HabitCategory } from '@/src/types/database.types';
-import Button from '@/src/components/common/Button';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function HabitHistoryScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
   const completedLogs = useCompletedHabitLogs();
 
@@ -22,7 +24,7 @@ export default function HabitHistoryScreen() {
     const now = new Date();
     const startDate = selectedPeriod === 'week' 
       ? getStartOfWeek(now)
-      : new Date(now.getFullYear(), now.getMonth(), 1);
+      : getStartOfMonth(now);
 
     return completedLogs.filter((log) => log.startedAt >= startDate);
   }, [completedLogs, selectedPeriod]);
@@ -61,151 +63,260 @@ export default function HabitHistoryScreen() {
     };
   }, [filteredLogs]);
 
+  // Group logs by date
+  const groupedLogs = useMemo(() => {
+    const groups: Record<string, typeof filteredLogs> = {};
+
+    filteredLogs.forEach((log) => {
+      const dateKey = formatDate(log.startedAt, 'short');
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(log);
+    });
+
+    return Object.entries(groups).sort(
+      ([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime()
+    );
+  }, [filteredLogs]);
+
   return (
-    <ScrollView className="flex-1 bg-slate-900">
-      <View className="p-6">
-        {/* Header */}
-        <View className="flex-row items-center mb-6 mt-4">
-          <Pressable onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={28} color="white" />
-          </Pressable>
-          <Text className="text-2xl font-bold text-white flex-1">Habit History</Text>
-        </View>
-
-        {/* Period Selector */}
-        <View className="flex-row gap-2 mb-6">
-          {(['week', 'month', 'all'] as const).map((period) => (
-            <Pressable
-              key={period}
-              onPress={() => setSelectedPeriod(period)}
-              className={`
-                flex-1 py-3 rounded-xl
-                ${selectedPeriod === period ? 'bg-purple-500' : 'bg-slate-800'}
-              `}
-            >
-              <Text
-                className={`
-                  text-center font-semibold capitalize
-                  ${selectedPeriod === period ? 'text-white' : 'text-slate-400'}
-                `}
-              >
-                {period === 'all' ? 'All Time' : `This ${period}`}
-              </Text>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+      <ScrollView style={{ flex: 1 }}>
+        <View style={{ padding: 20 }}>
+          {/* Header */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 8 }}>
+            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
-          ))}
-        </View>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
+              History & Stats
+            </Text>
+          </View>
 
-        {/* Summary Stats */}
-        <View className="card p-5 mb-6">
-          <Text className="text-white font-semibold text-lg mb-4">Summary</Text>
-          <View className="flex-row flex-wrap gap-4">
-            <StatBox
-              label="Total Time"
-              value={formatDuration(analytics.totalDuration)}
-              icon="time"
-              color="text-sky-400"
-            />
-            <StatBox
-              label="Sessions"
-              value={analytics.totalSessions.toString()}
-              icon="list"
-              color="text-purple-400"
-            />
-            <StatBox
-              label="Avg Session"
-              value={formatDuration(Math.floor(analytics.averageSession))}
-              icon="analytics"
-              color="text-green-400"
-            />
-            <StatBox
-              label="Top Activity"
-              value={analytics.mostFrequentActivity}
-              icon="star"
-              color="text-yellow-400"
-            />
+          {/* Period Selector */}
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
+            {(['week', 'month', 'all'] as const).map((period) => (
+              <Pressable
+                key={period}
+                onPress={() => setSelectedPeriod(period)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  backgroundColor: selectedPeriod === period ? colors.moduleHabits : colors.bgSurface,
+                  borderWidth: 1,
+                  borderColor: selectedPeriod === period ? colors.moduleHabits : colors.borderSurface,
+                }}
+              >
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: '600',
+                    fontSize: 13,
+                    color: selectedPeriod === period ? 'white' : colors.textPrimary,
+                  }}
+                >
+                  {period === 'all' ? 'All Time' : `This ${period.charAt(0).toUpperCase() + period.slice(1)}`}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Summary Stats */}
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 14
+          }}>
+            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 12 }}>
+              Summary
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              <StatBox
+                label="Total Time"
+                value={formatDuration(analytics.totalDuration)}
+                icon="time"
+                color={colors.moduleHabits}
+                colors={colors}
+              />
+              <StatBox
+                label="Sessions"
+                value={analytics.totalSessions.toString()}
+                icon="list"
+                color={colors.moduleHabits}
+                colors={colors}
+              />
+              <StatBox
+                label="Avg Session"
+                value={formatDuration(Math.floor(analytics.averageSession))}
+                icon="analytics"
+                color={colors.moduleHabits}
+                colors={colors}
+              />
+              <StatBox
+                label="Top Activity"
+                value={analytics.mostFrequentActivity}
+                icon="star"
+                color={colors.moduleHabits}
+                colors={colors}
+              />
+            </View>
+          </View>
+
+          {/* By Category */}
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 14
+          }}>
+            <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 12 }}>
+              Time by Category
+            </Text>
+            {Object.entries(analytics.byCategory)
+              .sort(([, a], [, b]) => b - a)
+              .map(([category, duration]) => {
+                const config = getHabitConfig(category as HabitCategory);
+                const percentage = (duration / analytics.totalDuration) * 100;
+
+                return (
+                  <View key={category} style={{ marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ 
+                          backgroundColor: config.color, 
+                          borderRadius: 16, 
+                          width: 28, 
+                          height: 28, 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          marginRight: 8 
+                        }}>
+                          <Ionicons name={config.icon as any} size={14} color="white" />
+                        </View>
+                        <Text style={{ color: colors.textPrimary, fontWeight: '500', fontSize: 13 }}>
+                          {category}
+                        </Text>
+                      </View>
+                      <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                        {formatDuration(duration)} • {percentage.toFixed(0)}%
+                      </Text>
+                    </View>
+                    <View style={{ height: 6, backgroundColor: colors.bgSurfaceHover, borderRadius: 3, overflow: 'hidden' }}>
+                      <View
+                        style={{ 
+                          width: `${percentage}%`, 
+                          height: '100%',
+                          backgroundColor: config.color
+                        }}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+          </View>
+
+          {/* Recent Sessions - Grouped by Date */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary, marginBottom: 12 }}>
+              Recent Sessions
+            </Text>
+            {groupedLogs.length === 0 ? (
+              <View style={{
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 12,
+                padding: 24,
+                alignItems: 'center'
+              }}>
+                <Ionicons name="time-outline" size={32} color={colors.textTertiary} />
+                <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 13 }}>
+                  No sessions found
+                </Text>
+              </View>
+            ) : (
+              <View style={{ gap: 12 }}>
+                {groupedLogs.map(([date, dateLogs]) => (
+                  <View key={date}>
+                    <Text style={{
+                      color: colors.textTertiary,
+                      fontSize: 11,
+                      fontWeight: '600',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5
+                    }}>
+                      {date}
+                    </Text>
+                    <View style={{ gap: 6 }}>
+                      {dateLogs.map((log) => {
+                        const config = getHabitConfig(log.category as HabitCategory);
+
+                        return (
+                          <Pressable
+                            key={log.id}
+                            onPress={() => router.push(`/habit/${log.id}`)}
+                            style={{
+                              backgroundColor: colors.bgSurface,
+                              borderWidth: 1,
+                              borderColor: colors.borderSurface,
+                              borderRadius: 12,
+                              padding: 12
+                            }}
+                          >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <View style={{ 
+                                backgroundColor: config.color, 
+                                borderRadius: 20, 
+                                width: 36, 
+                                height: 36, 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                marginRight: 10 
+                              }}>
+                                <Ionicons name={config.icon as any} size={16} color="white" />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 13 }}>
+                                  {log.activity}
+                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                  <View style={{ 
+                                    backgroundColor: colors.bgSurfaceHover, 
+                                    paddingHorizontal: 6, 
+                                    paddingVertical: 2, 
+                                    borderRadius: 4 
+                                  }}>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 9, fontWeight: '500' }}>
+                                      {log.category}
+                                    </Text>
+                                  </View>
+                                  <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                    {formatDurationHMS(log.duration || 0)}
+                                  </Text>
+                                </View>
+                              </View>
+                              <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         </View>
-
-        {/* By Category */}
-        <View className="card p-5 mb-6">
-          <Text className="text-white font-semibold text-lg mb-4">Time by Category</Text>
-          {Object.entries(analytics.byCategory)
-            .sort(([, a], [, b]) => b - a)
-            .map(([category, duration]) => {
-              const config = getHabitConfig(category as HabitCategory);
-              const percentage = (duration / analytics.totalDuration) * 100;
-
-              return (
-                <View key={category} className="mb-4">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
-                      <View className={`${config.color} rounded-full w-8 h-8 items-center justify-center mr-2`}>
-                        <Ionicons name={config.icon as any} size={16} color="white" />
-                      </View>
-                      <Text className="text-white font-medium">{category}</Text>
-                    </View>
-                    <Text className="text-slate-400 text-sm">
-                      {formatDuration(duration)} • {percentage.toFixed(0)}%
-                    </Text>
-                  </View>
-                  <View className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <View
-                      className={config.color}
-                      style={{ width: `${percentage}%`, height: '100%' }}
-                    />
-                  </View>
-                </View>
-              );
-            })}
-        </View>
-
-        {/* Top Activities */}
-        <View className="card p-5 mb-6">
-          <Text className="text-white font-semibold text-lg mb-4">Top Activities</Text>
-          {Object.entries(analytics.byActivity)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 5)
-            .map(([activity, duration], index) => (
-              <View key={activity} className="flex-row items-center py-3 border-b border-slate-700 last:border-b-0">
-                <View className="bg-slate-700 rounded-full w-8 h-8 items-center justify-center mr-3">
-                  <Text className="text-white font-bold text-sm">{index + 1}</Text>
-                </View>
-                <Text className="text-white flex-1">{activity}</Text>
-                <Text className="text-slate-400 text-sm">{formatDuration(duration)}</Text>
-              </View>
-            ))}
-        </View>
-
-        {/* Recent Sessions */}
-        <View className="mb-6">
-          <Text className="text-xl font-semibold text-white mb-4">Recent Sessions</Text>
-          {filteredLogs.slice(0, 10).map((log) => {
-            const config = getHabitConfig(log.category as HabitCategory);
-
-            return (
-              <Pressable
-                key={log.id}
-                onPress={() => router.push(`/habit/${log.id}`)}
-                className="card p-4 mb-3 active:bg-slate-700"
-              >
-                <View className="flex-row items-center">
-                  <View className={`${config.color} rounded-full w-10 h-10 items-center justify-center mr-3`}>
-                    <Ionicons name={config.icon as any} size={20} color="white" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold">{log.activity}</Text>
-                    <Text className="text-slate-400 text-xs">
-                      {formatDate(log.startedAt, 'short')} • {formatDurationHMS(log.duration || 0)}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#64748b" />
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -214,16 +325,27 @@ interface StatBoxProps {
   value: string;
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
+  colors: any;
 }
 
-function StatBox({ label, value, icon, color }: StatBoxProps) {
+function StatBox({ label, value, icon, color, colors }: StatBoxProps) {
   return (
-    <View className="flex-1 min-w-[45%] bg-slate-800/50 rounded-xl p-4">
-      <View className="flex-row items-center mb-2">
-        <Ionicons name={icon} size={16} color="#64748b" />
-        <Text className="text-slate-400 text-xs ml-2">{label}</Text>
+    <View style={{ 
+      flex: 1, 
+      minWidth: '47%', 
+      backgroundColor: colors.bgSurfaceHover, 
+      borderRadius: 10, 
+      padding: 12 
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+        <Ionicons name={icon} size={12} color={colors.textTertiary} />
+        <Text style={{ color: colors.textSecondary, fontSize: 10, marginLeft: 4 }}>
+          {label}
+        </Text>
       </View>
-      <Text className={`${color} font-bold text-xl`}>{value}</Text>
+      <Text style={{ color: color, fontWeight: 'bold', fontSize: 16 }} numberOfLines={1}>
+        {value}
+      </Text>
     </View>
   );
 }

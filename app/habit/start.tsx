@@ -1,4 +1,4 @@
-// app/habit/start.tsx - SPACE OPTIMIZED
+// app/habit/start.tsx - COMPACT VERSION
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -15,7 +15,7 @@ const CATEGORY_ICONS: Record<HabitCategory, keyof typeof Ionicons.glyphMap> = {
   'Self-Care': 'heart',
   'Logistics': 'car',
   'Enjoyment': 'happy',
-  'Nothing': 'moon',
+  'Nothing': 'time',
 };
 
 const CATEGORY_COLORS: Record<HabitCategory, string> = {
@@ -65,21 +65,21 @@ export default function StartHabitScreen() {
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         <View style={{ padding: 20 }}>
           {/* Header */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24, marginTop: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 8 }}>
             <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
               <Ionicons name="close" size={24} color={colors.textPrimary} />
             </Pressable>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.textPrimary }}>
               Start Activity
             </Text>
           </View>
 
-          {/* Category Selection - Fill Width */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 10 }}>
+          {/* Category Selection */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary, marginBottom: 10 }}>
               Category
             </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {CATEGORIES.map((category) => (
                 <Pressable
                   key={category}
@@ -90,13 +90,14 @@ export default function StartHabitScreen() {
                   style={{
                     flex: 1,
                     flexBasis: '30%',
+                    minWidth: 100,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: selectedCategory === category 
                       ? CATEGORY_COLORS[category] 
                       : colors.bgSurface,
-                    borderWidth: 1.5,
+                    borderWidth: 1,
                     borderColor: selectedCategory === category 
                       ? CATEGORY_COLORS[category] 
                       : colors.borderSurface,
@@ -107,13 +108,13 @@ export default function StartHabitScreen() {
                 >
                   <Ionicons
                     name={CATEGORY_ICONS[category]}
-                    size={18}
+                    size={16}
                     color={selectedCategory === category ? 'white' : colors.textPrimary}
                   />
                   <Text
                     style={{
                       marginLeft: 6,
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: '600',
                       color: selectedCategory === category ? 'white' : colors.textPrimary,
                     }}
@@ -126,9 +127,9 @@ export default function StartHabitScreen() {
             </View>
           </View>
 
-          {/* Activity Selection - Dynamic Columns */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 10 }}>
+          {/* Activity Selection */}
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary, marginBottom: 10 }}>
               Activity
             </Text>
             {activities.length > 0 ? (
@@ -146,7 +147,7 @@ export default function StartHabitScreen() {
                       backgroundColor: selectedActivity === activity
                         ? `${CATEGORY_COLORS[selectedCategory]}20`
                         : colors.bgSurface,
-                      borderWidth: 1.5,
+                      borderWidth: 1,
                       borderColor: selectedActivity === activity
                         ? CATEGORY_COLORS[selectedCategory]
                         : colors.borderSurface,
@@ -160,7 +161,7 @@ export default function StartHabitScreen() {
                   >
                     <Text
                       style={{
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: selectedActivity === activity ? '600' : '500',
                         color: selectedActivity === activity 
                           ? CATEGORY_COLORS[selectedCategory]
@@ -174,7 +175,7 @@ export default function StartHabitScreen() {
                     {selectedActivity === activity && (
                       <Ionicons 
                         name="checkmark-circle" 
-                        size={18} 
+                        size={16} 
                         color={CATEGORY_COLORS[selectedCategory]}
                         style={{ marginLeft: 6 }}
                       />
@@ -183,7 +184,7 @@ export default function StartHabitScreen() {
                 ))}
               </View>
             ) : (
-              <Text style={{ color: colors.textTertiary, fontSize: 14 }}>
+              <Text style={{ color: colors.textTertiary, fontSize: 13 }}>
                 No activities available
               </Text>
             )}
@@ -191,8 +192,8 @@ export default function StartHabitScreen() {
 
           {/* Notes Section */}
           <View style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>
-              Notes <Text style={{ color: colors.textTertiary, fontSize: 13, fontWeight: '400' }}>(Optional)</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>
+              Notes <Text style={{ color: colors.textTertiary, fontSize: 12, fontWeight: '400' }}>(Optional)</Text>
             </Text>
             <TextInput
               placeholder="Add notes about this activity..."
@@ -207,7 +208,7 @@ export default function StartHabitScreen() {
                 borderColor: colors.borderSurface,
                 borderRadius: 10,
                 padding: 12,
-                fontSize: 14,
+                fontSize: 13,
                 color: colors.textPrimary,
                 textAlignVertical: 'top',
                 minHeight: 80,

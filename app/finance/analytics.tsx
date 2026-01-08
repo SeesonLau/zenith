@@ -1,18 +1,21 @@
-// app/finance/analytics.tsx (CREATE NEW)
+// app/finance/analytics.tsx - THEME COMPATIBLE
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { database } from '@/src/database';
 import { Q } from '@nozbe/watermelondb';
 import type FinanceLog from '@/src/database/models/FinanceLog';
 import { formatCurrency } from '@/src/utils/formatters';
 import { getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpers';
-import { getFinanceCategoryConfig, getTransactionTypeConfig } from '@/src/lib/constants';
+import { getFinanceCategoryConfig } from '@/src/lib/constants';
 import type { FinanceTypeCategory, CurrencyCode } from '@/src/types/database.types';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function FinanceAnalyticsScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [logs, setLogs] = useState<FinanceLog[]>([]);
 
@@ -91,169 +94,323 @@ export default function FinanceAnalyticsScreen() {
   const monthName = selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
-      <View className="p-6">
-        {/* Header */}
-        <View className="flex-row items-center mb-6 mt-4">
-          <Pressable onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={28} color="white" />
-          </Pressable>
-          <Text className="text-2xl font-bold text-white flex-1">Analytics</Text>
-        </View>
-
-        {/* Month Navigator */}
-        <View className="card p-4 mb-6">
-          <View className="flex-row items-center justify-between">
-            <Pressable
-              onPress={handlePreviousMonth}
-              className="bg-slate-700 rounded-lg p-3"
-            >
-              <Ionicons name="chevron-back" size={20} color="white" />
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+      <ScrollView style={{ flex: 1 }}>
+        <View style={{ padding: 20 }}>
+          {/* Header */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 12 }}>
+            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
-
-            <Text className="text-white text-xl font-bold">{monthName}</Text>
-
-            <Pressable
-              onPress={handleNextMonth}
-              className="bg-slate-700 rounded-lg p-3"
-              disabled={selectedMonth >= new Date()}
-            >
-              <Ionicons name="chevron-forward" size={20} color="white" />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Summary Cards */}
-        <View className="mb-6">
-          {/* Balance */}
-          <View className="gradient-green border border-green-700 rounded-2xl p-6 mb-4">
-            <Text className="text-green-400 text-sm mb-1">Balance</Text>
-            <Text className="text-white text-4xl font-bold">
-              {formatCurrency(analytics.balance)}
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
+              Analytics
             </Text>
           </View>
 
-          {/* Income & Expenses */}
-          <View className="flex-row gap-3 mb-4">
-            <View className="flex-1 card p-4">
-              <View className="flex-row items-center mb-2">
-                <View className="bg-green-500 rounded-full w-8 h-8 items-center justify-center mr-2">
-                  <Ionicons name="arrow-down" size={16} color="white" />
-                </View>
-                <Text className="text-slate-400 text-sm">Income</Text>
-              </View>
-              <Text className="text-white text-2xl font-bold">
-                {formatCurrency(analytics.income)}
-              </Text>
-            </View>
+          {/* Month Navigator */}
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 12,
+            padding: 14,
+            marginBottom: 16
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Pressable
+                onPress={handlePreviousMonth}
+                style={{
+                  backgroundColor: colors.bgSurfaceHover,
+                  borderRadius: 8,
+                  padding: 10
+                }}
+              >
+                <Ionicons name="chevron-back" size={18} color={colors.textPrimary} />
+              </Pressable>
 
-            <View className="flex-1 card p-4">
-              <View className="flex-row items-center mb-2">
-                <View className="bg-red-500 rounded-full w-8 h-8 items-center justify-center mr-2">
-                  <Ionicons name="arrow-up" size={16} color="white" />
-                </View>
-                <Text className="text-slate-400 text-sm">Expenses</Text>
-              </View>
-              <Text className="text-white text-2xl font-bold">
-                {formatCurrency(analytics.expenses)}
+              <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
+                {monthName}
               </Text>
+
+              <Pressable
+                onPress={handleNextMonth}
+                style={{
+                  backgroundColor: colors.bgSurfaceHover,
+                  borderRadius: 8,
+                  padding: 10
+                }}
+                disabled={selectedMonth >= new Date()}
+              >
+                <Ionicons name="chevron-forward" size={18} color={colors.textPrimary} />
+              </Pressable>
             </View>
           </View>
 
-          {/* Additional Stats */}
-          <View className="flex-row gap-3">
-            <View className="flex-1 card p-4">
-              <Text className="text-slate-400 text-xs mb-1">Transactions</Text>
-              <Text className="text-white text-xl font-bold">{analytics.totalTransactions}</Text>
-            </View>
-            <View className="flex-1 card p-4">
-              <Text className="text-slate-400 text-xs mb-1">Average</Text>
-              <Text className="text-white text-xl font-bold">
-                {formatCurrency(analytics.avgTransaction)}
+          {/* Summary Cards */}
+          <View style={{ marginBottom: 16 }}>
+            {/* Balance */}
+            <View style={{
+              backgroundColor: analytics.balance >= 0 ? colors.moduleFinance : colors.danger,
+              borderRadius: 14,
+              padding: 20,
+              marginBottom: 12
+            }}>
+              <Text style={{ color: '#ffffff', fontSize: 13, marginBottom: 4, opacity: 0.9 }}>
+                Balance
+              </Text>
+              <Text style={{ color: '#ffffff', fontSize: 32, fontWeight: 'bold' }}>
+                {formatCurrency(analytics.balance)}
               </Text>
             </View>
+
+            {/* Income & Expenses */}
+            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+              <View style={{
+                flex: 1,
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 12,
+                padding: 14
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <View style={{
+                    backgroundColor: colors.success,
+                    borderRadius: 16,
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 8
+                  }}>
+                    <Ionicons name="arrow-down" size={14} color="white" />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Income</Text>
+                </View>
+                <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
+                  {formatCurrency(analytics.income)}
+                </Text>
+              </View>
+
+              <View style={{
+                flex: 1,
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 12,
+                padding: 14
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <View style={{
+                    backgroundColor: colors.danger,
+                    borderRadius: 16,
+                    width: 28,
+                    height: 28,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 8
+                  }}>
+                    <Ionicons name="arrow-up" size={14} color="white" />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>Expenses</Text>
+                </View>
+                <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
+                  {formatCurrency(analytics.expenses)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Additional Stats */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{
+                flex: 1,
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 12,
+                padding: 12
+              }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4 }}>
+                  Transactions
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
+                  {analytics.totalTransactions}
+                </Text>
+              </View>
+              <View style={{
+                flex: 1,
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 12,
+                padding: 12
+              }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4 }}>
+                  Average
+                </Text>
+                <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
+                  {formatCurrency(analytics.avgTransaction)}
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
 
-        {/* Expenses by Category */}
-        <View className="card p-5 mb-6">
-          <Text className="text-white font-semibold text-lg mb-4">Expenses by Category</Text>
-          {Object.entries(analytics.byCategory)
-            .sort(([, a], [, b]) => b - a)
-            .map(([category, amount]) => {
-              const config = getFinanceCategoryConfig(category as FinanceTypeCategory);
-              const percentage = (amount / analytics.expenses) * 100;
+          {/* Expenses by Category */}
+          {Object.keys(analytics.byCategory).length > 0 && (
+            <View style={{
+              backgroundColor: colors.bgSurface,
+              borderWidth: 1,
+              borderColor: colors.borderSurface,
+              borderRadius: 14,
+              padding: 16,
+              marginBottom: 16
+            }}>
+              <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 16, marginBottom: 14 }}>
+                Expenses by Category
+              </Text>
+              {Object.entries(analytics.byCategory)
+                .sort(([, a], [, b]) => b - a)
+                .map(([category, amount]) => {
+                  const config = getFinanceCategoryConfig(category as FinanceTypeCategory);
+                  const percentage = (amount / analytics.expenses) * 100;
 
-              return (
-                <View key={category} className="mb-4">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-row items-center">
-                      <View className={`${config.color} rounded-full w-8 h-8 items-center justify-center mr-2`}>
-                        <Ionicons name={config.icon as any} size={16} color="white" />
+                  return (
+                    <View key={category} style={{ marginBottom: 14 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{
+                            backgroundColor: config.color.replace('bg-', '#'),
+                            borderRadius: 14,
+                            width: 24,
+                            height: 24,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: 8
+                          }}>
+                            <Ionicons name={config.icon as any} size={12} color="white" />
+                          </View>
+                          <Text style={{ color: colors.textPrimary, fontWeight: '500', fontSize: 13 }}>
+                            {category}
+                          </Text>
+                        </View>
+                        <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                          {formatCurrency(amount)} • {percentage.toFixed(0)}%
+                        </Text>
                       </View>
-                      <Text className="text-white font-medium">{category}</Text>
+                      <View style={{
+                        height: 6,
+                        backgroundColor: colors.bgSurfaceHover,
+                        borderRadius: 3,
+                        overflow: 'hidden'
+                      }}>
+                        <View
+                          style={{
+                            width: `${percentage}%`,
+                            height: '100%',
+                            backgroundColor: colors.danger
+                          }}
+                        />
+                      </View>
                     </View>
-                    <Text className="text-slate-400 text-sm">
-                      {formatCurrency(amount)} • {percentage.toFixed(0)}%
+                  );
+                })}
+            </View>
+          )}
+
+          {/* Largest Transactions */}
+          {(analytics.largestIncome || analytics.largestExpense) && (
+            <View style={{
+              backgroundColor: colors.bgSurface,
+              borderWidth: 1,
+              borderColor: colors.borderSurface,
+              borderRadius: 14,
+              padding: 16,
+              marginBottom: 16
+            }}>
+              <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 16, marginBottom: 12 }}>
+                Largest Transactions
+              </Text>
+              
+              {analytics.largestIncome && (
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Largest Income
+                  </Text>
+                  <View style={{
+                    backgroundColor: colors.success + '15',
+                    borderWidth: 1,
+                    borderColor: colors.success + '40',
+                    borderRadius: 10,
+                    padding: 12
+                  }}>
+                    <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 14 }}>
+                      {analytics.largestIncome.item}
+                    </Text>
+                    <Text style={{ color: colors.success, fontWeight: 'bold', fontSize: 18, marginTop: 4 }}>
+                      {formatCurrency(analytics.largestIncome.totalCost, analytics.largestIncome.currency as CurrencyCode)}
                     </Text>
                   </View>
-                  <View className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <View
-                      className="bg-red-500"
-                      style={{ width: `${percentage}%`, height: '100%' }}
-                    />
+                </View>
+              )}
+
+              {analytics.largestExpense && (
+                <View>
+                  <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Largest Expense
+                  </Text>
+                  <View style={{
+                    backgroundColor: colors.danger + '15',
+                    borderWidth: 1,
+                    borderColor: colors.danger + '40',
+                    borderRadius: 10,
+                    padding: 12
+                  }}>
+                    <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 14 }}>
+                      {analytics.largestExpense.item}
+                    </Text>
+                    <Text style={{ color: colors.danger, fontWeight: 'bold', fontSize: 18, marginTop: 4 }}>
+                      {formatCurrency(analytics.largestExpense.totalCost, analytics.largestExpense.currency as CurrencyCode)}
+                    </Text>
                   </View>
                 </View>
-              );
-            })}
-        </View>
-
-        {/* Largest Transactions */}
-        <View className="card p-5 mb-6">
-          <Text className="text-white font-semibold text-lg mb-4">Largest Transactions</Text>
-          
-          {analytics.largestIncome && (
-            <View className="mb-4">
-              <Text className="text-slate-400 text-xs mb-2 uppercase">Largest Income</Text>
-              <View className="bg-green-900/20 border border-green-700 rounded-lg p-3">
-                <Text className="text-white font-semibold">{analytics.largestIncome.item}</Text>
-                <Text className="text-green-400 font-bold text-xl mt-1">
-                  {formatCurrency(analytics.largestIncome.totalCost, analytics.largestIncome.currency as CurrencyCode)}
-                </Text>
-              </View>
+              )}
             </View>
           )}
 
-          {analytics.largestExpense && (
-            <View>
-              <Text className="text-slate-400 text-xs mb-2 uppercase">Largest Expense</Text>
-              <View className="bg-red-900/20 border border-red-700 rounded-lg p-3">
-                <Text className="text-white font-semibold">{analytics.largestExpense.item}</Text>
-                <Text className="text-red-400 font-bold text-xl mt-1">
-                  {formatCurrency(analytics.largestExpense.totalCost, analytics.largestExpense.currency as CurrencyCode)}
+          {/* Insights */}
+          <View style={{
+            backgroundColor: colors.info + '15',
+            borderWidth: 1,
+            borderColor: colors.info + '40',
+            borderRadius: 12,
+            padding: 14
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+              <Ionicons
+                name="bulb"
+                size={18}
+                color={colors.info}
+                style={{ marginRight: 8, marginTop: 2 }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.info, fontSize: 13, fontWeight: '600', marginBottom: 4 }}>
+                  Financial Insight
+                </Text>
+                <Text style={{ color: colors.info, fontSize: 12, opacity: 0.9 }}>
+                  {analytics.balance > 0
+                    ? `Great job! You have a positive balance of ${formatCurrency(analytics.balance)} this month.`
+                    : analytics.balance === 0
+                    ? 'You broke even this month. Consider saving more next month.'
+                    : `You overspent by ${formatCurrency(Math.abs(analytics.balance))}. Review your expenses to find savings opportunities.`}
                 </Text>
               </View>
-            </View>
-          )}
-        </View>
-
-        {/* Insights */}
-        <View className="bg-sky-900/20 border border-sky-700 rounded-xl p-4">
-          <View className="flex-row items-start">
-            <Ionicons name="bulb" size={20} color="#0ea5e9" style={{ marginRight: 8, marginTop: 2 }} />
-            <View className="flex-1">
-              <Text className="text-sky-300 text-sm font-semibold mb-1">Financial Insight</Text>
-              <Text className="text-sky-200 text-xs">
-                {analytics.balance > 0
-                  ? `Great job! You have a positive balance of ${formatCurrency(analytics.balance)} this month.`
-                  : analytics.balance === 0
-                  ? 'You broke even this month. Consider saving more next month.'
-                  : `You overspent by ${formatCurrency(Math.abs(analytics.balance))}. Review your expenses to find savings opportunities.`}
-              </Text>
             </View>
           </View>
+
+          {/* Bottom padding */}
+          <View style={{ height: 40 }} />
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

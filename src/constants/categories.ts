@@ -2,6 +2,8 @@
 // 🎯 SINGLE SOURCE OF TRUTH FOR ALL CATEGORIES
 // Edit this file to add/remove/modify categories across the entire app
 
+import { FINANCE_CATEGORY_COLORS } from "../lib/financeConstants";
+
 // ==========================================
 // HABIT TRACKER CATEGORIES
 // ==========================================
@@ -44,20 +46,29 @@ export const TRANSACTION_TYPES = ['income', 'expense'] as const;
 
 export type TransactionType = typeof TRANSACTION_TYPES[number];
 
-export const FINANCE_CATEGORIES = [
-  'Load',
-  'Fare',
+export const EXPENSE_CATEGORIES = [
+  'Load/Data',
+  'Transport',
   'School',
-  'Personal-Physical',
-  'Personal-Digital',
-  'Favor',
+  'Health',
+  'Digital',
+  'Social',
   'Corrupt',
   'Food',
   'Give',
-  'Refund',
-  'Withdraw',
+  'Shopping',
 ] as const;
 
+export const INCOME_CATEGORIES = [
+  'Allowance',
+  'Salary',
+  'Freelance',
+  'Gift',
+  'Repayment',
+  'Investments',
+] as const;
+
+export const FINANCE_CATEGORIES = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES] as const;
 export type FinanceTypeCategory = typeof FINANCE_CATEGORIES[number];
 
 export const CURRENCIES = [
@@ -65,26 +76,20 @@ export const CURRENCIES = [
   'USD',
   'EUR',
   'JPY',
-  'GBP',
+  'SGD',
   'AUD',
-  'CAD',
-  'CNY',
-  'KRW',
 ] as const;
 
 export type CurrencyCode = typeof CURRENCIES[number];
 
 // Currency symbols helper
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
-  PHP: '₱',
-  USD: '$',
-  EUR: '€',
-  JPY: '¥',
-  GBP: '£',
-  AUD: 'A$',
-  CAD: 'C$',
-  CNY: '¥',
-  KRW: '₩',
+    PHP: '₱',
+    USD: '$',
+    EUR: '€',
+    JPY: '¥',
+    SGD: 'S$',
+    AUD: 'A$',
 };
 
 export function getCurrencySymbol(currency: CurrencyCode): string {
@@ -229,18 +234,26 @@ export const HABIT_CATEGORY_COLORS: Record<HabitCategory, string> = {
   Nothing: '#6B7280', // gray
 };
 
-export const FINANCE_CATEGORY_COLORS: Record<FinanceTypeCategory, string> = {
-  Load: '#3B82F6',
-  Fare: '#F59E0B',
-  School: '#8B5CF6',
-  'Personal-Physical': '#10B981',
-  'Personal-Digital': '#06B6D4',
-  Favor: '#EC4899',
-  Corrupt: '#EF4444',
-  Food: '#F97316',
-  Give: '#14B8A6',
-  Refund: '#84CC16',
-  Withdraw: '#6366F1',
+export const FINANCE_CATEGORY_CONFIG: Record<FinanceTypeCategory, { icon: string; color: string }> = {
+  // --- INCOME ---
+  Allowance: { icon: 'wallet', color: 'bg-green-500' },
+  Salary: { icon: 'cash', color: 'bg-emerald-600' },
+  Gift: { icon: 'gift', color: 'bg-pink-500' },
+  Repayment: { icon: 'return-up-back', color: 'bg-cyan-500' },
+  Freelance: { icon: 'briefcase', color: 'bg-indigo-500' },
+  Investments: { icon: 'trending-up', color: 'bg-violet-500' },
+
+  // --- EXPENSES ---
+  'Load/Data': { icon: 'wifi', color: 'bg-sky-500' },
+  Transport: { icon: 'bus', color: 'bg-yellow-500' },
+  School: { icon: 'school', color: 'bg-purple-500' },
+  Health: { icon: 'medkit', color: 'bg-rose-500' },
+  Digital: { icon: 'laptop', color: 'bg-blue-500' },
+  Social: { icon: 'people', color: 'bg-orange-400' },
+  Corrupt: { icon: 'alert-circle', color: 'bg-red-700' },
+  Food: { icon: 'restaurant', color: 'bg-orange-600' },
+  Give: { icon: 'heart', color: 'bg-pink-400' },
+  Shopping: { icon: 'cart', color: 'bg-teal-500' },
 };
 
 export function getHabitCategoryColor(category: HabitCategory): string {
@@ -248,5 +261,5 @@ export function getHabitCategoryColor(category: HabitCategory): string {
 }
 
 export function getFinanceCategoryColor(category: FinanceTypeCategory): string {
-  return FINANCE_CATEGORY_COLORS[category] || '#6B7280';
+  return FINANCE_CATEGORY_CONFIG[category]?.color || '#6B7280';
 }

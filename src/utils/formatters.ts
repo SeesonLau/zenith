@@ -1,3 +1,4 @@
+// src/utils/formatters.ts
 import type { CurrencyCode } from '@/src/types/database.types';
 
 /**
@@ -9,11 +10,8 @@ export function formatCurrency(amount: number, currency: CurrencyCode = 'PHP'): 
     USD: '$',
     EUR: '€',
     JPY: '¥',
-    GBP: '£',
+    SGD: 'S$',
     AUD: 'A$',
-    CAD: 'C$',
-    CNY: 'CN¥',
-    KRW: '₩',
   };
 
   const symbol = symbols[currency] || currency;

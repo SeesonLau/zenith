@@ -100,17 +100,26 @@ export const HABIT_CONFIG = {
 // ==========================================
 export const FINANCE_CONFIG = {
   categories: {
-    Load: { icon: 'phone-portrait' as const, color: 'bg-blue-500' },
-    Fare: { icon: 'bus' as const, color: 'bg-yellow-500' },
+    // --- INCOME CATEGORIES ---
+    Allowance: { icon: 'wallet' as const, color: 'bg-green-500' },
+    Salary: { icon: 'cash' as const, color: 'bg-emerald-600' },
+    Gift: { icon: 'gift' as const, color: 'bg-pink-500' },
+    Repayment: { icon: 'return-up-back' as const, color: 'bg-cyan-500' },
+    Freelance: { icon: 'briefcase' as const, color: 'bg-indigo-500' },
+    Investments: { icon: 'trending-up' as const, color: 'bg-violet-500' },
+
+    // --- EXPENSE CATEGORIES ---
+    'Load/Data': { icon: 'wifi' as const, color: 'bg-sky-500' },
+    Transport: { icon: 'bus' as const, color: 'bg-yellow-500' },
     School: { icon: 'school' as const, color: 'bg-purple-500' },
-    'Personal-Physical': { icon: 'shirt' as const, color: 'bg-pink-500' },
-    'Personal-Digital': { icon: 'phone-portrait' as const, color: 'bg-sky-500' },
-    Favor: { icon: 'gift' as const, color: 'bg-green-500' },
-    Corrupt: { icon: 'alert-circle' as const, color: 'bg-red-500' },
-    Food: { icon: 'restaurant' as const, color: 'bg-orange-500' },
+    Health: { icon: 'medkit' as const, color: 'bg-rose-500' },
+    Digital: { icon: 'laptop' as const, color: 'bg-blue-500' }, // For subscriptions, software
+    Social: { icon: 'people' as const, color: 'bg-orange-400' },
+    Corrupt: { icon: 'alert-circle' as const, color: 'bg-red-700' },
+    Food: { icon: 'restaurant' as const, color: 'bg-orange-600' },
     Give: { icon: 'heart' as const, color: 'bg-pink-400' },
-    Refund: { icon: 'return-up-back' as const, color: 'bg-green-400' },
-    Withdraw: { icon: 'cash' as const, color: 'bg-blue-400' },
+    Shopping: { icon: 'cart' as const, color: 'bg-teal-500' },
+
   } as const satisfies Record<FinanceTypeCategory, { icon: string; color: string }>,
   
   transactionTypes: {

@@ -72,7 +72,7 @@ export default function HomeScreen() {
 
           {/* Version Info */}
           <Text style={{ color: colors.textTertiary, fontSize: 12, textAlign: 'center', marginTop: 24, marginBottom: 96 }}>
-            Zenith v1.0.0 
+            Zenith v1.1.0 
           </Text>
         </View>
       </ScrollView>
