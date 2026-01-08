@@ -1,10 +1,10 @@
-// app/(tabs)/leisure.tsx - INLINE STYLES VERSION
+// app/(tabs)/leisure.tsx
 import React, { useState } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRunningLeisureTimers } from '@/src/database/hooks/useDatabase';
-import { stopLeisureTimer } from '@/src/database/actions/leisureActions';
+import { startLeisureTimer } from '@/src/database/actions/leisureActions';
 import { database } from '@/src/database';
 import { Q } from '@nozbe/watermelondb';
 import type LeisureLog from '@/src/database/models/LeisureLog';
@@ -36,11 +36,23 @@ export default function LeisureScreen() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleStartTimer = async () => {
+    try {
+      await startLeisureTimer();
+    } catch (error) {
+      console.error('Failed to start timer:', error);
+    }
+  };
+
   const handleStopTimer = async (timerId: string) => {
     try {
-      await stopLeisureTimer(timerId);
+      const timer = runningTimers.find(t => t.id === timerId);
+      if (!timer) return;
+
+      const durationSeconds = Math.floor((Date.now() - timer.startedAt.getTime()) / 1000);
+      router.push(`/leisure/complete?id=${timerId}&duration=${durationSeconds}`);
     } catch (error) {
-      console.error('Failed to stop timer:', error);
+      console.error('Failed to navigate to complete:', error);
     }
   };
 
@@ -176,7 +188,7 @@ export default function LeisureScreen() {
                 description="Start tracking your leisure time"
                 action={
                   <Button
-                    onPress={() => router.push('/leisure/start')}
+                    onPress={handleStartTimer}
                     title="Start Session"
                     icon="play"
                     variant="primary"
@@ -205,7 +217,7 @@ export default function LeisureScreen() {
 
       {/* Floating Action Button */}
       <FloatingActionButton
-        onPress={() => router.push('/leisure/start')}
+        onPress={handleStartTimer}
         icon="play"
         color="bg-pink-600"
       />

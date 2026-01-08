@@ -1,4 +1,4 @@
-// src/components/common/NetworkStatus.tsx (NEW FILE - OPTIONAL)
+// src/components/common/NetworkStatus.tsx thmed
 import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,17 +18,26 @@ export default function NetworkStatus() {
   if (isConnected === null) return null;
 
   return (
-    <View className={`flex-row items-center justify-center py-2 px-4 rounded-full ${
-      isConnected ? 'bg-green-900/20' : 'bg-red-900/20'
-    }`}>
+    <View style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      backgroundColor: isConnected ? '#22c55e20' : '#ef444420'
+    }}>
       <Ionicons
         name={isConnected ? 'wifi' : 'wifi-outline'}
         size={14}
         color={isConnected ? '#22c55e' : '#ef4444'}
       />
-      <Text className={`text-xs font-medium ml-2 ${
-        isConnected ? 'text-green-400' : 'text-red-400'
-      }`}>
+      <Text style={{
+        fontSize: 12,
+        fontWeight: '500',
+        marginLeft: 8,
+        color: isConnected ? '#22c55e' : '#ef4444'
+      }}>
         {isConnected ? 'Online' : 'Offline'}
       </Text>
     </View>

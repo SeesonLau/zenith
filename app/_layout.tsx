@@ -7,6 +7,7 @@ import "./global.css";
 import { startAutoSync, stopAutoSync } from '@/src/database/sync/syncManager';
 import { ThemeProvider } from '@/src/contexts/ThemeContext';
 
+
 export default function RootLayout() {
 
   

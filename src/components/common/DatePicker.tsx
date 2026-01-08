@@ -1,9 +1,10 @@
-// src/components/common/DatePicker.tsx
+// src/components/common/DatePicker.tsx  themed
 import React, { useState } from 'react';
 import { View, Text, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { formatDate } from '@/src/utils/dateHelpers';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface DatePickerProps {
   label?: string;
@@ -22,6 +23,7 @@ export default function DatePicker({
   minimumDate,
   maximumDate,
 }: DatePickerProps) {
+  const colors = useThemeColors();
   const [show, setShow] = useState(false);
 
   const handleChange = (event: any, selectedDate?: Date) => {
@@ -54,14 +56,25 @@ export default function DatePicker({
   return (
     <View>
       {label && (
-        <Text className="text-white font-semibold mb-2">{label}</Text>
+        <Text style={{ color: colors.textPrimary, fontWeight: '600', marginBottom: 8 }}>
+          {label}
+        </Text>
       )}
       <Pressable
         onPress={() => setShow(true)}
-        className="input flex-row items-center justify-between"
+        style={{
+          backgroundColor: colors.bgSurface,
+          borderWidth: 1,
+          borderColor: colors.borderSurface,
+          borderRadius: 12,
+          padding: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}
       >
-        <Text className="text-white">{getDisplayText()}</Text>
-        <Ionicons name="calendar-outline" size={20} color="#64748b" />
+        <Text style={{ color: colors.textPrimary }}>{getDisplayText()}</Text>
+        <Ionicons name="calendar-outline" size={20} color={colors.textTertiary} />
       </Pressable>
 
       {show && (
@@ -72,8 +85,8 @@ export default function DatePicker({
           onChange={handleChange}
           minimumDate={minimumDate}
           maximumDate={maximumDate}
-          textColor="#ffffff"
-          themeVariant="dark"
+          textColor={colors.textPrimary}
+          themeVariant={colors.bgPrimary === '#0f172a' ? 'dark' : 'light'}
         />
       )}
     </View>

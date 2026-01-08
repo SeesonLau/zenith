@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getLeisureConfig } from '@/src/lib/constants';
 import { formatDurationHMS } from '@/src/utils/formatters';
 import { getRelativeTime } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { LeisureType } from '@/src/types/database.types';
 
 interface LeisureTimerCardProps {
@@ -20,15 +20,12 @@ interface LeisureTimerCardProps {
 
 export default function LeisureTimerCard({
   id,
-  type,
-  title,
-  notes,
   startedAt,
   onStop,
   onPress,
 }: LeisureTimerCardProps) {
+  const colors = useThemeColors();
   const [elapsedTime, setElapsedTime] = useState(0);
-  const config = getLeisureConfig(type);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,40 +39,97 @@ export default function LeisureTimerCard({
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-2xl p-5 border-2 ${config.borderColor} border-opacity-30 mb-3`}
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.8)' }}
+      style={{
+        backgroundColor: colors.bgSurface,
+        borderWidth: 2,
+        borderColor: '#ec4899',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+      }}
     >
+      {/* Active Indicator */}
+      <View 
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: '#22c55e20',
+          paddingHorizontal: 8,
+          paddingVertical: 3,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#22c55e50',
+        }}
+      >
+        <View style={{ width: 5, height: 5, backgroundColor: '#22c55e', borderRadius: 3, marginRight: 5 }} />
+        <Text style={{ color: '#22c55e', fontSize: 10, fontWeight: '700' }}>
+          ACTIVE
+        </Text>
+      </View>
+
       {/* Header */}
-      <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center flex-1">
-          <View className={`${config.color} rounded-full w-12 h-12 items-center justify-center mr-3`}>
-            <Text className="text-2xl">{config.emoji}</Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-slate-400 text-xs uppercase tracking-wider">{type}</Text>
-            <Text className="text-white text-lg font-bold">
-              {title || `${type} Session`}
-            </Text>
-          </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, paddingRight: 70 }}>
+        <View 
+          style={{
+            backgroundColor: '#64748b',
+            borderRadius: 20,
+            width: 40,
+            height: 40,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: 12,
+          }}
+        >
+          <Text style={{ fontSize: 20 }}>❓</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text 
+            style={{
+              color: colors.textTertiary,
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              fontWeight: '600',
+              marginBottom: 2
+            }}
+          >
+            IN PROGRESS
+          </Text>
+          <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold' }}>
+            Untitled Session
+          </Text>
         </View>
       </View>
 
-      {/* Timer Display */}
-      <View className="glass rounded-xl p-4 mb-3">
-        <Text className="text-sky-400 text-4xl font-mono font-bold text-center">
+      {/* Timer Display - Compact */}
+      <View 
+        style={{
+          backgroundColor: colors.bgSurfaceHover,
+          borderRadius: 12,
+          padding: 12,
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: '#0ea5e940',
+          alignItems: 'center',
+        }}
+      >
+        <Text 
+          style={{
+            color: '#0ea5e9',
+            fontSize: 32,
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+          }}
+        >
           {formatDurationHMS(elapsedTime)}
         </Text>
-        <Text className="text-slate-500 text-xs text-center mt-1">
+        <Text style={{ color: colors.textTertiary, fontSize: 11, marginTop: 4 }}>
           Started {getRelativeTime(startedAt)}
         </Text>
       </View>
-
-      {/* Notes */}
-      {notes && (
-        <View className="bg-slate-800/50 rounded-lg p-3 mb-3">
-          <Text className="text-slate-400 text-sm">{notes}</Text>
-        </View>
-      )}
 
       {/* Stop Button */}
       <Button

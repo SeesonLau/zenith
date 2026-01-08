@@ -1,13 +1,14 @@
 // src/database/sync/syncManager.ts (COMPLETE FIXED VERSION)
 import { syncWithSupabase } from './supabaseSync';
 import { database } from '../index';
+import { Q } from '@nozbe/watermelondb'; // ADDED: Import Q
 import NetInfo from '@react-native-community/netinfo';
 
 let syncInterval: ReturnType<typeof setInterval> | null = null;
 let isSyncing = false;
 let lastSyncTimestamp: number | null = null;
 let isAutoSyncStarted = false;
-let isForcingFullSync = false;  // ADDED: Flag for force sync
+let isForcingFullSync = false;
 
 interface SyncResult {
   success: boolean;
@@ -32,18 +33,20 @@ interface SyncResult {
  */
 async function getLastSyncTimestamp(): Promise<number | null> {
   try {
-    const metadata = await database
-      .get('sync_metadata')
-      .query()
+    const metadataCollection = database.get('sync_metadata');
+    
+    // FIXED: Use Q.where to filter by table_name
+    const records = await metadataCollection
+      .query(Q.where('table_name', 'last_sync'))
       .fetch();
 
-    if (metadata.length > 0) {
-      const lastSync = metadata.find((m: any) => m.tableName === 'last_sync');
-      return lastSync ? (lastSync as any).lastPulledAt : null;
+    if (records.length > 0) {
+      const record = records[0] as any;
+      return record.lastPulledAt || null;
     }
     return null;
   } catch (error) {
-    console.error('Failed to get last sync timestamp:', error);
+    console.error('❌ Failed to get last sync timestamp:', error);
     return null;
   }
 }
@@ -52,7 +55,6 @@ async function getLastSyncTimestamp(): Promise<number | null> {
  * Save last sync timestamp
  */
 async function saveLastSyncTimestamp(timestamp: number): Promise<void> {
-  // ADDED: Don't save timestamp during force sync
   if (isForcingFullSync) {
     console.log('⏭️ Skipping timestamp save during force sync');
     return;
@@ -61,28 +63,33 @@ async function saveLastSyncTimestamp(timestamp: number): Promise<void> {
   try {
     await database.write(async () => {
       const metadataCollection = database.get('sync_metadata');
+      
+      // FIXED: Use Q.where to find by table_name
       const existing = await metadataCollection
-        .query()
+        .query(Q.where('table_name', 'last_sync'))
         .fetch();
 
-      const lastSyncRecord = existing.find((m: any) => m.tableName === 'last_sync');
-
-      if (lastSyncRecord) {
-        await lastSyncRecord.update((record: any) => {
-          record.lastPulledAt = timestamp;
-          record.lastPushedAt = timestamp;
+      if (existing.length > 0) {
+        // Update existing record
+        const record = existing[0];
+        await record.update((r: any) => {
+          r.lastPulledAt = timestamp;
+          r.lastPushedAt = timestamp;
         });
+        console.log('💾 Updated sync timestamp:', new Date(timestamp).toISOString());
       } else {
+        // Create new record only if none exists
         await metadataCollection.create((record: any) => {
           record.tableName = 'last_sync';
           record.lastPulledAt = timestamp;
           record.lastPushedAt = timestamp;
         });
+        console.log('💾 Created new sync timestamp:', new Date(timestamp).toISOString());
       }
     });
-    console.log('💾 Saved sync timestamp:', new Date(timestamp).toISOString());
   } catch (error) {
-    console.error('Failed to save sync timestamp:', error);
+    console.error('❌ Failed to save sync timestamp:', error);
+    // Don't throw - sync can continue even if timestamp save fails
   }
 }
 
@@ -107,11 +114,9 @@ export async function performSync(): Promise<SyncResult> {
     console.log('🔄 Starting sync...');
     console.log('📊 Last sync:', lastSyncTimestamp ? new Date(lastSyncTimestamp).toISOString() : 'Never');
 
-    // Perform sync using supabaseSync
     const result = await syncWithSupabase();
 
     if (result.success) {
-      // Update last sync timestamp (will be skipped if forcing)
       lastSyncTimestamp = Date.now();
       await saveLastSyncTimestamp(lastSyncTimestamp);
 
@@ -144,26 +149,25 @@ export async function performSync(): Promise<SyncResult> {
 export async function forceFullSync(): Promise<SyncResult> {
   console.log('🔄 Forcing full sync (pulling all data)...');
 
-  // Set flag to prevent saving timestamp during this sync
   isForcingFullSync = true;
 
-  // Reset last sync timestamp to 0 to pull ALL data
   try {
     await database.write(async () => {
       const metadataCollection = database.get('sync_metadata');
-      const existing = await metadataCollection.query().fetch();
+      
+      // FIXED: Use Q.where to find records
+      const existing = await metadataCollection
+        .query(Q.where('table_name', 'last_sync'))
+        .fetch();
 
-      // Update to timestamp 0 instead of deleting
       if (existing.length > 0) {
-        for (const record of existing) {
-          await record.update((r: any) => {
-            r.lastPulledAt = 0;
-            r.lastPushedAt = 0;
-          });
-        }
+        const record = existing[0];
+        await record.update((r: any) => {
+          r.lastPulledAt = 0;
+          r.lastPushedAt = 0;
+        });
         console.log('✅ Reset existing sync metadata to 0');
       } else {
-        // Create new metadata with 0 timestamp
         await metadataCollection.create((record: any) => {
           record.tableName = 'last_sync';
           record.lastPulledAt = 0;
@@ -180,8 +184,6 @@ export async function forceFullSync(): Promise<SyncResult> {
   }
 
   const result = await performSync();
-  
-  // Reset flag after sync completes
   isForcingFullSync = false;
   
   return result;
@@ -199,30 +201,25 @@ export function startAutoSync() {
   console.log('🔄 Starting auto-sync...');
   isAutoSyncStarted = true;
 
-  // Sync immediately (with delay to avoid concurrent calls)
   setTimeout(() => {
     performSync();
   }, 1000);
 
-  // Then sync every 5 minutes
   if (syncInterval) {
     clearInterval(syncInterval);
   }
 
   syncInterval = setInterval(() => {
     performSync();
-  }, 5 * 60 * 1000); // 5 minutes
+  }, 5 * 60 * 1000);
 
-  // Also sync when app comes online (with debounce)
   let networkSyncTimeout: ReturnType<typeof setTimeout> | null = null;
   NetInfo.addEventListener((state) => {
     if (state.isConnected && !isSyncing) {
-      // Clear any pending network sync
       if (networkSyncTimeout) {
         clearTimeout(networkSyncTimeout);
       }
       
-      // Wait 2 seconds before syncing to avoid rapid network changes
       networkSyncTimeout = setTimeout(() => {
         console.log('📡 Network connected, syncing...');
         performSync();
@@ -276,5 +273,25 @@ export async function getPendingChangesCount(): Promise<number> {
   } catch (error) {
     console.error('Failed to get pending changes:', error);
     return 0;
+  }
+}
+
+/**
+ * Clear sync metadata (useful for debugging)
+ */
+export async function clearSyncMetadata() {
+  try {
+    await database.write(async () => {
+      const metadataCollection = database.get('sync_metadata');
+      const allRecords = await metadataCollection.query().fetch();
+      
+      for (const record of allRecords) {
+        await record.destroyPermanently();
+      }
+      
+      console.log('✅ Cleared all sync metadata');
+    });
+  } catch (error) {
+    console.error('Failed to clear sync metadata:', error);
   }
 }

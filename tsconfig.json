@@ -22,10 +22,18 @@
 }
 
 /*
+usbipd bind --busid 1-5
 
 usbipd list
 usbipd attach --wsl --busid <BUSID>
 
 npx expo start --tunnel --clear --reset-cache
+
+
 npx expo run:android --variant release
+
+
+npx expo prebuild --platform android --clean
+adb uninstall com.seesonlau.zenith
+npx expo run:android
 */

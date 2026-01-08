@@ -1,22 +1,20 @@
-// src/components/common/ScreenWrapper.tsx (NEW)
+// src/components/common/ScreenWrapper.tsx themed
 import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface ScreenWrapperProps {
   children: ReactNode;
-  className?: string;
 }
 
-/**
- * Wrapper component for all screens
- * Handles Android status bar and navigation bar safe areas
- */
-export default function ScreenWrapper({ children, className = '' }: ScreenWrapperProps) {
+export default function ScreenWrapper({ children }: ScreenWrapperProps) {
+  const colors = useThemeColors();
+  
   return (
     <SafeAreaView 
-      edges={['top']} // Only apply top edge (status bar), bottom is handled by tab bar
-      className={`flex-1 ${className}`}
+      edges={['top']}
+      style={{ flex: 1, backgroundColor: colors.bgPrimary }}
     >
       {children}
     </SafeAreaView>

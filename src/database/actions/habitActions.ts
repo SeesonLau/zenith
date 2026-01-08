@@ -1,10 +1,11 @@
-// src/database/actions/habitActions.ts (FIXED VERSION)
+// src/database/actions/habitActions.ts
 import { database } from '../index';
 import HabitLog from '../models/HabitLog';
 import { getDeviceId } from '@/src/lib/supabase';
+import type { HabitCategory } from '@/src/constants/categories';
 
 export async function startHabitTimer(
-  category: string,
+  category: HabitCategory,
   activity: string,
   notes?: string
 ) {

@@ -1,4 +1,4 @@
-// src/database/hooks/useDatabase.ts (ADD IMPORT AND FIX HOOK)
+// src/database/hooks/useDatabase.ts
 import { useEffect, useState } from 'react';
 import { database } from '../index';
 import { Q } from '@nozbe/watermelondb';
@@ -6,11 +6,9 @@ import type HabitLog from '../models/HabitLog';
 import type FinanceLog from '../models/FinanceLog';
 import type DiaryEntry from '../models/DiaryEntry';
 import type LeisureLog from '../models/LeisureLog';
-import type DiaryImage from '../models/DiaryImage';  // ADDED: Import DiaryImage
+import type DiaryImage from '../models/DiaryImage';
 
-// ... existing hooks ...
-
-// FIXED: Add this hook at the end of the file
+// Hook to get all diary images for an entry
 export function useDiaryImages(entryId: string) {
   const [images, setImages] = useState<DiaryImage[]>([]);
 
@@ -27,55 +25,79 @@ export function useDiaryImages(entryId: string) {
   return images;
 }
 
-// Hook to get all completed habit logs
+// Hook to get all completed habit logs - FIXED with observeWithColumns
 export function useCompletedHabitLogs() {
   const [logs, setLogs] = useState<HabitLog[]>([]);
 
   useEffect(() => {
-    const subscription = database
-      .get<HabitLog>('habit_logs')
-      .query(
-        Q.where('ended_at', Q.notEq(null)),
-        Q.sortBy('started_at', Q.desc)
-      )
-      .observe()
-      .subscribe(setLogs);
+    const fetchLogs = async () => {
+      const habitLogs = database.get<HabitLog>('habit_logs');
+      
+      const subscription = habitLogs
+        .query(
+          Q.where('ended_at', Q.notEq(null)),
+          Q.sortBy('started_at', Q.desc)
+        )
+        .observeWithColumns(['ended_at', 'duration', 'updated_at']) // ← Watch these columns
+        .subscribe(setLogs);
 
-    return () => subscription.unsubscribe();
+      return subscription;
+    };
+
+    const sub = fetchLogs();
+    return () => {
+      sub.then(s => s.unsubscribe());
+    };
   }, []);
 
   return logs;
 }
 
-// Hook to get all running habit timers
+// Hook to get all running habit timers - FIXED with observeWithColumns
 export function useRunningHabitTimers() {
   const [timers, setTimers] = useState<HabitLog[]>([]);
 
   useEffect(() => {
-    const subscription = database
-      .get<HabitLog>('habit_logs')
-      .query(Q.where('ended_at', null))
-      .observe()
-      .subscribe(setTimers);
+    const fetchTimers = async () => {
+      const habitLogs = database.get<HabitLog>('habit_logs');
+      
+      const subscription = habitLogs
+        .query(Q.where('ended_at', null))
+        .observeWithColumns(['ended_at', 'started_at', 'updated_at']) // ← Watch these columns
+        .subscribe(setTimers);
 
-    return () => subscription.unsubscribe();
+      return subscription;
+    };
+
+    const sub = fetchTimers();
+    return () => {
+      sub.then(s => s.unsubscribe());
+    };
   }, []);
 
   return timers;
 }
 
-// Hook to get all running leisure timers
+// Hook to get all running leisure timers - FIXED with observeWithColumns
 export function useRunningLeisureTimers() {
   const [timers, setTimers] = useState<LeisureLog[]>([]);
 
   useEffect(() => {
-    const subscription = database
-      .get<LeisureLog>('leisure_logs')
-      .query(Q.where('ended_at', null))
-      .observe()
-      .subscribe(setTimers);
+    const fetchTimers = async () => {
+      const leisureLogs = database.get<LeisureLog>('leisure_logs');
+      
+      const subscription = leisureLogs
+        .query(Q.where('ended_at', null))
+        .observeWithColumns(['ended_at', 'started_at', 'updated_at']) // ← Watch these columns
+        .subscribe(setTimers);
 
-    return () => subscription.unsubscribe();
+      return subscription;
+    };
+
+    const sub = fetchTimers();
+    return () => {
+      sub.then(s => s.unsubscribe());
+    };
   }, []);
 
   return timers;
@@ -126,22 +148,30 @@ export function useDiaryEntries(year: number, month: number) {
   return entries;
 }
 
-// Hook to get completed leisure logs
+// Hook to get completed leisure logs - FIXED with observeWithColumns
 export function useCompletedLeisureLogs(limit: number = 20) {
   const [logs, setLogs] = useState<LeisureLog[]>([]);
 
   useEffect(() => {
-    const subscription = database
-      .get<LeisureLog>('leisure_logs')
-      .query(
-        Q.where('ended_at', Q.notEq(null)),
-        Q.sortBy('started_at', Q.desc),
-        Q.take(limit)
-      )
-      .observe()
-      .subscribe(setLogs);
+    const fetchLogs = async () => {
+      const leisureLogs = database.get<LeisureLog>('leisure_logs');
+      
+      const subscription = leisureLogs
+        .query(
+          Q.where('ended_at', Q.notEq(null)),
+          Q.sortBy('started_at', Q.desc),
+          Q.take(limit)
+        )
+        .observeWithColumns(['ended_at', 'duration', 'updated_at']) // ← Watch these columns
+        .subscribe(setLogs);
 
-    return () => subscription.unsubscribe();
+      return subscription;
+    };
+
+    const sub = fetchLogs();
+    return () => {
+      sub.then(s => s.unsubscribe());
+    };
   }, [limit]);
 
   return logs;

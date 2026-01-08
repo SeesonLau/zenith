@@ -1,25 +1,27 @@
-// app/(tabs)/_layout.tsx (ANDROID SAFE AREAS)
+// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/src/contexts/ThemeContext';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { isLight } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#0f172a', // Slate-900
-          borderTopColor: '#1e293b',  // Slate-800
+          backgroundColor: isLight ? '#ffffff' : '#0f172a', // White or Slate-900
+          borderTopColor: isLight ? '#e2e8f0' : '#1e293b',  // Slate-200 or Slate-800
           // CRITICAL: Add bottom padding for Android navigation bar
           paddingBottom: insets.bottom,
           height: 56 + insets.bottom, // Standard tab height + safe area
         },
-        tabBarActiveTintColor: '#38bdf8', // Sky-400
-        tabBarInactiveTintColor: '#64748b', // Slate-500
+        tabBarActiveTintColor: isLight ? '#0284c7' : '#38bdf8', // Sky-600 or Sky-400
+        tabBarInactiveTintColor: isLight ? '#94a3b8' : '#64748b', // Slate-400 or Slate-500
       }}
     >
       <Tabs.Screen
@@ -63,7 +65,7 @@ export default function TabLayout() {
         options={{
           title: 'Leisure',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="game-controller-outline" size={size} color={color} />
+            <Ionicons name="film-outline" size={size} color={color} />
           ),
         }}
       />

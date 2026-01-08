@@ -9,9 +9,11 @@ import { getLeisureConfig } from '@/src/lib/constants';
 import { formatDurationHMS, formatTime } from '@/src/utils/formatters';
 import { formatDate } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function LeisureDetailScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [leisureLog, setLeisureLog] = useState<LeisureLog | null>(null);
 
@@ -54,9 +56,9 @@ export default function LeisureDetailScreen() {
 
   if (!leisureLog) {
     return (
-      <View className="flex-1 bg-slate-900 items-center justify-center">
+      <View style={{ flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' }}>
         <Ionicons name="film-outline" size={40} color="#64748b" />
-        <Text className="text-white mt-4">Loading session...</Text>
+        <Text style={{ color: colors.textPrimary, marginTop: 16 }}>Loading session...</Text>
       </View>
     );
   }
@@ -65,80 +67,168 @@ export default function LeisureDetailScreen() {
   const durationSeconds = leisureLog.duration || 0;
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
-      <View className="p-6">
+    <ScrollView style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+      <View style={{ padding: 24 }}>
         {/* Header */}
-        <View className="flex-row items-center mb-6 mt-4">
-          <Pressable onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={28} color="white" />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24, marginTop: 16 }}>
+          <Pressable onPress={() => router.back()} style={{ marginRight: 16 }}>
+            <Ionicons name="arrow-back" size={28} color={colors.textPrimary} />
           </Pressable>
-          <Text className="text-2xl font-bold text-white flex-1">Session Details</Text>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
+            Session Details
+          </Text>
         </View>
 
         {/* Session Card */}
-        <View className={`rounded-2xl p-6 mb-6 border-2 ${config.borderColor}`}>
-          <View className="flex-row items-center mb-4">
-            <View className={`${config.color} rounded-full w-16 h-16 items-center justify-center mr-4`}>
-              <Text className="text-4xl">{config.emoji}</Text>
+        <View 
+          style={{
+            borderRadius: 20,
+            padding: 24,
+            marginBottom: 24,
+            borderWidth: 2,
+            borderColor: config.borderColor,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{ 
+              backgroundColor: config.color,
+              borderRadius: 32,
+              width: 64,
+              height: 64,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: 16
+            }}>
+              <Text style={{ fontSize: 36 }}>{config.emoji}</Text>
             </View>
-            <View className="flex-1">
-              <Text className="text-slate-400 text-xs uppercase tracking-wider">
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: colors.textTertiary, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
                 {leisureLog.type}
               </Text>
-              <Text className="text-white text-2xl font-bold">
+              <Text style={{ color: colors.textPrimary, fontSize: 24, fontWeight: 'bold' }}>
                 {leisureLog.title || `${leisureLog.type} Session`}
               </Text>
             </View>
           </View>
 
           {/* Duration Display */}
-          <View className="glass rounded-xl p-5 mb-4">
-            <Text className="text-slate-400 text-sm mb-2">Total Duration</Text>
-            <Text className="text-sky-400 text-5xl font-mono font-bold text-center">
+          <View style={{ 
+            backgroundColor: colors.bgSurfaceHover,
+            borderRadius: 16,
+            padding: 20,
+            marginBottom: 16
+          }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 8 }}>
+              Total Duration
+            </Text>
+            <Text 
+              style={{ 
+                color: '#0ea5e9', 
+                fontSize: 48, 
+                fontFamily: 'monospace', 
+                fontWeight: 'bold',
+                textAlign: 'center' 
+              }}
+            >
               {formatDurationHMS(durationSeconds)}
             </Text>
           </View>
         </View>
 
         {/* Time Details */}
-        <View className="card p-4 mb-6">
-          <Text className="text-white font-semibold text-lg mb-4">Time Details</Text>
+        <View style={{
+          backgroundColor: colors.bgSurface,
+          borderWidth: 1,
+          borderColor: colors.borderSurface,
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 24
+        }}>
+          <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 18, marginBottom: 16 }}>
+            Time Details
+          </Text>
 
           <DetailRow
             icon="play"
             label="Started"
             value={`${formatDate(leisureLog.startedAt, 'full')} at ${formatTime(leisureLog.startedAt)}`}
+            colors={colors}
           />
           {leisureLog.endedAt && (
             <DetailRow
               icon="stop"
               label="Ended"
               value={`${formatDate(leisureLog.endedAt, 'full')} at ${formatTime(leisureLog.endedAt)}`}
+              colors={colors}
             />
           )}
-          <DetailRow icon="time" label="Duration" value={formatDurationHMS(durationSeconds)} />
+          <DetailRow 
+            icon="time" 
+            label="Duration" 
+            value={formatDurationHMS(durationSeconds)} 
+            colors={colors}
+          />
         </View>
 
         {/* Notes */}
         {leisureLog.notes && (
-          <View className="card p-4 mb-6">
-            <View className="flex-row items-center mb-2">
-              <Ionicons name="document-text-outline" size={20} color="#94a3b8" />
-              <Text className="text-white font-semibold ml-2">Notes</Text>
+          <View style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: colors.borderSurface,
+            borderRadius: 16,
+            padding: 16,
+            marginBottom: 24
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} />
+              <Text style={{ color: colors.textPrimary, fontWeight: '600', marginLeft: 8 }}>
+                Notes
+              </Text>
             </View>
-            <Text className="text-slate-300">{leisureLog.notes}</Text>
+            <Text style={{ color: colors.textSecondary }}>{leisureLog.notes}</Text>
           </View>
         )}
 
         {/* Insights */}
-        <View className={`${config.bgColor} border ${config.borderColor} rounded-xl p-4 mb-6`}>
-          <View className="flex-row items-start">
-            <Ionicons name="bulb" size={20} color={config.color.replace('bg-', '#')} style={{ marginRight: 8, marginTop: 2 }} />
-            <View className="flex-1">
-              <Text className={`${config.textColor} text-sm font-semibold mb-1`}>
+        <View 
+          style={{
+            backgroundColor: config.bgColor,
+            borderWidth: 1,
+            borderColor: config.borderColor,
+            borderRadius: 16,
+            padding: 16,
+            marginBottom: 24
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+            <Ionicons 
+              name="bulb" 
+              size={20} 
+              style={{ 
+                color: config.color,
+                marginRight: 8,
+                marginTop: 2 
+              }} 
+            />
+            <View style={{ flex: 1 }}>
+              <Text 
+                style={{
+                  color: config.textColor,
+                  fontSize: 14,
+                  fontWeight: '600',
+                  marginBottom: 4
+                }}
+              >
                 Session Insight
               </Text>
-              <Text className={`${config.textColor} text-xs opacity-80`}>
+              <Text 
+                style={{
+                  color: config.textColor,
+                  fontSize: 12,
+                  opacity: 0.8
+                }}
+              >
                 {durationSeconds < 600
                   ? 'Quick session! Perfect for a short break.'
                   : durationSeconds < 1800
@@ -168,16 +258,26 @@ interface DetailRowProps {
   icon: any;
   label: string;
   value: string;
+  colors: any;
 }
 
-function DetailRow({ icon, label, value }: DetailRowProps) {
+function DetailRow({ icon, label, value, colors }: DetailRowProps) {
   return (
-    <View className="flex-row py-3 border-b border-slate-700 last:border-b-0">
-      <View className="flex-row items-start flex-1">
-        <Ionicons name={icon} size={20} color="#64748b" style={{ marginTop: 2 }} />
-        <Text className="text-slate-400 text-sm ml-3 w-20">{label}</Text>
+    <View 
+      style={{
+        flexDirection: 'row',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderSurface
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+        <Ionicons name={icon} size={20} color={colors.textTertiary} style={{ marginTop: 2 }} />
+        <Text style={{ color: colors.textSecondary, fontSize: 14, marginLeft: 12, width: 80 }}>
+          {label}
+        </Text>
       </View>
-      <Text className="text-white flex-1">{value}</Text>
+      <Text style={{ color: colors.textPrimary, flex: 1 }}>{value}</Text>
     </View>
   );
 }

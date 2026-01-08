@@ -1,4 +1,5 @@
-// src/components/common/Card.tsx (THEME-AWARE)
+// src/components/common/Card.tsx - THEMED
+// This already uses CSS variables from global.css which work correctly
 import React, { ReactNode } from 'react';
 import { View, Pressable } from 'react-native';
 
@@ -9,11 +10,6 @@ interface CardProps {
   variant?: 'default' | 'elevated';
 }
 
-/**
- * Theme-aware card component
- * Uses CSS variables from global.css
- * Automatically adapts to Slate/White mode
- */
 export default function Card({
   children,
   onPress,

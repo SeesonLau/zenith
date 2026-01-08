@@ -1,4 +1,4 @@
-// app/finance/add.tsx (FINAL FIX - Correct Categories from Database)
+// app/finance/add.tsx (FIXED IMPORTS)
 import React, { useState } from 'react';
 import {
   View,
@@ -14,7 +14,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createFinanceLog } from '@/src/database/actions/financeActions';
-import { FINANCE_CATEGORIES, CURRENCIES } from '@/src/types/database.types';
+// ✅ FIXED: Import from categories.ts instead of database.types.ts
+import { FINANCE_CATEGORIES, CURRENCIES } from '@/src/constants/categories';
 import type { TransactionType, FinanceTypeCategory, CurrencyCode } from '@/src/types/database.types';
 import { formatCurrency } from '@/src/utils/formatters';
 import Button from '@/src/components/common/Button';

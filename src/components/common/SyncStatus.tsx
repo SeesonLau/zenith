@@ -1,7 +1,8 @@
-// src/components/common/SyncStatus.tsx (WITH DEBUG FEATURES)
+// src/components/common/SyncStatus.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from '@/src/hooks/useThemeColors'; // ✅ Theme Hook
 import {
   performSync,
   forceFullSync,
@@ -12,6 +13,9 @@ import { database } from '@/src/database';
 import { supabase, getDeviceId } from '@/src/lib/supabase';
 
 export default function SyncStatus() {
+  const colors = useThemeColors(); // ✅ Get current theme colors
+
+  // --- STATE MANAGEMENT ---
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [pendingChanges, setPendingChanges] = useState(0);
@@ -31,6 +35,8 @@ export default function SyncStatus() {
     const pending = await getPendingChangesCount();
     setPendingChanges(pending);
   };
+
+  // --- LOGIC HANDLERS ---
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -87,7 +93,8 @@ export default function SyncStatus() {
     );
   };
 
-  // DEBUG: Test Supabase Pull
+  // --- DEBUG TOOLS ---
+
   const testSupabasePull = async () => {
     try {
       const deviceId = await getDeviceId();
@@ -143,7 +150,6 @@ export default function SyncStatus() {
     }
   };
 
-  // DEBUG: Check Local Database
   const debugCheckLocalData = async () => {
     try {
       console.log('🔍 Checking local database...');
@@ -181,32 +187,16 @@ export default function SyncStatus() {
     }
   };
 
-  // DEBUG: Check Supabase Direct
   const debugCheckSupabaseData = async () => {
     try {
       console.log('☁️ Checking Supabase database...');
       
-      const { data: financeLogs, error: financeError } = await supabase
-        .from('finance_logs')
-        .select('*')
-        .limit(10);
+      const { data: financeLogs } = await supabase.from('finance_logs').select('*').limit(10);
+      const { data: habitLogs } = await supabase.from('habit_logs').select('*').limit(10);
+      const { data: diaryEntries } = await supabase.from('diary_entries').select('*').limit(10);
+      const { data: leisureLogs } = await supabase.from('leisure_logs').select('*').limit(10);
 
-      const { data: habitLogs, error: habitError } = await supabase
-        .from('habit_logs')
-        .select('*')
-        .limit(10);
-
-      const { data: diaryEntries, error: diaryError } = await supabase
-        .from('diary_entries')
-        .select('*')
-        .limit(10);
-
-      const { data: leisureLogs, error: leisureError } = await supabase
-        .from('leisure_logs')
-        .select('*')
-        .limit(10);
-
-      console.log('📊 Supabase database counts:');
+      console.log('📊 Supabase database counts (Limit 10):');
       console.log('  💰 Finance:', financeLogs?.length || 0);
       console.log('  ⏱️  Habits:', habitLogs?.length || 0);
       console.log('  📔 Diary:', diaryEntries?.length || 0);
@@ -219,7 +209,7 @@ export default function SyncStatus() {
 
       Alert.alert(
         'Supabase Database',
-        `Records in Supabase:\n\n` +
+        `Records in Supabase (limit 10):\n\n` +
         `💰 Finance: ${financeLogs?.length || 0}\n` +
         `⏱️ Habits: ${habitLogs?.length || 0}\n` +
         `📔 Diary: ${diaryEntries?.length || 0}\n` +
@@ -232,104 +222,150 @@ export default function SyncStatus() {
     }
   };
 
+  // --- RENDER ---
+
   return (
-    <View className="card p-4">
-      <View className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center">
+    <View style={{
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderSurface,
+      borderRadius: 16,
+      padding: 16
+    }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Ionicons
             name="cloud"
             size={20}
             color={isSyncing ? '#0ea5e9' : pendingChanges > 0 ? '#f59e0b' : '#22c55e'}
           />
-          <Text className="text-white font-semibold ml-2">Sync Status</Text>
+          <Text style={{ color: colors.textPrimary, fontWeight: '600', marginLeft: 8 }}>
+            Sync Status
+          </Text>
         </View>
         {isSyncing && <ActivityIndicator size="small" color="#0ea5e9" />}
       </View>
 
       {/* Status Info */}
-      <View className="space-y-2 mb-3">
-        <View className="flex-row justify-between">
-          <Text className="text-slate-400 text-sm">Last synced:</Text>
-          <Text className="text-slate-300 text-sm">
+      <View style={{ gap: 8, marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Last synced:</Text>
+          <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
             {lastSyncedAt ? lastSyncedAt.toLocaleTimeString() : 'Never'}
           </Text>
         </View>
-        <View className="flex-row justify-between">
-          <Text className="text-slate-400 text-sm">Pending changes:</Text>
-          <Text
-            className={`text-sm font-semibold ${
-              pendingChanges > 0 ? 'text-amber-400' : 'text-green-400'
-            }`}
-          >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Pending changes:</Text>
+          <Text style={{
+            fontSize: 14,
+            fontWeight: '600',
+            color: pendingChanges > 0 ? '#f59e0b' : '#22c55e'
+          }}>
             {pendingChanges}
           </Text>
         </View>
       </View>
 
-      {/* Sync Result */}
-      {syncResult && (
-        <View className="bg-slate-900/50 rounded-lg p-2 mb-3">
-          <Text className="text-slate-300 text-xs">{syncResult}</Text>
+      {/* Sync Result Output Box */}
+      {syncResult ? (
+        <View style={{
+          backgroundColor: '#0f172a', // Keep dark for terminal look, or use colors.bgCard
+          borderRadius: 8,
+          padding: 8,
+          marginBottom: 12
+        }}>
+          <Text style={{ color: '#cbd5e1', fontSize: 12 }}>{syncResult}</Text>
         </View>
-      )}
+      ) : null}
 
       {/* Action Buttons */}
-      <View className="flex-row gap-2 mb-3">
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
         <Pressable
           onPress={handleSync}
           disabled={isSyncing}
-          className={`flex-1 bg-sky-500 rounded-lg p-3 flex-row items-center justify-center ${
-            isSyncing ? 'opacity-50' : ''
-          }`}
+          style={{
+            flex: 1,
+            backgroundColor: '#0ea5e9', // Sky blue
+            borderRadius: 8,
+            padding: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isSyncing ? 0.5 : 1
+          }}
         >
           <Ionicons name="sync" size={16} color="white" />
-          <Text className="text-white font-semibold ml-2">Sync</Text>
+          <Text style={{ color: 'white', fontWeight: '600', marginLeft: 8 }}>Sync</Text>
         </Pressable>
 
         <Pressable
           onPress={handleForceSync}
           disabled={isSyncing}
-          className={`bg-purple-600 rounded-lg p-3 ${isSyncing ? 'opacity-50' : ''}`}
+          style={{
+            backgroundColor: '#9333ea', // Purple
+            borderRadius: 8,
+            padding: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isSyncing ? 0.5 : 1
+          }}
         >
           <Ionicons name="cloud-download" size={16} color="white" />
         </Pressable>
       </View>
 
-      {/* Debug Buttons */}
-      <View className="pt-3 border-t border-slate-700">
-        <Text className="text-slate-400 text-xs font-semibold mb-2">Debug Tools</Text>
-        <View className="flex-row gap-2 mb-2">
+      {/* Debug Tools Section */}
+      <View style={{ paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSurface }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
+          Debug Tools
+        </Text>
+        
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
           <Pressable
             onPress={testSupabasePull}
-            className="flex-1 bg-amber-600 rounded-lg p-2"
+            style={{
+              flex: 1,
+              backgroundColor: '#d97706', // Amber
+              borderRadius: 8,
+              padding: 8,
+              alignItems: 'center'
+            }}
           >
-            <Text className="text-white text-xs text-center font-semibold">
-              Test Pull
-            </Text>
+            <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Test Pull</Text>
           </Pressable>
+
           <Pressable
             onPress={debugCheckLocalData}
-            className="flex-1 bg-blue-600 rounded-lg p-2"
+            style={{
+              flex: 1,
+              backgroundColor: '#2563eb', // Blue
+              borderRadius: 8,
+              padding: 8,
+              alignItems: 'center'
+            }}
           >
-            <Text className="text-white text-xs text-center font-semibold">
-              Check Local
-            </Text>
+            <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Check Local</Text>
           </Pressable>
         </View>
+
         <Pressable
           onPress={debugCheckSupabaseData}
-          className="bg-green-600 rounded-lg p-2"
+          style={{
+            backgroundColor: '#16a34a', // Green
+            borderRadius: 8,
+            padding: 8,
+            alignItems: 'center'
+          }}
         >
-          <Text className="text-white text-xs text-center font-semibold">
-            Check Supabase
-          </Text>
+          <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Check Supabase</Text>
         </Pressable>
       </View>
 
       {/* Legend */}
-      <View className="mt-3 pt-3 border-t border-slate-700">
-        <Text className="text-slate-500 text-xs">🔵 Sync - Push & pull changes</Text>
-        <Text className="text-slate-500 text-xs">🟣 Pull All - Download all data</Text>
+      <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSurface }}>
+        <Text style={{ color: colors.textTertiary, fontSize: 12 }}>🔵 Sync - Push & pull changes</Text>
+        <Text style={{ color: colors.textTertiary, fontSize: 12 }}>🟣 Pull All - Download all data</Text>
       </View>
     </View>
   );

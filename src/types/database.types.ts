@@ -1,23 +1,31 @@
 // src/types/database.types.ts
+// 🎯 Import all category types from centralized location
+import type {
+  HabitCategory,
+  HabitActivity,
+  TransactionType,
+  FinanceTypeCategory,
+  CurrencyCode,
+  MoodType,
+  LeisureType,
+} from '@/src/constants/categories';
 
-// ==========================================
-// HABIT TRACKER TYPES
-// ==========================================
-export type HabitCategory = 
-  | 'Productivity' 
-  | 'Self-Care' 
-  | 'Logistics' 
-  | 'Enjoyment' 
-  | 'Nothing';
-
-export type HabitActivity = {
-  Productivity: 'Working' | 'Studying' | 'Personal Project';
-  'Self-Care': 'Sleeping' | 'Exercise' | 'Eating' | 'Cooking' | 'Bathing' | 'Peace';
-  Logistics: 'Errands' | 'Chores' | 'Travel';
-  Enjoyment: 'Socializing' | 'Romance' | 'Gaming' | 'Music'| 'Watching Videos' | 'Reading' | 'Leisure';
-  Nothing: 'Doomscrolling' | 'Procrastinating';
+// Re-export category types for convenience
+export type {
+  HabitCategory,
+  TransactionType,
+  FinanceTypeCategory,
+  CurrencyCode,
+  MoodType,
+  LeisureType,
 };
 
+// Re-export activity type
+export type { HabitActivity } from '@/src/constants/categories';
+
+// ==========================================
+// HABIT TRACKER DATA TYPES
+// ==========================================
 export type HabitLogData = {
   id: string;
   category: HabitCategory;
@@ -32,34 +40,8 @@ export type HabitLogData = {
 };
 
 // ==========================================
-// FINANCE TRACKER TYPES
+// FINANCE TRACKER DATA TYPES
 // ==========================================
-export type TransactionType = 'income' | 'expense';
-
-export type FinanceTypeCategory = 
-  | 'Load'
-  | 'Fare'
-  | 'School'
-  | 'Personal-Physical'
-  | 'Personal-Digital'
-  | 'Favor'
-  | 'Corrupt'
-  | 'Food'
-  | 'Give'
-  | 'Refund'
-  | 'Withdraw';
-
-export type CurrencyCode = 
-  | 'PHP' 
-  | 'USD' 
-  | 'EUR' 
-  | 'JPY' 
-  | 'GBP' 
-  | 'AUD' 
-  | 'CAD'
-  | 'CNY'
-  | 'KRW';
-
 export type FinanceLogData = {
   id: string;
   transactionType: TransactionType;
@@ -78,18 +60,8 @@ export type FinanceLogData = {
 };
 
 // ==========================================
-// DIARY TYPES
+// DIARY DATA TYPES
 // ==========================================
-export type MoodType = 
-  | 'Happy'
-  | 'Sad'
-  | 'Neutral'
-  | 'Excited'
-  | 'Anxious'
-  | 'Angry'
-  | 'Grateful'
-  | 'Reflective';
-
 export type DiaryEntryData = {
   id: string;
   title?: string;
@@ -115,21 +87,8 @@ export type DiaryImageData = {
 };
 
 // ==========================================
-// LEISURE TRACKER TYPES
+// LEISURE TRACKER DATA TYPES
 // ==========================================
-export type LeisureType = 
-  | 'Manga'
-  | 'Mangah' 
-  | 'Manhwah'
-  | 'Manhuah'
-  | 'Fanart'
-  | 'Acquainted'
-  | 'Stranger'
-  | 'Sensual';
-
-
-  
-
 export type LeisureLogData = {
   id: string;
   type: LeisureType;
@@ -268,73 +227,6 @@ export type RootStackParamList = {
   'leisure/start': undefined;
   'settings/index': undefined;
 };
-
-// ==========================================
-// CONSTANTS
-// ==========================================
-export const HABIT_CATEGORIES: HabitCategory[] = [
-  'Productivity',
-  'Self-Care',
-  'Logistics',
-  'Enjoyment',
-  'Nothing',
-];
-
-export const HABIT_ACTIVITIES: Record<keyof HabitActivity, readonly string[]> = {
-  Productivity: ['Working', 'Studying', 'Personal Project'],
-  'Self-Care': ['Sleeping', 'Exercise', 'Eating', 'Cooking', 'Bathing', 'Peace'],
-  Logistics: ['Errands', 'Chores', 'Travel'],
-  Enjoyment: ['Socializing', 'Romance', 'Gaming', 'Music', 'Watching Videos', 'Reading', 'Leisure'],
-  Nothing: ['Doomscrolling', 'Procrastinating'],
-} as const;
-
-export const FINANCE_CATEGORIES: FinanceTypeCategory[] = [
-  'Load',
-  'Fare',
-  'School',
-  'Personal-Physical',
-  'Personal-Digital',
-  'Favor',
-  'Corrupt',
-  'Food',
-  'Give',
-  'Refund',
-  'Withdraw',
-];
-
-export const CURRENCIES: CurrencyCode[] = [
-  'PHP',
-  'USD',
-  'EUR',
-  'JPY',
-  'GBP',
-  'AUD',
-  'CAD',
-  'CNY',
-  'KRW',
-];
-
-export const LEISURE_TYPES: LeisureType[] = [
-  'Manga',
-  'Mangah',
-  'Manhwah',
-  'Manhuah',
-  'Fanart',
-  'Acquainted',
-  'Stranger',
-  'Sensual',
-];
-
-export const MOOD_OPTIONS: MoodType[] = [
-  'Happy',
-  'Sad',
-  'Neutral',
-  'Excited',
-  'Anxious',
-  'Angry',
-  'Grateful',
-  'Reflective',
-];
 
 // ==========================================
 // UTILITY TYPES

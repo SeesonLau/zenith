@@ -51,7 +51,7 @@ export const HABIT_CONFIG = {
       borderColor: 'border-purple-500',
       bgColor: 'bg-purple-900/20',
       icon: 'briefcase' as const,
-      activities: ['Working', 'Studying', 'Personal Project'],
+      activities: ['Personal Project', 'Studying', 'Working'],
     },
     'Self-Care': {
       color: 'bg-green-500',
@@ -59,7 +59,7 @@ export const HABIT_CONFIG = {
       borderColor: 'border-green-500',
       bgColor: 'bg-green-900/20',
       icon: 'heart' as const,
-      activities: ['Sleeping', 'Exercise', 'Eating', 'Cooking', 'Bathing', 'Peace'],
+      activities: ['Bathing', 'Cooking', 'Eating', 'Exercise', 'Peace', 'Sleeping'],
     },
     Logistics: {
       color: 'bg-blue-500',
@@ -67,7 +67,7 @@ export const HABIT_CONFIG = {
       borderColor: 'border-blue-500',
       bgColor: 'bg-blue-900/20',
       icon: 'car' as const,
-      activities: ['Errands', 'Chores', 'Travel'],
+      activities: ['Chores', 'Errands', 'Travel'],
     },
     Enjoyment: {
       color: 'bg-pink-500',
@@ -75,7 +75,7 @@ export const HABIT_CONFIG = {
       borderColor: 'border-pink-500',
       bgColor: 'bg-pink-900/20',
       icon: 'happy' as const,
-      activities: ['Socializing', 'Romance', 'Gaming', 'Watching Videos', 'Reading', 'Leisure'],
+      activities: ['Anime', 'Gaming', 'Leisure', 'Modding', 'Music', 'Reading', 'Romance', 'Socializing', 'Watching Videos'],
     },
     Nothing: {
       color: 'bg-gray-500',
@@ -134,7 +134,17 @@ export const FINANCE_CONFIG = {
 // ==========================================
 export const LEISURE_CONFIG = {
   types: {
-      Manga: {
+    // Group I - General
+    Anime: {
+      color: 'bg-sky-500',
+      textColor: 'text-sky-400',
+      borderColor: 'border-sky-500',
+      bgColor: 'bg-sky-900/20',
+      icon: 'tv' as const,
+      emoji: '📺',
+    },
+    
+    Manga: {
       color: 'bg-purple-500',
       textColor: 'text-purple-400',
       borderColor: 'border-purple-500',
@@ -143,47 +153,94 @@ export const LEISURE_CONFIG = {
       emoji: '📘',
     },
     
+    Manhwa: {
+      color: 'bg-blue-500',
+      textColor: 'text-blue-400',
+      borderColor: 'border-blue-500',
+      bgColor: 'bg-blue-900/20',
+      icon: 'book' as const,
+      emoji: '📙',
+    },
+
+    Manhua: {
+      color: 'bg-red-500',
+      textColor: 'text-red-400',
+      borderColor: 'border-red-500',
+      bgColor: 'bg-red-900/20',
+      icon: 'book' as const,
+      emoji: '📕',
+    },
+
+    Webtoon: {
+      color: 'bg-teal-500',
+      textColor: 'text-teal-400',
+      borderColor: 'border-teal-500',
+      bgColor: 'bg-teal-900/20',
+      icon: 'phone-portrait' as const,
+      emoji: '📱',
+    },
+
+    // Group II - Adult
+    Animeh: {
+      color: 'bg-pink-600',
+      textColor: 'text-pink-400',
+      borderColor: 'border-pink-600',
+      bgColor: 'bg-pink-900/30',
+      icon: 'tv' as const,
+      emoji: '📹',
+    },
+    
     Mangah: {
-      color: 'bg-green-500',
-      textColor: 'text-green-400',
-      borderColor: 'border-green-500',
-      bgColor: 'bg-green-900/20',
+      color: 'bg-fuchsia-600',
+      textColor: 'text-fuchsia-400',
+      borderColor: 'border-fuchsia-600',
+      bgColor: 'bg-fuchsia-900/30',
       icon: 'book-open' as const,
       emoji: '📗',
     },
 
     Manhwah: {
-      color: 'bg-blue-500',
-      textColor: 'text-blue-400',
-      borderColor: 'border-blue-500',
-      bgColor: 'bg-blue-900/20',
-      icon: 'book-open' as const,
-      emoji: '📙',
+      color: 'bg-rose-600',
+      textColor: 'text-rose-400',
+      borderColor: 'border-rose-600',
+      bgColor: 'bg-rose-900/30',
+      icon: 'book' as const,
+      emoji: '💗',
     },
 
     Manhuah: {
-      color: 'bg-red-500',
+      color: 'bg-red-600',
       textColor: 'text-red-400',
-      borderColor: 'border-red-500',
-      bgColor: 'bg-red-900/20',
-      icon: 'book-open' as const,
-      emoji: '📕',
+      borderColor: 'border-red-600',
+      bgColor: 'bg-red-900/30',
+      icon: 'book' as const,
+      emoji: '❤️',
     },
 
+    // Group III - Other
     Fanart: {
-      color: 'bg-pink-500',
-      textColor: 'text-pink-400',
-      borderColor: 'border-pink-500',
-      bgColor: 'bg-pink-900/20',
+      color: 'bg-violet-500',
+      textColor: 'text-violet-400',
+      borderColor: 'border-violet-500',
+      bgColor: 'bg-violet-900/20',
       icon: 'palette' as const,
       emoji: '🎨',
     },
 
+    Imagination: {
+      color: 'bg-indigo-500',
+      textColor: 'text-indigo-400',
+      borderColor: 'border-indigo-500',
+      bgColor: 'bg-indigo-900/20',
+      icon: 'sparkles' as const,
+      emoji: '✨',
+    },
+
     Acquainted: {
-      color: 'bg-orange-500',
-      textColor: 'text-orange-400',
-      borderColor: 'border-orange-500',
-      bgColor: 'bg-orange-900/20',
+      color: 'bg-amber-500',
+      textColor: 'text-amber-400',
+      borderColor: 'border-amber-500',
+      bgColor: 'bg-amber-900/20',
       icon: 'people' as const,
       emoji: '🙂',
     },
@@ -198,10 +255,10 @@ export const LEISURE_CONFIG = {
     },
 
     Sensual: {
-      color: 'bg-red-600',
+      color: 'bg-red-700',
       textColor: 'text-red-400',
-      borderColor: 'border-red-600',
-      bgColor: 'bg-red-900/30',
+      borderColor: 'border-red-700',
+      bgColor: 'bg-red-900/40',
       icon: 'heart' as const,
       emoji: '💖',
     },

@@ -1,58 +1,59 @@
-// app/habit/start.tsx
+// app/habit/start.tsx - SPACE OPTIMIZED
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { startHabitTimer } from '@/src/database/actions/habitActions';
-import { HABIT_CATEGORIES, HABIT_ACTIVITIES } from '@/src/types/database.types';
-import type { HabitCategory } from '@/src/types/database.types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '@/src/components/common/Button';
+import { startHabitTimer } from '@/src/database/actions/habitActions';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { getHabitConfig } from '@/src/lib/constants';
+import type { HabitCategory } from '@/src/types/database.types';
+
+const CATEGORY_ICONS: Record<HabitCategory, keyof typeof Ionicons.glyphMap> = {
+  'Productivity': 'briefcase',
+  'Self-Care': 'heart',
+  'Logistics': 'car',
+  'Enjoyment': 'happy',
+  'Nothing': 'moon',
+};
 
 const CATEGORY_COLORS: Record<HabitCategory, string> = {
-  Productivity: 'bg-purple-500',
-  'Self-Care': 'bg-green-500',
-  Logistics: 'bg-blue-500',
-  Enjoyment: 'bg-pink-500',
-  Nothing: 'bg-gray-500',
+  'Productivity': '#a855f7',
+  'Self-Care': '#22c55e',
+  'Logistics': '#3b82f6',
+  'Enjoyment': '#ec4899',
+  'Nothing': '#64748b',
 };
 
-const CATEGORY_ICONS: Record<HabitCategory, any> = {
-  Productivity: 'briefcase',
-  'Self-Care': 'heart',
-  Logistics: 'car',
-  Enjoyment: 'happy',
-  Nothing: 'time',
-};
+const CATEGORIES: HabitCategory[] = ['Productivity', 'Self-Care', 'Logistics', 'Enjoyment', 'Nothing'];
 
-export default function StartTimerScreen() {
+export default function StartHabitScreen() {
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<HabitCategory | null>(null);
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+  const colors = useThemeColors();
+  
+  const [selectedCategory, setSelectedCategory] = useState<HabitCategory>('Productivity');
+  const [selectedActivity, setSelectedActivity] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleStart = async () => {
-    if (!selectedCategory || !selectedActivity) {
-      Alert.alert('Error', 'Please select both category and activity');
+  const config = getHabitConfig(selectedCategory);
+  const activities = config?.activities || [];
+  const useTwoColumns = activities.length > 5;
+
+  const handleStartTimer = async () => {
+    if (!selectedActivity) {
+      Alert.alert('Error', 'Please select an activity');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await startHabitTimer(selectedCategory, selectedActivity, notes || undefined);
+      await startHabitTimer(selectedCategory, selectedActivity, notes.trim() || undefined);
       router.back();
     } catch (error) {
-      console.error('Failed to start timer:', error);
+      console.error('Failed to start habit timer:', error);
       Alert.alert('Error', 'Failed to start timer');
     } finally {
       setIsLoading(false);
@@ -60,113 +61,172 @@ export default function StartTimerScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-slate-900"
-    >
-      <ScrollView className="flex-1">
-        <View className="p-6">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        <View style={{ padding: 20 }}>
           {/* Header */}
-          <View className="flex-row items-center mb-6 mt-4">
-            <Pressable onPress={() => router.back()} className="mr-4">
-              <Ionicons name="close" size={28} color="white" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24, marginTop: 8 }}>
+            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+              <Ionicons name="close" size={24} color={colors.textPrimary} />
             </Pressable>
-            <Text className="text-2xl font-bold text-white flex-1">Start Timer</Text>
+            <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.textPrimary }}>
+              Start Activity
+            </Text>
           </View>
 
-          {/* Category Selection */}
-          <Text className="text-white font-semibold text-lg mb-3">Select Category</Text>
-          <View className="flex-row flex-wrap gap-3 mb-6">
-            {HABIT_CATEGORIES.map((category) => (
-              <Pressable
-                key={category}
-                onPress={() => {
-                  setSelectedCategory(category);
-                  setSelectedActivity(null);
-                }}
-                className={`flex-1 min-w-[45%] rounded-xl p-4 border-2 ${
-                  selectedCategory === category
-                    ? `${CATEGORY_COLORS[category]} border-opacity-100`
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <View className="items-center">
-                  <View
-                    className={`${
-                      selectedCategory === category ? 'bg-white/20' : 'bg-slate-700'
-                    } rounded-full w-12 h-12 items-center justify-center mb-2`}
-                  >
-                    <Ionicons
-                      name={CATEGORY_ICONS[category]}
-                      size={24}
-                      color={selectedCategory === category ? 'white' : '#64748b'}
-                    />
-                  </View>
+          {/* Category Selection - Fill Width */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 10 }}>
+              Category
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {CATEGORIES.map((category) => (
+                <Pressable
+                  key={category}
+                  onPress={() => {
+                    setSelectedCategory(category);
+                    setSelectedActivity('');
+                  }}
+                  style={{
+                    flex: 1,
+                    flexBasis: '30%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: selectedCategory === category 
+                      ? CATEGORY_COLORS[category] 
+                      : colors.bgSurface,
+                    borderWidth: 1.5,
+                    borderColor: selectedCategory === category 
+                      ? CATEGORY_COLORS[category] 
+                      : colors.borderSurface,
+                    borderRadius: 10,
+                    paddingVertical: 10,
+                    paddingHorizontal: 8,
+                  }}
+                >
+                  <Ionicons
+                    name={CATEGORY_ICONS[category]}
+                    size={18}
+                    color={selectedCategory === category ? 'white' : colors.textPrimary}
+                  />
                   <Text
-                    className={`font-semibold text-center ${
-                      selectedCategory === category ? 'text-white' : 'text-slate-400'
-                    }`}
+                    style={{
+                      marginLeft: 6,
+                      fontSize: 13,
+                      fontWeight: '600',
+                      color: selectedCategory === category ? 'white' : colors.textPrimary,
+                    }}
+                    numberOfLines={1}
                   >
                     {category}
                   </Text>
-                </View>
-              </Pressable>
-            ))}
+                </Pressable>
+              ))}
+            </View>
           </View>
 
-          {/* Activity Selection */}
-          {selectedCategory && (
-            <>
-              <Text className="text-white font-semibold text-lg mb-3">Select Activity</Text>
-              <View className="flex-row flex-wrap gap-2 mb-6">
-                {HABIT_ACTIVITIES[selectedCategory].map((activity) => (
+          {/* Activity Selection - Dynamic Columns */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 10 }}>
+              Activity
+            </Text>
+            {activities.length > 0 ? (
+              <View style={{ 
+                flexDirection: 'row', 
+                flexWrap: 'wrap', 
+                gap: 8 
+              }}>
+                {activities.map((activity) => (
                   <Pressable
                     key={activity}
                     onPress={() => setSelectedActivity(activity)}
-                    className={`px-4 py-3 rounded-xl ${
-                      selectedActivity === activity
+                    style={{
+                      width: useTwoColumns ? '48.5%' : '100%',
+                      backgroundColor: selectedActivity === activity
+                        ? `${CATEGORY_COLORS[selectedCategory]}20`
+                        : colors.bgSurface,
+                      borderWidth: 1.5,
+                      borderColor: selectedActivity === activity
                         ? CATEGORY_COLORS[selectedCategory]
-                        : 'bg-slate-800 border border-slate-700'
-                    }`}
+                        : colors.borderSurface,
+                      borderRadius: 10,
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
                   >
                     <Text
-                      className={`font-medium ${
-                        selectedActivity === activity ? 'text-white' : 'text-slate-400'
-                      }`}
+                      style={{
+                        fontSize: 14,
+                        fontWeight: selectedActivity === activity ? '600' : '500',
+                        color: selectedActivity === activity 
+                          ? CATEGORY_COLORS[selectedCategory]
+                          : colors.textPrimary,
+                        flex: 1,
+                      }}
+                      numberOfLines={1}
                     >
                       {activity}
                     </Text>
+                    {selectedActivity === activity && (
+                      <Ionicons 
+                        name="checkmark-circle" 
+                        size={18} 
+                        color={CATEGORY_COLORS[selectedCategory]}
+                        style={{ marginLeft: 6 }}
+                      />
+                    )}
                   </Pressable>
                 ))}
               </View>
-            </>
-          )}
+            ) : (
+              <Text style={{ color: colors.textTertiary, fontSize: 14 }}>
+                No activities available
+              </Text>
+            )}
+          </View>
 
-          {/* Notes */}
-          <Text className="text-white font-semibold text-lg mb-3">Notes (Optional)</Text>
-          <TextInput
-            placeholder="Add any notes..."
-            placeholderTextColor="#64748b"
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={4}
-            className="bg-slate-800 border border-slate-700 text-white p-4 rounded-xl mb-6"
-            style={{ textAlignVertical: 'top' }}
-          />
+          {/* Notes Section */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 8 }}>
+              Notes <Text style={{ color: colors.textTertiary, fontSize: 13, fontWeight: '400' }}>(Optional)</Text>
+            </Text>
+            <TextInput
+              placeholder="Add notes about this activity..."
+              placeholderTextColor={colors.textTertiary}
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={3}
+              style={{
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 10,
+                padding: 12,
+                fontSize: 14,
+                color: colors.textPrimary,
+                textAlignVertical: 'top',
+                minHeight: 80,
+              }}
+            />
+          </View>
 
           {/* Start Button */}
           <Button
-            onPress={handleStart}
+            onPress={handleStartTimer}
             title="Start Timer"
             icon="play"
             variant="primary"
             fullWidth
-            disabled={!selectedCategory || !selectedActivity}
             loading={isLoading}
+            disabled={!selectedActivity}
           />
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

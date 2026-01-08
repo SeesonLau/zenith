@@ -1,20 +1,23 @@
 // src/database/models/LeisureLog.ts
 import { Model } from '@nozbe/watermelondb';
 import { field, date, readonly, writer } from '@nozbe/watermelondb/decorators';
+import type { LeisureType } from '@/src/constants/categories';
 
 export default class LeisureLog extends Model {
   static table = 'leisure_logs';
 
-  @field('type') type!: 'Manga' | 'Mangah' | 'Manhwah' | 'Manhuah' | 'Fanart' | 'Acquainted' | 'Stranger' | 'Sensual';
+  @field('type') type!: LeisureType;
   @field('title') title?: string;
   @date('started_at') startedAt!: Date;
   @date('ended_at') endedAt?: Date;
   @field('duration') duration?: number; // in seconds
   @field('notes') notes?: string;
   @field('is_synced') isSynced!: boolean;
+  @field('device_id') deviceId?: string;
+  
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
-@field('device_id') deviceId?: string;
+
   @writer async stopTimer() {
     if (this.endedAt) {
       throw new Error('Timer already stopped');

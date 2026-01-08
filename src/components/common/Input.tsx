@@ -1,45 +1,55 @@
-// src/components/common/Input.tsx
+// src/components/common/Input.tsx  themed
 import React from 'react';
 import { View, TextInput, Text, TextInputProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   icon?: keyof typeof Ionicons.glyphMap;
-  containerClassName?: string;
 }
 
 export default function Input({
   label,
   error,
   icon,
-  containerClassName = '',
   ...props
 }: InputProps) {
+  const colors = useThemeColors();
+
   return (
-    <View className={containerClassName}>
+    <View>
       {label && (
-        <Text className="text-white font-semibold mb-2">{label}</Text>
+        <Text style={{ color: colors.textPrimary, fontWeight: '600', marginBottom: 8 }}>
+          {label}
+        </Text>
       )}
-      <View className="relative">
+      <View style={{ position: 'relative' }}>
         {icon && (
-          <View className="absolute left-4 top-4 z-10">
-            <Ionicons name={icon} size={20} color="#64748b" />
+          <View style={{ position: 'absolute', left: 16, top: 16, zIndex: 10 }}>
+            <Ionicons name={icon} size={20} color={colors.textTertiary} />
           </View>
         )}
         <TextInput
-          className={`
-            input
-            ${icon ? 'pl-12' : ''}
-            ${error ? 'border-red-500' : ''}
-          `}
-          placeholderTextColor="#64748b"
+          style={{
+            backgroundColor: colors.bgSurface,
+            borderWidth: 1,
+            borderColor: error ? '#ef4444' : colors.borderSurface,
+            borderRadius: 12,
+            padding: 16,
+            paddingLeft: icon ? 48 : 16,
+            fontSize: 16,
+            color: colors.textPrimary
+          }}
+          placeholderTextColor={colors.textTertiary}
           {...props}
         />
       </View>
       {error && (
-        <Text className="text-red-400 text-sm mt-1">{error}</Text>
+        <Text style={{ color: '#ef4444', fontSize: 13, marginTop: 4 }}>
+          {error}
+        </Text>
       )}
     </View>
   );

@@ -1,7 +1,8 @@
-// src/components/common/Button.tsx (THEME-AWARE)
+// src/components/common/Button.tsx
 import React from 'react';
-import { Pressable, Text, ActivityIndicator, View } from 'react-native';
+import { Pressable, Text, ActivityIndicator, ViewStyle } from 'react-native'; // Added ViewStyle for stricter typing if needed
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { IconProps } from '@expo/vector-icons/build/createIconSet';
 
 type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
@@ -17,13 +18,16 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
-  className?: string;
+  style?: any;
 }
 
-/**
- * Theme-aware button component
- * Uses semantic colors that adapt to Slate/White mode
- */
+// ✅ Fix: Define the shape of the style object
+type VariantStyle = {
+  bg: string;
+  text: string;
+  border?: string; // Explicitly say border is optional
+};
+
 export default function Button({
   onPress,
   title,
@@ -34,80 +38,80 @@ export default function Button({
   loading = false,
   disabled = false,
   fullWidth = false,
-  className = '',
+  style,
 }: ButtonProps) {
-  const variantStyles = {
-    primary: 'bg-sky-500 active:bg-sky-600',
-    secondary: 'bg-surface active:bg-surface-hover border border-surface-border',
-    success: 'bg-green-500 active:bg-green-600',
-    danger: 'bg-red-500 active:bg-red-600',
-    ghost: 'bg-transparent active:bg-surface-hover',
-  };
+  const colors = useThemeColors();
 
-  const textVariantStyles = {
-    primary: 'text-white',
-    secondary: 'text-primary',
-    success: 'text-white',
-    danger: 'text-white',
-    ghost: 'text-primary',
+  // ✅ Fix: Apply the type to the object
+  const variantStyles: Record<ButtonVariant, VariantStyle> = {
+    primary: { bg: '#0ea5e9', text: 'white' },
+    secondary: { bg: colors.bgSurface, text: colors.textPrimary, border: colors.borderSurface },
+    success: { bg: '#22c55e', text: 'white' },
+    danger: { bg: '#ef4444', text: 'white' },
+    ghost: { bg: 'transparent', text: colors.textPrimary },
   };
 
   const sizeStyles = {
-    sm: 'px-4 py-2',
-    md: 'px-6 py-3',
-    lg: 'px-8 py-4',
-  };
-
-  const textSizeStyles = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-  };
-
-  const iconSizes = {
-    sm: 16,
-    md: 20,
-    lg: 24,
+    sm: { px: 16, py: 8, text: 14, icon: 16 },
+    md: { px: 24, py: 12, text: 16, icon: 20 },
+    lg: { px: 32, py: 16, text: 18, icon: 24 },
   };
 
   const isDisabled = disabled || loading;
+  const variantStyle = variantStyles[variant];
+  const sizing = sizeStyles[size];
 
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      className={`
-        ${variantStyles[variant]}
-        ${sizeStyles[size]}
-        ${fullWidth ? 'w-full' : ''}
-        ${isDisabled ? 'opacity-50' : ''}
-        rounded-xl flex-row items-center justify-center
-        ${className}
-      `}
+      style={[
+        {
+          backgroundColor: variantStyle.bg,
+          paddingHorizontal: sizing.px,
+          paddingVertical: sizing.py,
+          borderRadius: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: isDisabled ? 0.5 : 1,
+          width: fullWidth ? '100%' : undefined,
+          // ✅ Fix: Now safe to access .border because it's defined as optional on the type
+          ...(variant === 'secondary' && {
+            borderWidth: 1,
+            borderColor: variantStyle.border 
+          })
+        },
+        style
+      ]}
     >
       {loading ? (
         <ActivityIndicator 
           size="small" 
-          color={variant === 'secondary' || variant === 'ghost' ? '#38bdf8' : 'white'} 
+          color={variant === 'secondary' || variant === 'ghost' ? '#0ea5e9' : 'white'} 
         />
       ) : (
         <>
           {icon && iconPosition === 'left' && (
             <Ionicons 
               name={icon as any} 
-              size={iconSizes[size]} 
-              color={variant === 'secondary' || variant === 'ghost' ? '#38bdf8' : 'white'} 
+              size={sizing.icon} 
+              color={variantStyle.text}
               style={{ marginRight: 8 }} 
             />
           )}
-          <Text className={`${textVariantStyles[variant]} font-semibold ${textSizeStyles[size]}`}>
+          <Text style={{
+            color: variantStyle.text,
+            fontSize: sizing.text,
+            fontWeight: '600'
+          }}>
             {title}
           </Text>
           {icon && iconPosition === 'right' && (
             <Ionicons 
               name={icon as any} 
-              size={iconSizes[size]} 
-              color={variant === 'secondary' || variant === 'ghost' ? '#38bdf8' : 'white'} 
+              size={sizing.icon} 
+              color={variantStyle.text}
               style={{ marginLeft: 8 }} 
             />
           )}
