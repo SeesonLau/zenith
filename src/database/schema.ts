@@ -1,8 +1,8 @@
-// src/database/schema.ts (FIXED - Remove duplicate diary_images)
+// src/database/schema.ts
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export const schema = appSchema({
-  version: 5,
+  version: 6, // INCREMENTED VERSION
   tables: [
     // ==========================================
     // HABIT TRACKER - Layered Time System
@@ -17,7 +17,7 @@ export const schema = appSchema({
         { name: 'duration', type: 'number', isOptional: true },
         { name: 'notes', type: 'string', isOptional: true },
         { name: 'is_synced', type: 'boolean' },
-        { name: 'device_id', type: 'string', isOptional: true },  // ADDED
+        { name: 'device_id', type: 'string', isOptional: true },
         { name: 'deleted_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
@@ -41,7 +41,7 @@ export const schema = appSchema({
         { name: 'transaction_date', type: 'number' },
         { name: 'notes', type: 'string', isOptional: true },
         { name: 'is_synced', type: 'boolean' },
-        { name: 'device_id', type: 'string', isOptional: true },  // ADDED
+        { name: 'device_id', type: 'string', isOptional: true },
         { name: 'deleted_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
@@ -59,7 +59,7 @@ export const schema = appSchema({
         { name: 'entry_date', type: 'number' },
         { name: 'mood', type: 'string', isOptional: true },
         { name: 'is_synced', type: 'boolean' },
-        { name: 'device_id', type: 'string', isOptional: true },  // ADDED
+        { name: 'device_id', type: 'string', isOptional: true },
         { name: 'deleted_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
@@ -78,7 +78,7 @@ export const schema = appSchema({
         { name: 'mime_type', type: 'string', isOptional: true },
         { name: 'uploaded_at', type: 'number', isOptional: true },
         { name: 'is_synced', type: 'boolean' },
-        { name: 'device_id', type: 'string', isOptional: true },  // ADDED
+        { name: 'device_id', type: 'string', isOptional: true },
         { name: 'deleted_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
@@ -97,8 +97,9 @@ export const schema = appSchema({
         { name: 'ended_at', type: 'number', isOptional: true },
         { name: 'duration', type: 'number', isOptional: true },
         { name: 'notes', type: 'string', isOptional: true },
+        { name: 'linked_habit_id', type: 'string', isOptional: true }, // NEW FIELD
         { name: 'is_synced', type: 'boolean' },
-        { name: 'device_id', type: 'string', isOptional: true },  // ADDED
+        { name: 'device_id', type: 'string', isOptional: true },
         { name: 'deleted_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },

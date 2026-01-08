@@ -12,6 +12,7 @@ export default class LeisureLog extends Model {
   @date('ended_at') endedAt?: Date;
   @field('duration') duration?: number; // in seconds
   @field('notes') notes?: string;
+  @field('linked_habit_id') linkedHabitId?: string; // NEW: Link to habit log
   @field('is_synced') isSynced!: boolean;
   @field('device_id') deviceId?: string;
   

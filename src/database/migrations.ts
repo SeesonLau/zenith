@@ -3,10 +3,8 @@ import { schemaMigrations, addColumns } from '@nozbe/watermelondb/Schema/migrati
 
 export default schemaMigrations({
   migrations: [
-    // Migration from version 1 to 5
-    // Only ADD device_id columns to existing tables
     {
-      toVersion: 5,
+      toVersion: 6,
       steps: [
         addColumns({
           table: 'habit_logs',
