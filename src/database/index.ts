@@ -1,7 +1,6 @@
 // src/database/index.ts (COMPLETE VERSION WITH MIGRATIONS)
 import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
-import { schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
 import { schema } from './schema';
 import migrations from './migrations';  
 
