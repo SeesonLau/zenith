@@ -44,3 +44,5 @@ yarn-error.*
 .env.local
 .env*.local
 .env
+# Local MCP config (contains Supabase access token)
+.mcp.json
