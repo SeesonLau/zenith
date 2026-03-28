@@ -35,8 +35,8 @@ Zenith is a personal life management mobile app built with React Native / Expo. 
 ## Coding Standards
 - **File path comment**: Every new file must begin with a comment on line 1: `// path/to/file.tsx`
 - **Naming**: Components PascalCase, hooks camelCase with `use` prefix, utils camelCase, types PascalCase with `.types.ts` suffix
-- **Styling**: NativeWind v4 className only — no StyleSheet.create, no inline style objects
-- **Theme**: Dark-first. Background: `slate-950`, surface: `slate-900`/`slate-800`, accent: `sky-400`, text: `white`/`slate-400`
+- **Styling**: Inline `style={{}}` objects using `useThemeColors()` tokens — no `StyleSheet.create`, no hardcoded hex values. NativeWind `className` is NOT used on new code (DiaryCard is a legacy exception to fix, not a pattern to follow).
+- **Theme**: Dark-first. Use `useThemeColors()` for all color values. Tokens: `bgPrimary`, `bgSurface`, `bgSurfaceHover`, `textPrimary`, `textSecondary`, `textTertiary`, `borderSurface`, `moduleHabits/Finance/Diary/Leisure`, `success/warning/danger/info`.
 - **Security**: Never log auth tokens, user credentials, or Supabase keys. Never commit `.env` files.
 - **Comments**: Only where logic is not self-evident. No JSDoc on obvious functions.
 - **No premature abstraction**: Three similar lines is better than a premature helper. Build helpers only when used 3+ times.
@@ -97,7 +97,7 @@ src/
     actions/      ← All DB writes. The only layer that imports database.
     hooks/        ← DB-reactive hooks (useDatabase.ts)
     sync/         ← Sync logic only
-    migrations/   ← Schema migration files
+    migrations.ts ← Single migrations file (not a folder)
 ```
 - `components/` and `hooks/` must never import from `src/database/`
 - Screens (`app/`) call actions and use hooks — never import models directly
@@ -117,7 +117,7 @@ src/
 - Never commit `.env` files, access tokens, or service role keys.
 - Never run destructive SQL (`DROP`, `TRUNCATE`, `DELETE` without WHERE) without explicit user confirmation.
 - Never expose Supabase service role key client-side under any circumstances.
-- Bug tracker (`_project-docs/progress/bugs.md`) must be updated whenever a security issue is found or fixed.
+- Bug tracker (`_project-docs/progress/qa-bugs.md`) must be updated whenever a security issue is found or fixed.
 
 ## What to Avoid
 - Don't refactor working code unless explicitly asked.
