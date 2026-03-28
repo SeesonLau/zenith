@@ -8,6 +8,70 @@ import type DiaryEntry from '../models/DiaryEntry';
 import type LeisureLog from '../models/LeisureLog';
 import type DiaryImage from '../models/DiaryImage';
 
+// ─── Single-record hooks ─────────────────────────────────────────────────────
+
+export function useHabitLog(id: string) {
+  const [log, setLog] = useState<HabitLog | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const subscription = database
+      .get<HabitLog>('habit_logs')
+      .findAndObserve(id)
+      .subscribe({ next: setLog, error: () => setLog(null) });
+    return () => subscription.unsubscribe();
+  }, [id]);
+
+  return log;
+}
+
+export function useFinanceLog(id: string) {
+  const [log, setLog] = useState<FinanceLog | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const subscription = database
+      .get<FinanceLog>('finance_logs')
+      .findAndObserve(id)
+      .subscribe({ next: setLog, error: () => setLog(null) });
+    return () => subscription.unsubscribe();
+  }, [id]);
+
+  return log;
+}
+
+export function useDiaryEntry(id: string) {
+  const [entry, setEntry] = useState<DiaryEntry | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const subscription = database
+      .get<DiaryEntry>('diary_entries')
+      .findAndObserve(id)
+      .subscribe({ next: setEntry, error: () => setEntry(null) });
+    return () => subscription.unsubscribe();
+  }, [id]);
+
+  return entry;
+}
+
+export function useLeisureLog(id: string) {
+  const [log, setLog] = useState<LeisureLog | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const subscription = database
+      .get<LeisureLog>('leisure_logs')
+      .findAndObserve(id)
+      .subscribe({ next: setLog, error: () => setLog(null) });
+    return () => subscription.unsubscribe();
+  }, [id]);
+
+  return log;
+}
+
+// ─── Collection hooks ────────────────────────────────────────────────────────
+
 export function useDiaryImages(entryId: string) {
   const [images, setImages] = useState<DiaryImage[]>([]);
 

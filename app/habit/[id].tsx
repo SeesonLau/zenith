@@ -1,38 +1,24 @@
-// app/habit/[id].tsx - COMPACT VERSION
-import React, { useEffect, useState } from 'react';
+// app/habit/[id].tsx
+import React from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { database } from '@/src/database';
-import type HabitLog from '@/src/database/models/HabitLog';
+import { useHabitLog } from '@/src/database/hooks/useDatabase';
+import { deleteHabitLog } from '@/src/database/actions/habitActions';
 import { formatDurationHMS, formatTime } from '@/src/utils/formatters';
 import { formatDate } from '@/src/utils/dateHelpers';
 import { getHabitConfig } from '@/src/lib/constants';
 import Button from '@/src/components/common/Button';
 import type { HabitCategory } from '@/src/types/database.types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import type { ThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function HabitDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [habitLog, setHabitLog] = useState<HabitLog | null>(null);
-
-  useEffect(() => {
-    loadHabitLog();
-  }, [id]);
-
-  const loadHabitLog = async () => {
-    try {
-      const log = await database.get<HabitLog>('habit_logs').find(id);
-      setHabitLog(log);
-    } catch (error) {
-      console.error('Failed to load habit log:', error);
-      Alert.alert('Error', 'Habit log not found');
-      router.back();
-    }
-  };
+  const habitLog = useHabitLog(id);
 
   const handleDelete = () => {
     Alert.alert(
@@ -45,9 +31,9 @@ export default function HabitDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await habitLog?.markAsDeleted();
+              await deleteHabitLog(id);
               router.back();
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Failed to delete session');
             }
           },
@@ -75,7 +61,12 @@ export default function HabitDetailScreen() {
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 8 }}>
-            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginRight: 12 }}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+            >
               <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
             <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
@@ -93,24 +84,19 @@ export default function HabitDetailScreen() {
             marginBottom: 14
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ 
-                backgroundColor: config.color, 
-                borderRadius: 24, 
-                width: 48, 
-                height: 48, 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                marginRight: 12 
+              <View style={{
+                backgroundColor: config.color,
+                borderRadius: 24,
+                width: 48,
+                height: 48,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12
               }}>
-                <Ionicons name={config.icon as any} size={24} color="white" />
+                <Ionicons name={config.icon as keyof typeof Ionicons.glyphMap} size={24} color="white" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ 
-                  color: colors.textTertiary, 
-                  fontSize: 10, 
-                  textTransform: 'uppercase', 
-                  letterSpacing: 0.5 
-                }}>
+                <Text style={{ color: colors.textTertiary, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {habitLog.category}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
@@ -119,10 +105,9 @@ export default function HabitDetailScreen() {
               </View>
             </View>
 
-            {/* Duration Display */}
-            <View style={{ 
-              backgroundColor: colors.bgSurfaceHover, 
-              borderRadius: 12, 
+            <View style={{
+              backgroundColor: colors.bgSurfaceHover,
+              borderRadius: 12,
               padding: 16,
               borderWidth: 1,
               borderColor: colors.moduleHabits + '30'
@@ -130,13 +115,7 @@ export default function HabitDetailScreen() {
               <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 4, textAlign: 'center' }}>
                 Total Duration
               </Text>
-              <Text style={{ 
-                color: colors.moduleHabits, 
-                fontSize: 40, 
-                fontFamily: 'monospace', 
-                fontWeight: 'bold', 
-                textAlign: 'center' 
-              }}>
+              <Text style={{ color: colors.moduleHabits, fontSize: 40, fontFamily: 'monospace', fontWeight: 'bold', textAlign: 'center' }}>
                 {formatDurationHMS(durationSeconds)}
               </Text>
             </View>
@@ -154,28 +133,11 @@ export default function HabitDetailScreen() {
             <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 12 }}>
               Time Details
             </Text>
-            
-            <DetailRow
-              icon="play"
-              label="Started"
-              value={`${formatDate(habitLog.startedAt, 'short')} at ${formatTime(habitLog.startedAt)}`}
-              colors={colors}
-            />
+            <DetailRow icon="play" label="Started" value={`${formatDate(habitLog.startedAt, 'short')} at ${formatTime(habitLog.startedAt)}`} colors={colors} />
             {habitLog.endedAt && (
-              <DetailRow
-                icon="stop"
-                label="Ended"
-                value={`${formatDate(habitLog.endedAt, 'short')} at ${formatTime(habitLog.endedAt)}`}
-                colors={colors}
-              />
+              <DetailRow icon="stop" label="Ended" value={`${formatDate(habitLog.endedAt, 'short')} at ${formatTime(habitLog.endedAt)}`} colors={colors} />
             )}
-            <DetailRow
-              icon="time"
-              label="Duration"
-              value={formatDurationHMS(durationSeconds)}
-              colors={colors}
-              isLast
-            />
+            <DetailRow icon="time" label="Duration" value={formatDurationHMS(durationSeconds)} colors={colors} isLast />
           </View>
 
           {/* Notes */}
@@ -190,13 +152,9 @@ export default function HabitDetailScreen() {
             }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                 <Ionicons name="document-text-outline" size={16} color={colors.textSecondary} />
-                <Text style={{ color: colors.textPrimary, fontWeight: '600', marginLeft: 6, fontSize: 14 }}>
-                  Notes
-                </Text>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', marginLeft: 6, fontSize: 14 }}>Notes</Text>
               </View>
-              <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 20 }}>
-                {habitLog.notes}
-              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 13, lineHeight: 20 }}>{habitLog.notes}</Text>
             </View>
           )}
 
@@ -212,9 +170,7 @@ export default function HabitDetailScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
               <Ionicons name="bulb" size={16} color={config.color} style={{ marginRight: 8, marginTop: 2 }} />
               <View style={{ flex: 1 }}>
-                <Text style={{ color: config.color, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
-                  Session Insight
-                </Text>
+                <Text style={{ color: config.color, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>Session Insight</Text>
                 <Text style={{ color: config.color, fontSize: 11, opacity: 0.9 }}>
                   {durationSeconds < 300
                     ? 'Quick session! Every minute counts.'
@@ -228,14 +184,7 @@ export default function HabitDetailScreen() {
             </View>
           </View>
 
-          {/* Delete Button */}
-          <Button
-            onPress={handleDelete}
-            title="Delete Session"
-            icon="trash"
-            variant="danger"
-            fullWidth
-          />
+          <Button onPress={handleDelete} title="Delete Session" icon="trash" variant="danger" fullWidth />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -243,26 +192,19 @@ export default function HabitDetailScreen() {
 }
 
 interface DetailRowProps {
-  icon: any;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
-  colors: any;
+  colors: ThemeColors;
   isLast?: boolean;
 }
 
 function DetailRow({ icon, label, value, colors, isLast }: DetailRowProps) {
   return (
-    <View style={{ 
-      flexDirection: 'row', 
-      paddingVertical: 10,
-      borderBottomWidth: isLast ? 0 : 1,
-      borderBottomColor: colors.borderSurface
-    }}>
+    <View style={{ flexDirection: 'row', paddingVertical: 10, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: colors.borderSurface }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
         <Ionicons name={icon} size={16} color={colors.textTertiary} style={{ marginTop: 1 }} />
-        <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 8, width: 70 }}>
-          {label}
-        </Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 8, width: 70 }}>{label}</Text>
       </View>
       <Text style={{ color: colors.textPrimary, flex: 1, fontSize: 12 }}>{value}</Text>
     </View>

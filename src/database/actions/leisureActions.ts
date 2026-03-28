@@ -76,6 +76,13 @@ export async function completeLeisureSession(
   });
 }
 
+export async function deleteLeisureLog(logId: string) {
+  return await database.write(async () => {
+    const log = await database.get<LeisureLog>('leisure_logs').find(logId);
+    await log.markAsDeleted();
+  });
+}
+
 export async function stopLeisureTimer(logId: string) {
   return await database.write(async () => {
     const leisureLogsCollection = database.get<LeisureLog>('leisure_logs');

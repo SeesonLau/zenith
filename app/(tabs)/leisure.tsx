@@ -3,11 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRunningLeisureTimers } from '@/src/database/hooks/useDatabase';
+import { useRunningLeisureTimers, useCompletedLeisureLogs } from '@/src/database/hooks/useDatabase';
 import { startLeisureTimer } from '@/src/database/actions/leisureActions';
-import { database } from '@/src/database';
-import { Q } from '@nozbe/watermelondb';
-import type LeisureLog from '@/src/database/models/LeisureLog';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
@@ -20,22 +17,8 @@ export default function LeisureScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const runningTimers = useRunningLeisureTimers();
+  const completedSessions = useCompletedLeisureLogs(20);
   const [refreshing, setRefreshing] = useState(false);
-  const [completedSessions, setCompletedSessions] = useState<LeisureLog[]>([]);
-
-  React.useEffect(() => {
-    const subscription = database
-      .get<LeisureLog>('leisure_logs')
-      .query(
-        Q.where('ended_at', Q.notEq(null)),
-        Q.sortBy('started_at', Q.desc),
-        Q.take(20)
-      )
-      .observe()
-      .subscribe(setCompletedSessions);
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Group completed sessions by date (like finance transactions)
   const groupedSessions = useMemo(() => {
@@ -58,20 +41,16 @@ export default function LeisureScreen() {
     try {
       await startLeisureTimer();
     } catch (error) {
-      console.error('Failed to start timer:', error);
+      if (__DEV__) console.error('Failed to start timer:', error);
     }
   };
 
   const handleStopTimer = async (timerId: string) => {
-    try {
-      const timer = runningTimers.find(t => t.id === timerId);
-      if (!timer) return;
+    const timer = runningTimers.find(t => t.id === timerId);
+    if (!timer) return;
 
-      const durationSeconds = Math.floor((Date.now() - timer.startedAt.getTime()) / 1000);
-      router.push(`/leisure/complete?id=${timerId}&duration=${durationSeconds}`);
-    } catch (error) {
-      console.error('Failed to navigate to complete:', error);
-    }
+    const durationSeconds = Math.floor((Date.now() - timer.startedAt.getTime()) / 1000);
+    router.push(`/leisure/complete?id=${timerId}&duration=${durationSeconds}`);
   };
 
   const onRefresh = async () => {

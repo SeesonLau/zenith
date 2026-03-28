@@ -4,9 +4,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { database } from '@/src/database';
-import { Q } from '@nozbe/watermelondb';
-import type FinanceLog from '@/src/database/models/FinanceLog';
+import { useFinanceLogs } from '@/src/database/hooks/useDatabase';
 import { formatCurrency } from '@/src/utils/formatters';
 import { getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpers';
 import { getFinanceCategoryConfig } from '@/src/lib/constants';
@@ -17,25 +15,10 @@ export default function FinanceAnalyticsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
-  const [logs, setLogs] = useState<FinanceLog[]>([]);
 
-  // Load logs for selected month
-  React.useEffect(() => {
-    const startDate = getStartOfMonth(selectedMonth);
-    const endDate = getEndOfMonth(selectedMonth);
-
-    const subscription = database
-      .get<FinanceLog>('finance_logs')
-      .query(
-        Q.where('transaction_date', Q.gte(startDate.getTime())),
-        Q.where('transaction_date', Q.lte(endDate.getTime())),
-        Q.sortBy('transaction_date', Q.desc)
-      )
-      .observe()
-      .subscribe(setLogs);
-
-    return () => subscription.unsubscribe();
-  }, [selectedMonth]);
+  const startDate = useMemo(() => getStartOfMonth(selectedMonth), [selectedMonth]);
+  const endDate = useMemo(() => getEndOfMonth(selectedMonth), [selectedMonth]);
+  const logs = useFinanceLogs(startDate, endDate);
 
   // Calculate analytics
   const analytics = useMemo(() => {
@@ -67,8 +50,8 @@ export default function FinanceAnalyticsScreen() {
       .sort((a, b) => b.totalCost - a.totalCost)[0];
 
     // Average
-    const avgTransaction = logs.length > 0 
-      ? (income + expenses) / logs.length 
+    const avgTransaction = logs.length > 0
+      ? (income + expenses) / logs.length
       : 0;
 
     return {
@@ -99,7 +82,12 @@ export default function FinanceAnalyticsScreen() {
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 12 }}>
-            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginRight: 12 }}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+            >
               <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
             <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
@@ -287,7 +275,7 @@ export default function FinanceAnalyticsScreen() {
                             justifyContent: 'center',
                             marginRight: 8
                           }}>
-                            <Ionicons name={config.icon as any} size={12} color="white" />
+                            <Ionicons name={config.icon as keyof typeof Ionicons.glyphMap} size={12} color="white" />
                           </View>
                           <Text style={{ color: colors.textPrimary, fontWeight: '500', fontSize: 13 }}>
                             {category}
@@ -330,7 +318,7 @@ export default function FinanceAnalyticsScreen() {
               <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 16, marginBottom: 12 }}>
                 Largest Transactions
               </Text>
-              
+
               {analytics.largestIncome && (
                 <View style={{ marginBottom: 12 }}>
                   <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 6, textTransform: 'uppercase' }}>

@@ -1,37 +1,23 @@
 // app/leisure/[id].tsx - COMPACT VERSION
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { database } from '@/src/database';
-import type LeisureLog from '@/src/database/models/LeisureLog';
+import { useLeisureLog } from '@/src/database/hooks/useDatabase';
+import { deleteLeisureLog } from '@/src/database/actions/leisureActions';
 import { getLeisureConfig } from '@/src/lib/constants';
 import { formatDurationHMS, formatTime } from '@/src/utils/formatters';
 import { formatDate } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import type { ThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function LeisureDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [leisureLog, setLeisureLog] = useState<LeisureLog | null>(null);
-
-  useEffect(() => {
-    loadLeisureLog();
-  }, [id]);
-
-  const loadLeisureLog = async () => {
-    try {
-      const log = await database.get<LeisureLog>('leisure_logs').find(id);
-      setLeisureLog(log);
-    } catch (error) {
-      console.error('Failed to load leisure log:', error);
-      Alert.alert('Error', 'Session not found');
-      router.back();
-    }
-  };
+  const leisureLog = useLeisureLog(id);
 
   const handleDelete = () => {
     Alert.alert(
@@ -44,9 +30,9 @@ export default function LeisureDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await leisureLog?.markAsDeleted();
+              await deleteLeisureLog(id);
               router.back();
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Failed to delete session');
             }
           },
@@ -73,7 +59,12 @@ export default function LeisureDetailScreen() {
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 8 }}>
-            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginRight: 12 }}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+            >
               <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
             <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
@@ -91,7 +82,7 @@ export default function LeisureDetailScreen() {
             marginBottom: 14
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ 
+              <View style={{
                 backgroundColor: config.color,
                 borderRadius: 24,
                 width: 48,
@@ -103,11 +94,11 @@ export default function LeisureDetailScreen() {
                 <Text style={{ fontSize: 28 }}>{config.emoji}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ 
-                  color: colors.textTertiary, 
-                  fontSize: 10, 
-                  textTransform: 'uppercase', 
-                  letterSpacing: 0.5 
+                <Text style={{
+                  color: colors.textTertiary,
+                  fontSize: 10,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5
                 }}>
                   {leisureLog.type}
                 </Text>
@@ -118,7 +109,7 @@ export default function LeisureDetailScreen() {
             </View>
 
             {/* Duration Display */}
-            <View style={{ 
+            <View style={{
               backgroundColor: colors.bgSurfaceHover,
               borderRadius: 12,
               padding: 16,
@@ -128,12 +119,12 @@ export default function LeisureDetailScreen() {
               <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 4, textAlign: 'center' }}>
                 Total Duration
               </Text>
-              <Text style={{ 
-                color: '#0ea5e9', 
-                fontSize: 40, 
-                fontFamily: 'monospace', 
+              <Text style={{
+                color: '#0ea5e9',
+                fontSize: 40,
+                fontFamily: 'monospace',
                 fontWeight: 'bold',
-                textAlign: 'center' 
+                textAlign: 'center'
               }}>
                 {formatDurationHMS(durationSeconds)}
               </Text>
@@ -167,10 +158,10 @@ export default function LeisureDetailScreen() {
                 colors={colors}
               />
             )}
-            <DetailRow 
-              icon="time" 
-              label="Duration" 
-              value={formatDurationHMS(durationSeconds)} 
+            <DetailRow
+              icon="time"
+              label="Duration"
+              value={formatDurationHMS(durationSeconds)}
               colors={colors}
               isLast
             />
@@ -241,16 +232,16 @@ export default function LeisureDetailScreen() {
 }
 
 interface DetailRowProps {
-  icon: any;
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
-  colors: any;
+  colors: ThemeColors;
   isLast?: boolean;
 }
 
 function DetailRow({ icon, label, value, colors, isLast }: DetailRowProps) {
   return (
-    <View style={{ 
+    <View style={{
       flexDirection: 'row',
       paddingVertical: 10,
       borderBottomWidth: isLast ? 0 : 1,

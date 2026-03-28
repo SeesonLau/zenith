@@ -1,37 +1,23 @@
 // app/finance/[id].tsx - THEME COMPATIBLE & COMPACT
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { database } from '@/src/database';
-import type FinanceLog from '@/src/database/models/FinanceLog';
+import { useFinanceLog } from '@/src/database/hooks/useDatabase';
+import { deleteFinanceLog } from '@/src/database/actions/financeActions';
 import { formatCurrency } from '@/src/utils/formatters';
 import { formatDate } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
 import type { CurrencyCode } from '@/src/types/database.types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import type { ThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function TransactionDetailScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [transaction, setTransaction] = useState<FinanceLog | null>(null);
-
-  useEffect(() => {
-    loadTransaction();
-  }, [id]);
-
-  const loadTransaction = async () => {
-    try {
-      const log = await database.get<FinanceLog>('finance_logs').find(id);
-      setTransaction(log);
-    } catch (error) {
-      console.error('Failed to load transaction:', error);
-      Alert.alert('Error', 'Transaction not found');
-      router.back();
-    }
-  };
+  const transaction = useFinanceLog(id);
 
   const handleDelete = () => {
     Alert.alert('Delete Transaction', 'Are you sure you want to delete this transaction?', [
@@ -41,9 +27,9 @@ export default function TransactionDetailScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await transaction?.markAsDeleted();
+            await deleteFinanceLog(id);
             router.back();
-          } catch (error) {
+          } catch {
             Alert.alert('Error', 'Failed to delete transaction');
           }
         },
@@ -67,7 +53,12 @@ export default function TransactionDetailScreen() {
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 12 }}>
-            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginRight: 12 }}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+            >
               <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
             <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
@@ -183,7 +174,7 @@ interface DetailRowProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
-  colors: any;
+  colors: ThemeColors;
   isLast?: boolean;
 }
 

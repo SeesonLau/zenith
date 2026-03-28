@@ -2,6 +2,7 @@
 import { Model } from '@nozbe/watermelondb';
 import { field, date, readonly } from '@nozbe/watermelondb/decorators';
 import type { LeisureType } from '@/src/constants/categories';
+import { formatDurationShort } from '@/src/utils/formatters';
 
 export default class LeisureLog extends Model {
   static table = 'leisure_logs';
@@ -23,13 +24,6 @@ export default class LeisureLog extends Model {
   }
 
   get formattedDuration(): string {
-    if (!this.duration) return '0s';
-    const hours = Math.floor(this.duration / 3600);
-    const minutes = Math.floor((this.duration % 3600) / 60);
-    const seconds = this.duration % 60;
-
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m ${seconds}s`;
-    return `${seconds}s`;
+    return formatDurationShort(this.duration || 0);
   }
 }

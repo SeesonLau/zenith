@@ -1,45 +1,34 @@
-// app/diary/[id].tsx (FIXED - Just update the import line)
+// app/diary/[id].tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { database } from '@/src/database';
-import type DiaryEntry from '@/src/database/models/DiaryEntry';
+import { useDiaryEntry } from '@/src/database/hooks/useDatabase';
 import { updateDiaryEntry, deleteDiaryEntry } from '@/src/database/actions/diaryActions';
 import { getMoodConfig } from '@/src/lib/constants';
-import { formatTime } from '@/src/utils/formatters';        // FIXED: Only formatTime from formatters
-import { formatDate } from '@/src/utils/dateHelpers';       // FIXED: formatDate from dateHelpers
+import { formatTime } from '@/src/utils/formatters';
+import { formatDate } from '@/src/utils/dateHelpers';
 import type { MoodType } from '@/src/types/database.types';
 import MoodPicker from '@/src/components/diary/MoodPicker';
 import Button from '@/src/components/common/Button';
 
-// ... rest of the code stays the same
 export default function DiaryDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [entry, setEntry] = useState<DiaryEntry | null>(null);
+  const entry = useDiaryEntry(id);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [editMood, setEditMood] = useState<MoodType | undefined>();
 
+  // Initialise edit fields when entry first loads (or when navigating to a different entry)
   useEffect(() => {
-    loadEntry();
-  }, [id]);
-
-  const loadEntry = async () => {
-    try {
-      const diaryEntry = await database.get<DiaryEntry>('diary_entries').find(id);
-      setEntry(diaryEntry);
-      setEditTitle(diaryEntry.title || '');
-      setEditContent(diaryEntry.content);
-      setEditMood(diaryEntry.mood as MoodType | undefined);
-    } catch (error) {
-      console.error('Failed to load diary entry:', error);
-      Alert.alert('Error', 'Entry not found');
-      router.back();
+    if (entry) {
+      setEditTitle(entry.title || '');
+      setEditContent(entry.content);
+      setEditMood(entry.mood as MoodType | undefined);
     }
-  };
+  }, [entry?.id]);
 
   const handleSaveEdit = async () => {
     if (!editContent.trim()) {
@@ -54,8 +43,7 @@ export default function DiaryDetailScreen() {
         mood: editMood,
       });
       setIsEditing(false);
-      loadEntry();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to update entry');
     }
   };
@@ -73,7 +61,7 @@ export default function DiaryDetailScreen() {
             try {
               await deleteDiaryEntry(id);
               router.back();
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Failed to delete entry');
             }
           },
@@ -162,7 +150,7 @@ export default function DiaryDetailScreen() {
               {moodConfig && (
                 <View className="flex-row items-center mb-4">
                   <View className={`${moodConfig.color} rounded-full w-12 h-12 items-center justify-center mr-3`}>
-                    <Ionicons name={moodConfig.icon as any} size={24} color="white" />
+                    <Ionicons name={moodConfig.icon as keyof typeof Ionicons.glyphMap} size={24} color="white" />
                   </View>
                   <View>
                     <Text className="text-slate-400 text-xs uppercase">Mood</Text>
@@ -234,10 +222,10 @@ export default function DiaryDetailScreen() {
                       {entry.wordCount < 50
                         ? 'A brief reflection. Every word counts in capturing your moment.'
                         : entry.wordCount < 200
-                        ? 'A thoughtful entry. You\'ve captured the essence of your day.'
+                        ? "A thoughtful entry. You've captured the essence of your day."
                         : entry.wordCount < 500
-                        ? 'A detailed reflection. You\'ve given good depth to your thoughts.'
-                        : 'An extensive journal entry! You\'ve really explored your experiences.'}
+                        ? "A detailed reflection. You've given good depth to your thoughts."
+                        : "An extensive journal entry! You've really explored your experiences."}
                     </Text>
                   </View>
                 </View>

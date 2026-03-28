@@ -1,6 +1,7 @@
 // src/database/models/HabitLog.ts
 import { Model } from '@nozbe/watermelondb';
 import { field, date, readonly } from '@nozbe/watermelondb/decorators';
+import { formatDurationShort } from '@/src/utils/formatters';
 
 export default class HabitLog extends Model {
   static table = 'habit_logs';
@@ -21,13 +22,6 @@ export default class HabitLog extends Model {
   }
 
   get formattedDuration(): string {
-    if (!this.duration) return '0s';
-    const hours = Math.floor(this.duration / 3600);
-    const minutes = Math.floor((this.duration % 3600) / 60);
-    const seconds = this.duration % 60;
-
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m ${seconds}s`;
-    return `${seconds}s`;
+    return formatDurationShort(this.duration || 0);
   }
 }
