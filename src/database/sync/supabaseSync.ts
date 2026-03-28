@@ -82,8 +82,8 @@ export async function syncWithSupabase(): Promise<SyncResult> {
           console.warn('⚠️ WARNING: sync_metadata found in pull response (should not be there!)');
         }
         
-        // Log first finance record to verify structure
-        if (data?.changes?.finance_logs?.created?.length > 0) {
+        // Log first finance record to verify structure (dev only — contains personal data)
+        if (__DEV__ && data?.changes?.finance_logs?.created?.length > 0) {
           console.log('📦 First finance record structure:');
           console.log(JSON.stringify(data.changes.finance_logs.created[0], null, 2));
         }
@@ -117,7 +117,7 @@ export async function syncWithSupabase(): Promise<SyncResult> {
 
         // Count local changes (after filtering)
         if (filteredChanges) {
-          Object.entries(filteredChanges).forEach(([tableName, tableChanges]: [string, any]) => {
+          Object.entries(filteredChanges).forEach(([_tableName, tableChanges]: [string, any]) => {
             changes.pushed.created += tableChanges.created?.length || 0;
             changes.pushed.updated += tableChanges.updated?.length || 0;
             changes.pushed.deleted += tableChanges.deleted?.length || 0;

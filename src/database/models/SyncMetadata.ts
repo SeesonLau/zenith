@@ -4,22 +4,19 @@ import { field, readonly, date } from '@nozbe/watermelondb/decorators';
 
 /**
  * SyncMetadata - LOCAL ONLY, NEVER SYNCED
- * 
- * This table stores device-specific sync timestamps.
- * Each device maintains its own sync state independently.
- * 
- * IMPORTANT: This table should NEVER be included in sync operations!
+ *
+ * Stores device-specific sync timestamps per table.
+ * IMPORTANT: This table must NEVER be included in sync operations.
  */
 export default class SyncMetadata extends Model {
   static table = 'sync_metadata';
 
   @field('table_name') tableName!: string;
-  
-  // Use numbers for sync timestamps (milliseconds since epoch)
-  // This matches what WatermelonDB's sync expects
-  @field('last_pulled_at') lastPulledAt!: number;
-  @field('last_pushed_at') lastPushedAt!: number;
-  
+
+  // Optional — null until first sync runs
+  @field('last_pulled_at') lastPulledAt?: number;
+  @field('last_pushed_at') lastPushedAt?: number;
+
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
 }

@@ -13,8 +13,8 @@ export default class DiaryImage extends Model {
   @field('local_uri') localUri!: string;
   @field('remote_url') remoteUrl?: string;
   @field('upload_status') uploadStatus!: 'pending' | 'uploading' | 'uploaded' | 'failed';
-  @field('file_size') fileSize!: number;
-  @field('mime_type') mimeType!: string;
+  @field('file_size') fileSize?: number;
+  @field('mime_type') mimeType?: string;
   @field('is_synced') isSynced!: boolean;
   @date('uploaded_at') uploadedAt?: Date;
   @readonly @date('created_at') createdAt!: Date;

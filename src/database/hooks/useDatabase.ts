@@ -8,7 +8,6 @@ import type DiaryEntry from '../models/DiaryEntry';
 import type LeisureLog from '../models/LeisureLog';
 import type DiaryImage from '../models/DiaryImage';
 
-// Hook to get all diary images for an entry
 export function useDiaryImages(entryId: string) {
   const [images, setImages] = useState<DiaryImage[]>([]);
 
@@ -25,85 +24,57 @@ export function useDiaryImages(entryId: string) {
   return images;
 }
 
-// Hook to get all completed habit logs - FIXED with observeWithColumns
 export function useCompletedHabitLogs() {
   const [logs, setLogs] = useState<HabitLog[]>([]);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      const habitLogs = database.get<HabitLog>('habit_logs');
-      
-      const subscription = habitLogs
-        .query(
-          Q.where('ended_at', Q.notEq(null)),
-          Q.sortBy('started_at', Q.desc)
-        )
-        .observeWithColumns(['ended_at', 'duration', 'updated_at']) // ← Watch these columns
-        .subscribe(setLogs);
+    const subscription = database
+      .get<HabitLog>('habit_logs')
+      .query(
+        Q.where('ended_at', Q.notEq(null)),
+        Q.sortBy('started_at', Q.desc)
+      )
+      .observeWithColumns(['ended_at', 'duration', 'updated_at'])
+      .subscribe(setLogs);
 
-      return subscription;
-    };
-
-    const sub = fetchLogs();
-    return () => {
-      sub.then(s => s.unsubscribe());
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   return logs;
 }
 
-// Hook to get all running habit timers - FIXED with observeWithColumns
 export function useRunningHabitTimers() {
   const [timers, setTimers] = useState<HabitLog[]>([]);
 
   useEffect(() => {
-    const fetchTimers = async () => {
-      const habitLogs = database.get<HabitLog>('habit_logs');
-      
-      const subscription = habitLogs
-        .query(Q.where('ended_at', null))
-        .observeWithColumns(['ended_at', 'started_at', 'updated_at']) // ← Watch these columns
-        .subscribe(setTimers);
+    const subscription = database
+      .get<HabitLog>('habit_logs')
+      .query(Q.where('ended_at', null))
+      .observeWithColumns(['ended_at', 'started_at', 'updated_at'])
+      .subscribe(setTimers);
 
-      return subscription;
-    };
-
-    const sub = fetchTimers();
-    return () => {
-      sub.then(s => s.unsubscribe());
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   return timers;
 }
 
-// Hook to get all running leisure timers - FIXED with observeWithColumns
 export function useRunningLeisureTimers() {
   const [timers, setTimers] = useState<LeisureLog[]>([]);
 
   useEffect(() => {
-    const fetchTimers = async () => {
-      const leisureLogs = database.get<LeisureLog>('leisure_logs');
-      
-      const subscription = leisureLogs
-        .query(Q.where('ended_at', null))
-        .observeWithColumns(['ended_at', 'started_at', 'updated_at']) // ← Watch these columns
-        .subscribe(setTimers);
+    const subscription = database
+      .get<LeisureLog>('leisure_logs')
+      .query(Q.where('ended_at', null))
+      .observeWithColumns(['ended_at', 'started_at', 'updated_at'])
+      .subscribe(setTimers);
 
-      return subscription;
-    };
-
-    const sub = fetchTimers();
-    return () => {
-      sub.then(s => s.unsubscribe());
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   return timers;
 }
 
-// Hook to get finance logs for a date range
 export function useFinanceLogs(startDate: Date, endDate: Date) {
   const [logs, setLogs] = useState<FinanceLog[]>([]);
 
@@ -124,7 +95,6 @@ export function useFinanceLogs(startDate: Date, endDate: Date) {
   return logs;
 }
 
-// Hook to get diary entries for a month
 export function useDiaryEntries(year: number, month: number) {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 
@@ -148,36 +118,26 @@ export function useDiaryEntries(year: number, month: number) {
   return entries;
 }
 
-// Hook to get completed leisure logs - FIXED with observeWithColumns
 export function useCompletedLeisureLogs(limit: number = 20) {
   const [logs, setLogs] = useState<LeisureLog[]>([]);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      const leisureLogs = database.get<LeisureLog>('leisure_logs');
-      
-      const subscription = leisureLogs
-        .query(
-          Q.where('ended_at', Q.notEq(null)),
-          Q.sortBy('started_at', Q.desc),
-          Q.take(limit)
-        )
-        .observeWithColumns(['ended_at', 'duration', 'updated_at']) // ← Watch these columns
-        .subscribe(setLogs);
+    const subscription = database
+      .get<LeisureLog>('leisure_logs')
+      .query(
+        Q.where('ended_at', Q.notEq(null)),
+        Q.sortBy('started_at', Q.desc),
+        Q.take(limit)
+      )
+      .observeWithColumns(['ended_at', 'duration', 'updated_at'])
+      .subscribe(setLogs);
 
-      return subscription;
-    };
-
-    const sub = fetchLogs();
-    return () => {
-      sub.then(s => s.unsubscribe());
-    };
+    return () => subscription.unsubscribe();
   }, [limit]);
 
   return logs;
 }
 
-// Hook to get all diary entries (without date filter)
 export function useAllDiaryEntries() {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 

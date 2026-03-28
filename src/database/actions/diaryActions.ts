@@ -1,8 +1,10 @@
-// src/database/actions/diaryActions.ts (COMPLETE FIX)
+// src/database/actions/diaryActions.ts
 import { database } from '../index';
 import DiaryEntry from '../models/DiaryEntry';
+import DiaryImage from '../models/DiaryImage';
 import { getDeviceId } from '@/src/lib/supabase';
-import { addImageToDiaryEntry, uploadPendingImagesForEntry } from './imageActions';
+import { uploadPendingImagesForEntry } from './imageActions';
+import { deleteImageFromSupabase } from '@/src/lib/supabaseStorage';
 import type { ImageInfo } from '@/src/utils/imageHelpers';
 
 export async function createDiaryEntry(
@@ -14,38 +16,45 @@ export async function createDiaryEntry(
   images?: ImageInfo[]
 ) {
   const deviceId = await getDeviceId();
-  
-  return await database.write(async () => {
-    const diaryEntriesCollection = database.get<DiaryEntry>('diary_entries');
 
-    const newEntry = await diaryEntriesCollection.create((entry) => {
-      entry.title = data.title;
-      entry.content = data.content;
-      entry.mood = data.mood;
-      entry.entryDate = new Date();
-      entry.isSynced = false;
-      entry.deviceId = deviceId;
+  // All DB creates in a single write — no nested writes
+  const newEntry = await database.write(async () => {
+    const diaryEntriesCollection = database.get<DiaryEntry>('diary_entries');
+    const imageCollection = database.get<DiaryImage>('diary_images');
+
+    const entry = await diaryEntriesCollection.create((e) => {
+      e.title = data.title;
+      e.content = data.content;
+      e.mood = data.mood;
+      e.entryDate = new Date();
+      e.isSynced = false;
+      e.deviceId = deviceId;
     });
 
-    // Add images if provided
     if (images && images.length > 0) {
       for (const imageInfo of images) {
-        await addImageToDiaryEntry(
-          newEntry.id,
-          imageInfo.uri,
-          imageInfo.fileSize,
-          'image/jpeg'
-        );
+        await imageCollection.create((img) => {
+          img.diaryEntryId = entry.id;
+          img.localUri = imageInfo.uri;
+          img.uploadStatus = 'pending';
+          img.fileSize = imageInfo.fileSize;
+          img.mimeType = 'image/jpeg';
+          img.isSynced = false;
+        });
       }
-
-      // Upload images in the background
-      uploadPendingImagesForEntry(newEntry.id).catch((error) => {
-        console.error('Failed to upload images:', error);
-      });
     }
 
-    return newEntry;
+    return entry;
   });
+
+  // Upload runs after the write completes — fire and forget
+  if (images && images.length > 0) {
+    uploadPendingImagesForEntry(newEntry.id).catch((error) => {
+      if (__DEV__) console.error('Failed to upload images:', error);
+    });
+  }
+
+  return newEntry;
 }
 
 export async function updateDiaryEntry(
@@ -72,18 +81,22 @@ export async function updateDiaryEntry(
 }
 
 export async function deleteDiaryEntry(entryId: string) {
-  return await database.write(async () => {
-    const diaryEntriesCollection = database.get<DiaryEntry>('diary_entries');
-    const entry = await diaryEntriesCollection.find(entryId);
+  const diaryEntriesCollection = database.get<DiaryEntry>('diary_entries');
+  const entry = await diaryEntriesCollection.find(entryId);
+  const images = await entry.images.fetch();
 
-    // Get and delete all associated images
-    const images = await entry.images.fetch();
-    const { deleteDiaryImage } = await import('./imageActions');
-    
-    for (const image of images) {
-      await deleteDiaryImage(image.id);
+  // Delete remote files first — outside the write context
+  for (const image of images) {
+    if (image.remoteUrl) {
+      await deleteImageFromSupabase(image.remoteUrl);
     }
+  }
 
+  // All local deletions in a single write — no nested writes
+  return await database.write(async () => {
+    for (const image of images) {
+      await image.markAsDeleted();
+    }
     await entry.markAsDeleted();
   });
 }

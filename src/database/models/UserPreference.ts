@@ -11,7 +11,7 @@ export default class UserPreference extends Model {
   @readonly @date('updated_at') updatedAt!: Date;
 
   // Parse JSON value
-  get parsedValue(): any {
+  get parsedValue(): unknown {
     try {
       return JSON.parse(this.value);
     } catch {
