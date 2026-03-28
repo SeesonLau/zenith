@@ -21,7 +21,7 @@ export const HABIT_ACTIVITIES = {
   Productivity: ['Personal Project', 'Studying', 'Working'],
   'Self-Care': ['Bathing', 'Cooking', 'Eating', 'Exercise', 'Peace', 'Sleeping'],
   Logistics: ['Chores', 'Errands', 'Travel'],
-  Enjoyment: ['Anime', 'Gaming', 'Leisure', 'Modding', 'Music', 'Reading', 'Romance', 'Socializing', 'Watching Videos'],
+  Enjoyment: ['Anime', 'Gaming', 'Leisure', 'Modding', 'Movie', 'Music', 'Reading', 'Romance', 'Socializing', 'Watching Videos'],
   Nothing: ['Doomscrolling', 'Procrastinating'],
 } as const;
 

@@ -1,4 +1,4 @@
--- supabase/migrations/05-timestamp-based-sync.sql
+-- supabase/migrations/07-timestamp-based-sync.sql
 -- CORRECT: Use updated_at to determine which version wins
 
 DROP FUNCTION IF EXISTS pull_changes CASCADE;
