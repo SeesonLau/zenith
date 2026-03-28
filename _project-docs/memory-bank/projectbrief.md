@@ -16,7 +16,7 @@ A single user (personal app). No multi-user or team features planned.
 React Native (iOS + Android) via Expo. Dark-themed UI.
 
 ## Success Criteria
-- All four domains are functional with local data persistence
-- Data syncs to Supabase when online
-- App works fully offline
-- Data is tied to a user account via Supabase Auth
+- All four domains are functional with local data persistence ✅ (v0.2.0)
+- App works fully offline ✅ (WatermelonDB)
+- Data syncs to Supabase when online 🔄 (sync layer built; Edge Functions unverified)
+- Data is tied to a user account via Supabase Auth ❌ (auth removed — planned for v0.3.0)
