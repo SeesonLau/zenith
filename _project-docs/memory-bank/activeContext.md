@@ -6,31 +6,30 @@
 ## Current State
 - ✅ All 4 tab screens fully implemented (Habits, Finance, Diary, Leisure)
 - ✅ All sub-screens implemented: habit/start, habit/[id], habit/history, finance/add, finance/[id], finance/analytics, diary/new, diary/[id], diary/calendar, leisure/complete, leisure/[id], settings/index, settings/preferences
-- ✅ All common components: Button, Card, Input, EmptyState, FAB, Badge, ScreenWrapper, SyncStatus, NetworkStatus, DatePicker, Divider, LoadingSpinner, ScreenContext
-- ✅ All domain components: DiaryCard, MoodPicker, ImageGallery, RichTextEditor, StatCard, LeisureTimerCard, CompletedLeisureCard, LeisureTypePicker
-- ✅ WatermelonDB schema v6 — 7 tables, device_id + linked_habit_id + uploaded_at added
-- ✅ SyncManager fully implemented — auto-sync every 5 min, performSync, forceFullSync, syncUtils diagnostics
+- ✅ All common + domain components implemented
+- ✅ WatermelonDB schema v6 — 7 tables, device_id + linked_habit_id + uploaded_at in schema
+- ✅ SyncManager fully implemented — auto-sync every 5 min, performSync, forceFullSync
 - ✅ ThemeContext working — dark (slate) / light (white) toggle, persisted via AsyncStorage
-- ✅ useThemeColors hook — full token map used across all screens
-- ❌ Auth removed — no login flow, supabase session disabled, app runs without authentication
-- ❌ RLS policies still open (allow all public) — CRITICAL security issue
-- ❌ No user_id column on any Supabase table
-- ❌ push_changes / pull_changes Edge Functions status unknown (called via RPC but may be empty)
+- ✅ Full QA audit complete (2026-03-28) — 77 issues logged in `_project-docs/progress/qa-bugs.md`
+- ❌ Auth removed — no login flow, supabase session disabled (CRITICAL)
+- ❌ RLS policies open (allow all public) — no user_id on any table (CRITICAL)
+- ❌ 2 crash bugs: nested `database.write()` in diaryActions.ts (QA-053, QA-060)
+- ❌ 2 data leak bugs: sync payload logged to console in production (QA-009, QA-010)
 
-## Open Issues
-- [CRITICAL] RLS allows all public access — user_id missing, no ownership filtering
-- [HIGH] Auth completely removed — app has no user authentication
-- [HIGH] Edge Functions (push/pull) likely broken — sync is wired but server-side unverified
-- [MED] financeConstants.ts has different category names than categories.ts — redundant file
-- [MED] LeisureTimerCard ignores type/title props — renders "❓ Untitled Session" for all
-- [MED] Version mismatch — index.tsx says v1.1.0, package.json says 1.0.0, CHANGELOG says 0.1.0
-- [LOW] DiaryCard uses className; other screens use inline styles — mixed approach
-- See `_project-docs/progress/bugs.md` for full list
+## Critical Bugs (crash / data leak / broken feature)
+- QA-053: Nested `database.write()` in `createDiaryEntry` → crash when adding images
+- QA-060: Nested `database.write()` in `deleteDiaryEntry` → crash when deleting entry with images
+- QA-009: `SyncStatus.tsx` logs raw sync data in production (no `__DEV__` guard)
+- QA-010: `supabaseSync.ts` logs individual finance records via `JSON.stringify`
+- QA-050: Leisure discard → phantom running timer (never completable)
+- QA-040: Diary calendar day tap → `console.log` only, no navigation
+- QA-024: Diary calendar hardcoded to December 2024
 
 ## Next Steps (Priority Order)
-1. Restore auth — implement login/signup flow (Supabase auth re-enable)
-2. Fix RLS: add user_id to all Supabase tables + rewrite policies
-3. Verify Edge Functions (push/pull) are deployed and working end-to-end
-4. Fix LeisureTimerCard to use type/title props
-5. Resolve financeConstants.ts vs categories.ts conflict
-6. Standardize styling: choose inline styles or className across all screens
+1. Fix QA-053 + QA-060 — diary nested write crashes (blocking feature)
+2. Fix QA-009 + QA-010 — production data leak via console
+3. Fix QA-050 — phantom leisure timer on discard
+4. Fix QA-024 + QA-040 — diary calendar broken
+5. Restore auth (R-01) — login/signup with Supabase
+6. Fix RLS (R-02) — add user_id + rewrite policies
+7. See `_project-docs/progress/qa-bugs.md` for all 77 issues

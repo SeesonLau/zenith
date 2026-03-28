@@ -72,12 +72,24 @@
 ## In Progress
 - Nothing actively in progress
 
-## Known Issues (see `_project-docs/progress/bugs.md` for full detail)
+## Known Issues
+Full issue list in `_project-docs/progress/qa-bugs.md` (77 issues, QA-001–QA-077).
+Legacy bug tracker in `_project-docs/progress/bugs.md`.
+
+**Critical (crash / data leak):**
+- [CRASH] QA-053: Nested `database.write()` in `createDiaryEntry` — crashes when adding images
+- [CRASH] QA-060: Nested `database.write()` in `deleteDiaryEntry` — crashes when deleting entry with images
+- [DATALEAK] QA-010: `supabaseSync.ts` logs individual finance records via `JSON.stringify` in production
+- [DATALEAK] QA-009: `SyncStatus.tsx` logs raw sync payload in production
 - [CRITICAL] RLS policies allow all public access — no user_id column on Supabase tables
-- [HIGH] Auth completely removed — no login/signup flow, supabase session disabled
-- [HIGH] Edge Functions (push_changes, pull_changes) status unknown — may be broken
-- [MED] financeConstants.ts has different category names than categories.ts — outdated file
-- [MED] LeisureTimerCard ignores type/title props — hardcoded to "❓ Untitled Session"
-- [MED] Version mismatch across files (index.tsx: v1.1.0, package.json: 1.0.0, CHANGELOG: 0.1.0)
-- [LOW] DiaryCard uses NativeWind className while all other screens use inline styles
-- [LOW] console.log calls in supabaseSync.ts and syncManager.ts — not wrapped in __DEV__
+- [CRITICAL] Auth completely removed — no login/signup flow, supabase session disabled
+
+**High:**
+- QA-050: Discard on leisure complete leaves phantom running timer
+- QA-040: Diary calendar day tap is a no-op (console.log only)
+- QA-024: Diary calendar hardcoded to December 2024
+- QA-047: Finance analytics screen unreachable from UI
+- QA-028: Settings preferences saves nothing — cosmetic only
+- QA-041: Settings preferences resets on every restart
+- QA-062: Finance analytics category colors render as `#green-500` (invalid CSS)
+- QA-077: 6 screens import directly from database layer (arch violation)
