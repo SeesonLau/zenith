@@ -16,6 +16,7 @@ export default class DiaryEntry extends Model {
   @field('is_synced') isSynced!: boolean;
   @readonly @date('created_at') createdAt!: Date;
   @readonly @date('updated_at') updatedAt!: Date;
+  @field('device_id') deviceId?: string;
 
   // CHANGE THIS LINE: Remove "Q."
   @children('diary_images') images!: Query<DiaryImage>; 

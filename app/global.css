@@ -1,0 +1,116 @@
+/* app/global.css - REACT NATIVE COMPATIBLE */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== THEME SYSTEM ==================== */
+:root {
+  /* SLATE MODE (Dark) - DEFAULT */
+  --color-bg-primary: #0f172a;
+  --color-bg-surface: #1e293b;
+  --color-bg-surface-hover: #334155;
+  
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  
+  --color-border-surface: #334155;
+  
+  /* Module Colors */
+  --color-module-habits: #9333ea;
+  --color-module-finance: #16a34a;
+  --color-module-diary: #0284c7;
+  --color-module-leisure: #db2777;
+}
+
+[data-theme="light"] {
+  /* WHITE MODE (Light) */
+  --color-bg-primary: #ffffff;
+  --color-bg-surface: #f8fafc;
+  --color-bg-surface-hover: #f1f5f9;
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748b;
+  
+  --color-border-surface: #e2e8f0;
+  
+  /* Module Colors */
+  --color-module-habits: #a855f7;
+  --color-module-finance: #22c55e;
+  --color-module-diary: #0ea5e9;
+  --color-module-leisure: #ec4899;
+}
+
+/* ==================== COMPONENT STYLES (RN Compatible) ==================== */
+
+/* Card Component */
+.card {
+  background-color: var(--color-bg-surface);
+  border-width: 1px;
+  border-color: var(--color-border-surface);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+/* Input Component */
+.input {
+  background-color: var(--color-bg-surface);
+  border-width: 1px;
+  border-color: var(--color-border-surface);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+/* Background Colors */
+.bg-primary {
+  background-color: var(--color-bg-primary);
+}
+
+.bg-surface {
+  background-color: var(--color-bg-surface);
+}
+
+.bg-surface-hover {
+  background-color: var(--color-bg-surface-hover);
+}
+
+/* Text Colors */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+/* Border Colors */
+.border-surface-border {
+  border-color: var(--color-border-surface);
+}
+
+/* Module Colors */
+.bg-module-habits {
+  background-color: var(--color-module-habits);
+}
+
+.bg-module-finance {
+  background-color: var(--color-module-finance);
+}
+
+.bg-module-diary {
+  background-color: var(--color-module-diary);
+}
+
+.bg-module-leisure {
+  background-color: var(--color-module-leisure);
+}

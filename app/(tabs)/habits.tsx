@@ -1,20 +1,27 @@
-// app/(tabs)/habits.tsx
-// Example implementation showing the layered time system in action
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
-import { useRunningHabitTimers } from '@/src/database/hooks/useDatabase';
-import { startHabitTimer, stopHabitTimer } from '@/src/database/actions/habitActions';
+// app/(tabs)/habits.tsx - COMPACT VERSION
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRunningHabitTimers, useCompletedHabitLogs } from '@/src/database/hooks/useDatabase';
+import { stopHabitTimer } from '@/src/database/actions/habitActions';
+import { formatDurationHMS } from '@/src/utils/formatters';
+import { formatDate } from '@/src/utils/dateHelpers';
+import { getHabitConfig } from '@/src/lib/constants';
+import FloatingActionButton from '@/src/components/common/FloatingActionButton';
+import EmptyState from '@/src/components/common/EmptyState';
+import Button from '@/src/components/common/Button';
 import type { HabitCategory } from '@/src/types/database.types';
-import { HABIT_CATEGORIES, HABIT_ACTIVITIES } from '@/src/types/database.types';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function HabitsScreen() {
+  const router = useRouter();
+  const colors = useThemeColors();
   const runningTimers = useRunningHabitTimers();
-  const [selectedCategory, setSelectedCategory] = useState<HabitCategory | null>(null);
-  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
-
-  // Calculate elapsed time for each running timer
   const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
+  const [refreshing, setRefreshing] = useState(false);
+  const completedLogs = useCompletedHabitLogs();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,205 +36,347 @@ export default function HabitsScreen() {
     return () => clearInterval(interval);
   }, [runningTimers]);
 
-  const handleStartTimer = async () => {
-    if (!selectedCategory || !selectedActivity) {
-      Alert.alert('Error', 'Please select both category and activity');
-      return;
-    }
+  // Group completed logs by date (like finance transactions)
+  const groupedLogs = useMemo(() => {
+    const groups: Record<string, typeof completedLogs> = {};
 
-    try {
-      await startHabitTimer(selectedCategory, selectedActivity);
-      Alert.alert('Success', `Started ${selectedActivity} timer`);
-      setSelectedCategory(null);
-      setSelectedActivity(null);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start timer');
-      console.error(error);
-    }
-  };
+    completedLogs.forEach((log) => {
+      const dateKey = formatDate(log.startedAt, 'short');
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(log);
+    });
 
-  const handleStopTimer = async (timerId: string, activity: string) => {
+    return Object.entries(groups).sort(
+      ([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime()
+    );
+  }, [completedLogs]);
+
+  const handleStopTimer = async (timerId: string) => {
     try {
       await stopHabitTimer(timerId);
-      Alert.alert('Success', `Stopped ${activity} timer`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to stop timer');
-      console.error(error);
+      console.error('Failed to stop timer:', error);
     }
   };
 
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 500);
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <View className="p-4">
-        {/* Header */}
-        <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Habit Tracker
-        </Text>
-        <Text className="text-gray-600 dark:text-gray-400 mb-6">
-          Layered Time System - Multiple timers can run simultaneously
-        </Text>
-
-        {/* Active Timers Section */}
-        <View className="mb-6">
-          <Text className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-            Active Timers ({runningTimers.length})
-          </Text>
-          
-          {runningTimers.length === 0 ? (
-            <View className="bg-white dark:bg-gray-800 rounded-lg p-6 items-center">
-              <Text className="text-gray-500 dark:text-gray-400 text-center">
-                No active timers. Start one below!
-              </Text>
-            </View>
-          ) : (
-            <View className="space-y-3">
-              {runningTimers.map((timer) => (
-                <View
-                  key={timer.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
-                >
-                  <View className="flex-row justify-between items-start mb-2">
-                    <View className="flex-1">
-                      <Text className="text-sm text-gray-500 dark:text-gray-400">
-                        {timer.category}
-                      </Text>
-                      <Text className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {timer.activity}
-                      </Text>
-                    </View>
-                    <View className="bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded-full">
-                      <Text className="text-blue-700 dark:text-blue-300 font-mono font-semibold">
-                        {formatTime(elapsedTimes[timer.id] || 0)}
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  <Text className="text-xs text-gray-400 dark:text-gray-500 mb-3">
-                    Started: {timer.startedAt.toLocaleTimeString()}
-                  </Text>
-
-                  <Pressable
-                    onPress={() => handleStopTimer(timer.id, timer.activity)}
-                    className="bg-red-500 py-3 rounded-lg active:bg-red-600"
-                  >
-                    <Text className="text-white text-center font-semibold">
-                      Stop Timer
-                    </Text>
-                  </Pressable>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Start New Timer Section */}
-        <View className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-          <Text className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Start New Timer
-          </Text>
-
-          {/* Category Selection */}
-          <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Category
-          </Text>
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {HABIT_CATEGORIES.map((category) => (
-              <Pressable
-                key={category}
-                onPress={() => {
-                  setSelectedCategory(category);
-                  setSelectedActivity(null);
-                }}
-                className={`px-4 py-2 rounded-full ${
-                  selectedCategory === category
-                    ? 'bg-blue-500'
-                    : 'bg-gray-200 dark:bg-gray-700'
-                }`}
-              >
-                <Text
-                  className={`font-medium ${
-                    selectedCategory === category
-                      ? 'text-white'
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  {category}
-                </Text>
-              </Pressable>
-            ))}
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#a855f7" />
+        }
+      >
+        <View style={{ padding: 20 }}>
+          {/* Header */}
+          <View style={{ marginBottom: 16, marginTop: 12 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 4 }}>
+              Habit Tracker
+            </Text>
           </View>
 
-          {/* Activity Selection */}
-          {selectedCategory && (
-            <>
-              <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Select Activity
-              </Text>
-              <View className="flex-row flex-wrap gap-2 mb-4">
-                {HABIT_ACTIVITIES[selectedCategory].map((activity) => (
-                  <Pressable
-                    key={activity}
-                    onPress={() => setSelectedActivity(activity)}
-                    className={`px-4 py-2 rounded-full ${
-                      selectedActivity === activity
-                        ? 'bg-green-500'
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <Text
-                      className={`font-medium ${
-                        selectedActivity === activity
-                          ? 'text-white'
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}
+          {/* Active Timers Section */}
+          <View style={{ marginBottom: 16 }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 12
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{
+                  width: 6,
+                  height: 6,
+                  backgroundColor: '#22c55e',
+                  borderRadius: 3,
+                  marginRight: 6
+                }} />
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
+                  Active Timers
+                </Text>
+              </View>
+              <View style={{
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                paddingHorizontal: 10,
+                paddingVertical: 3,
+                borderRadius: 10
+              }}>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 12 }}>
+                  {runningTimers.length}
+                </Text>
+              </View>
+            </View>
+
+            {runningTimers.length === 0 ? (
+              <EmptyState
+                icon="hourglass-outline"
+                title="No Active Timers"
+                description="Start tracking your activities"
+                action={
+                  <Button
+                    onPress={() => router.push('/habit/start')}
+                    title="Start Timer"
+                    icon="add"
+                    variant="primary"
+                  />
+                }
+              />
+            ) : (
+              <View style={{ gap: 10 }}>
+                {runningTimers.map((timer) => {
+                  const config = getHabitConfig(timer.category as HabitCategory);
+
+                  return (
+                    <View
+                      key={timer.id}
+                      style={{
+                        backgroundColor: colors.bgSurface,
+                        borderWidth: 1,
+                        borderColor: colors.moduleHabits,
+                        borderRadius: 12,
+                        padding: 14
+                      }}
                     >
-                      {activity}
+                      {/* Active Badge */}
+                      <View style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: '#22c55e20',
+                        paddingHorizontal: 6,
+                        paddingVertical: 3,
+                        borderRadius: 6
+                      }}>
+                        <View style={{
+                          width: 4,
+                          height: 4,
+                          backgroundColor: '#22c55e',
+                          borderRadius: 2,
+                          marginRight: 4
+                        }} />
+                        <Text style={{ color: '#22c55e', fontSize: 9, fontWeight: '600' }}>LIVE</Text>
+                      </View>
+
+                      {/* Header */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                        <View style={{
+                          backgroundColor: config.color,
+                          borderRadius: 20,
+                          width: 36,
+                          height: 36,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 10
+                        }}>
+                          <Ionicons name={config.icon as any} size={18} color="white" />
+                        </View>
+                        <View style={{ flex: 1, paddingRight: 60 }}>
+                          <Text style={{
+                            color: colors.textTertiary,
+                            fontSize: 10,
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5
+                          }}>
+                            {timer.category}
+                          </Text>
+                          <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>
+                            {timer.activity}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Timer Display */}
+                      <View style={{
+                        backgroundColor: colors.bgSurfaceHover,
+                        borderRadius: 10,
+                        padding: 12,
+                        marginBottom: 10,
+                        borderWidth: 1,
+                        borderColor: colors.moduleHabits + '50'
+                      }}>
+                        <Text style={{
+                          color: colors.moduleHabits,
+                          fontSize: 28,
+                          fontFamily: 'monospace',
+                          fontWeight: 'bold',
+                          textAlign: 'center'
+                        }}>
+                          {formatDurationHMS(elapsedTimes[timer.id] || 0)}
+                        </Text>
+                      </View>
+
+                      {/* Notes */}
+                      {timer.notes && (
+                        <View style={{
+                          backgroundColor: colors.bgSurfaceHover,
+                          borderRadius: 8,
+                          padding: 10,
+                          marginBottom: 10
+                        }}>
+                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                            {timer.notes}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* Stop Button */}
+                      <Button
+                        onPress={() => handleStopTimer(timer.id)}
+                        title="Stop Timer"
+                        icon="stop"
+                        variant="danger"
+                        fullWidth
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          {/* Recent Sessions - Grouped by Date like Finance */}
+          <View style={{ marginBottom: 20 }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 12
+            }}>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
+                Recent Sessions
+              </Text>
+              <Pressable onPress={() => router.push('/habit/history')}>
+                <Text style={{ color: colors.moduleHabits, fontSize: 12, fontWeight: '600' }}>
+                  View All →
+                </Text>
+              </Pressable>
+            </View>
+
+            {completedLogs.length === 0 ? (
+              <EmptyState
+                icon="time-outline"
+                title="No Sessions Yet"
+                description="Complete activities to see them here"
+              />
+            ) : (
+              <View style={{ gap: 12 }}>
+                {groupedLogs.slice(0, 5).map(([date, dateLogs]) => (
+                  <View key={date}>
+                    <Text style={{
+                      color: colors.textTertiary,
+                      fontSize: 11,
+                      fontWeight: '600',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5
+                    }}>
+                      {date}
                     </Text>
-                  </Pressable>
+                    <View style={{ gap: 6 }}>
+                      {dateLogs.map((log) => {
+                        const config = getHabitConfig(log.category as HabitCategory);
+
+                        return (
+                          <Pressable
+                            key={log.id}
+                            onPress={() => router.push(`/habit/${log.id}`)}
+                            style={{
+                              backgroundColor: colors.bgSurface,
+                              borderWidth: 1,
+                              borderColor: colors.borderSurface,
+                              borderRadius: 12,
+                              padding: 12
+                            }}
+                          >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <View style={{
+                                backgroundColor: config.color,
+                                borderRadius: 20,
+                                width: 40,
+                                height: 40,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: 12
+                              }}>
+                                <Ionicons name={config.icon as any} size={18} color="white" />
+                              </View>
+
+                              <View style={{ flex: 1 }}>
+                                <Text style={{
+                                  color: colors.textPrimary,
+                                  fontWeight: '600',
+                                  fontSize: 14,
+                                  marginBottom: 3
+                                }}>
+                                  {log.activity}
+                                </Text>
+                                <View style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  flexWrap: 'wrap',
+                                  gap: 6
+                                }}>
+                                  <View style={{
+                                    backgroundColor: colors.bgSurfaceHover,
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 2,
+                                    borderRadius: 4
+                                  }}>
+                                    <Text style={{
+                                      color: colors.textSecondary,
+                                      fontSize: 10,
+                                      fontWeight: '500'
+                                    }}>
+                                      {log.category}
+                                    </Text>
+                                  </View>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Ionicons name="time" size={10} color={colors.textTertiary} />
+                                    <Text style={{
+                                      color: colors.textTertiary,
+                                      fontSize: 10,
+                                      marginLeft: 2
+                                    }}>
+                                      {formatDurationHMS(log.duration || 0)}
+                                    </Text>
+                                  </View>
+                                </View>
+                              </View>
+
+                              <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
                 ))}
               </View>
-            </>
-          )}
+            )}
+          </View>
 
-          {/* Start Button */}
-          <Pressable
-            onPress={handleStartTimer}
-            disabled={!selectedCategory || !selectedActivity}
-            className={`py-4 rounded-lg ${
-              selectedCategory && selectedActivity
-                ? 'bg-blue-500 active:bg-blue-600'
-                : 'bg-gray-300 dark:bg-gray-600'
-            }`}
-          >
-            <Text className="text-white text-center font-bold text-lg">
-              Start Timer
-            </Text>
-          </Pressable>
+          {/* Bottom Padding for FAB */}
+          <View style={{ height: 100 }} />
         </View>
+      </ScrollView>
 
-        {/* Example: Overlapping Timers Explanation */}
-        <View className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-          <Text className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-            💡 Layered Time System
-          </Text>
-          <Text className="text-xs text-blue-800 dark:text-blue-200">
-            Unlike traditional trackers, you can run multiple timers at once! 
-            Example: Start "Travel" at 8:00 AM, then start "Reading" at 8:10 AM. 
-            Both timers run independently until you stop them.
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        onPress={() => router.push('/habit/start')}
+        icon="add"
+        color="bg-purple-600"
+      />
+    </SafeAreaView>
   );
 }
