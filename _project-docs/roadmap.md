@@ -1,34 +1,42 @@
 # Roadmap — Zenith
 
 ## Planned
-| ID | Description | Est | Notes |
+| ID | Description | Priority | Notes |
 |---|---|---|---|
-| P-01 | Define WatermelonDB schema (all 4 domains) | S | Habits, Finance, Diary, Leisure tables + migrations |
-| P-02 | Auth screens — Login + Signup UI | S | Wire to existing AuthContext |
-| P-03 | Habits screen — timer list + start/stop | M | Use HabitTimerCard, useTimer hook |
-| P-04 | Finance screen — transaction list + add form | M | TransactionCard, TransactionForm, FinanceSummary |
-| P-05 | Diary screen — entry list + new entry | M | DiaryCard, RichTextEditor, MoodPicker |
-| P-06 | Leisure screen — activity list + log session | M | LeisureTimerCard, TypePicker |
-| P-07 | Dashboard screen — summary of all 4 domains | M | Depends on P-03 through P-06 |
-| P-08 | Sync implementation — WatermelonDB ↔ Supabase | L | SyncManager, pull_changes Edge Function |
-| P-09 | Settings screens — preferences + sync status | S | Theme toggle, sync info |
-| P-10 | Finance analytics screen | M | Charts, category breakdown |
+| R-01 | Restore auth — login/signup screens wired to Supabase auth | CRITICAL | Re-enable persistSession, add login + signup UI |
+| R-02 | Fix RLS: add user_id to all Supabase tables + rewrite policies | CRITICAL | Blocks any production use |
+| R-03 | Verify + redeploy Edge Functions (push_changes, pull_changes) | HIGH | Sync broken without these |
+| R-04 | Fix LeisureTimerCard — use type/title/notes props instead of hardcoded fallbacks | MED | BUG-021 |
+| R-05 | Delete financeConstants.ts — consolidate into categories.ts | MED | BUG-020 |
+| R-06 | Standardize styling — decide: inline style OR className, apply everywhere | MED | DiaryCard is the outlier |
+| R-07 | Fix version mismatch — align package.json, index.tsx, CHANGELOG to 0.2.0 | LOW | BUG-022 |
+| R-08 | Wrap all console.log in __DEV__ guards (supabaseSync.ts, syncManager.ts) | LOW | BUG-017, BUG-025 |
+| R-09 | Add sync_metadata table to Supabase | HIGH | Required for sync protocol |
+| R-10 | Add user_id to WatermelonDB schema + migration (for local ownership tracking) | MED | Needed for multi-account support later |
 
-Est: S = small (< 1 session), M = medium (1-2 sessions), L = large (3+ sessions)
-
-## Suggestions
+## Suggestions (Post-Auth)
 - Calendar heatmap for habit streaks
 - Export data as CSV
 - Widget support (if Expo supports it)
 - Biometric auth lock
+- Push notifications for habit reminders
+- Finance budget goals / alerts
 
 ## Deferred
 | Item | Reason | Resume When |
 |---|---|---|
-| Conflict resolution for sync | No schema yet, premature | After P-08 is working |
 | Social login (Google/Apple) | Complexity vs value for personal app | If app becomes multi-user |
+| Supabase type generation (`supabase gen types typescript`) | Requires auth + live DB connection | After R-01 + R-02 complete |
 
 ## Completed
 | ID | Description | Version | Date |
 |---|---|---|---|
-| — | Initial scaffold + DB setup | 0.1.0 | 2026-03-28 |
+| P-01 | WatermelonDB schema v6 — 7 tables, all models, migrations | 0.1.0–0.2.0 | 2026-03-28 |
+| P-03 | Habits screen — live timers, start/stop, history, sub-screens | 0.2.0 | 2026-03-28 |
+| P-04 | Finance screen — transaction list, add form, analytics, sub-screens | 0.2.0 | 2026-03-28 |
+| P-05 | Diary screen — entry list, new entry (rich text + mood + images), calendar, sub-screens | 0.2.0 | 2026-03-28 |
+| P-06 | Leisure screen — activity list, complete session, timer cards, sub-screens | 0.2.0 | 2026-03-28 |
+| P-07 | Dashboard screen — sync status, navigation to all domains | 0.2.0 | 2026-03-28 |
+| P-08 | Sync layer — SyncManager, supabaseSync, syncUtils, useSync hook, auto-sync | 0.2.0 | 2026-03-28 |
+| P-09 | Settings screens — theme toggle (dark/light), preferences | 0.2.0 | 2026-03-28 |
+| P-10 | Finance analytics screen — category breakdown + charts | 0.2.0 | 2026-03-28 |

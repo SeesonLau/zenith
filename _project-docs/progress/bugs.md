@@ -7,10 +7,10 @@
 
 | ID | Area | File | Line | Issue | Status |
 |---|---|---|---|---|---|
-| BUG-001 | Security | Supabase DB | — | RLS policies are `Allow all (public)` with `qual: true` — any request can read/write all rows. No user filtering. | Open |
-| BUG-002 | Security | Supabase DB | — | No `user_id` column on any table — RLS policies cannot filter by owner even if rewritten. | Open |
-| BUG-003 | Sync | Schema | — | Schema drift: Supabase has `device_id` on all tables, `linked_habit_id` on `leisure_logs`, `uploaded_at` on `diary_images` — none of these exist in local WatermelonDB schema. Sync will silently drop these columns. | Open |
-| BUG-004 | Sync | Supabase DB | — | `sync_metadata` table exists locally but not in Supabase — sync tracking will fail. | Open |
+| BUG-001 | Security | Supabase DB | — | RLS policies are `Allow all (public)` — any request can read/write all rows. No user filtering. | Open |
+| BUG-002 | Security | Supabase DB | — | No `user_id` column on any table — RLS cannot filter by owner even if policies are rewritten. | Open |
+| BUG-004 | Sync | Supabase DB | — | `sync_metadata` table exists locally but not in Supabase — WatermelonDB sync tracking will fail. | Open |
+| BUG-026 | Auth | Entire app | — | Auth completely removed. `supabase.auth` session disabled (`persistSession: false`). No login/signup flow. App runs unauthenticated. Cannot ship without re-enabling auth. | Open |
 
 ---
 
@@ -18,12 +18,8 @@
 
 | ID | Area | File | Line | Issue | Status |
 |---|---|---|---|---|---|
-| BUG-005 | Security | `src/database/sync/supabaseSync.ts` | 36 | Logs full sync payload via `JSON.stringify(changes)` — exposes all personal data to console/logs. | Open |
-| BUG-006 | Sync | `supabase/functions/` | — | `push_changes` Edge Function does not exist — every sync push will fail with RPC error. | Open |
-| BUG-007 | Sync | `supabase/functions/pull_changes/index.ts` | — | `pull_changes` Edge Function is empty — sync pull returns no data. | Open |
-| BUG-008 | Code Quality | `app/auth.tsx` | 41, 52 | `error: any` used twice — should be typed as `AuthError` from `@supabase/supabase-js`. | Open |
-| BUG-009 | Code Quality | Multiple | 1 | Missing file path comment on line 1 in: `app/auth.tsx`, `app/(tabs)/_layout.tsx`, `app/(tabs)/habits.tsx`. | Open |
-| BUG-010 | Code Quality | `app/(tabs)/_layout.tsx` | 12–14 | Hardcoded hex colors `#0f172a`, `#1e293b`, `#38bdf8`, `#64748b` instead of theme tokens or constants. | Open |
+| BUG-005 | Security | `src/database/sync/supabaseSync.ts` | ~35 | Logs full sync payload via `JSON.stringify(changes)` — exposes all personal data to console. Not in `__DEV__` guard. | Open |
+| BUG-006 | Sync | Supabase server | — | `push_changes` and `pull_changes` Edge Functions deleted locally. Server deployment status unknown. Sync push/pull will fail if not deployed. | Open |
 
 ---
 
@@ -31,12 +27,12 @@
 
 | ID | Area | File | Line | Issue | Status |
 |---|---|---|---|---|---|
-| BUG-011 | Architecture | `src/types/database.types.ts` | ~360 | `RootStackParamList` defined in wrong file — belongs in `src/types/navigation.types.ts`. | Open |
-| BUG-012 | Architecture | `app/(tabs)/habits.tsx` | ~30–60 | Timer interval logic (`setInterval` / elapsed time) is inline — `src/hooks/useTimer.ts` exists but is empty. Violates separation of concerns. | Open |
-| BUG-013 | Code Quality | `src/database/models/DiaryEntry.ts` | 20 | Stale comment "CHANGE THIS LINE: Remove Q." — misleading, should be removed. | Open |
-| BUG-014 | Architecture | `src/contexts/SyncContext.tsx` | — | Empty stub — sync state (isSyncing, lastSyncedAt, error) not available app-wide. Any screen that needs sync status has no source of truth. | Open |
-| BUG-015 | Architecture | `src/contexts/ThemeContext.tsx` | — | Empty stub — no theme switching capability. | Open |
-| BUG-016 | Architecture | `src/types/` | — | `global.types.ts`, `navigation.types.ts`, `supabase.types.ts` are all empty stubs. Types they should contain are scattered or missing entirely. | Open |
+| BUG-011 | Architecture | `src/types/database.types.ts` | ~360 | `RootStackParamList` defined here — should be in a navigation types file. Minor — navigation.types.ts was deleted. | Open |
+| BUG-012 | Architecture | `app/(tabs)/habits.tsx` | ~26–37 | Timer `setInterval` / elapsed time logic is inline. `useTimer.ts` was deleted rather than implemented. Acceptable short-term but violates hooks separation. | Open |
+| BUG-013 | Code Quality | `src/database/models/DiaryEntry.ts` | ~20 | Stale comment: "CHANGE THIS LINE: Remove Q." — misleading, should be removed. | Open |
+| BUG-020 | Code Quality | `src/lib/financeConstants.ts` | — | Outdated category names (Load, Fare, Personal-Physical, etc.) that do not match `src/constants/categories.ts`. Also imported but never used in categories.ts. Creates false impression of a second category source. | Open |
+| BUG-021 | UI | `src/components/leisure/LeisureTimerCard.tsx` | ~30–60 | Accepts `type`, `title`, `notes` props but ignores all three. Renders hardcoded "❓" icon and "Untitled Session" for every active session. | Open |
+| BUG-022 | Code Quality | Multiple | — | Version mismatch: `app/(tabs)/index.tsx` says v1.1.0, `package.json` says 1.0.0, `CHANGELOG.md` says 0.1.0. Actual version is 0.2.0. | Fixed |
 
 ---
 
@@ -44,9 +40,27 @@
 
 | ID | Area | File | Line | Issue | Status |
 |---|---|---|---|---|---|
-| BUG-017 | Code Quality | `src/database/sync/supabaseSync.ts` | Multiple | 12 `console.log` statements with emoji decorations — must be removed or wrapped in `__DEV__` before production. | Open |
-| BUG-018 | Architecture | `src/hooks/useTimer.ts` | — | Empty stub while timer logic is duplicated inline in `habits.tsx`. Will need to be extracted before Leisure timer screen is built. | Open |
-| BUG-019 | Architecture | `src/database/sync/syncManager.ts` | — | Empty stub — `supabaseSync.ts` exists but `syncManager.ts` (the intended wrapper) is never used. Two sync files with unclear responsibility split. | Open |
+| BUG-017 | Code Quality | `src/database/sync/supabaseSync.ts` | Multiple | ~20 `console.log` statements with emoji decorators. Not wrapped in `__DEV__` guards. | Open |
+| BUG-023 | Code Quality | `src/components/diary/DiaryCard.tsx` | — | Uses NativeWind `className` strings ("card p-4 mb-3", "text-primary font-bold text-lg") while all other components use inline `style={{}}` objects. Inconsistent styling approach. | Open |
+| BUG-024 | Code Quality | `app/settings/index.tsx` | ~10–30 | Manually derives colors via `theme === 'slate' ? '#...' : '#...'` instead of using `useThemeColors()` hook. Will drift from design tokens. | Open |
+| BUG-025 | Code Quality | `src/database/sync/syncManager.ts` | Multiple | Multiple `console.log` calls not wrapped in `__DEV__` guards. | Open |
+
+---
+
+## Fixed
+
+| ID | Area | What Was Fixed | Fixed In |
+|---|---|---|---|
+| BUG-003 | Sync | Schema drift partially resolved: `device_id` added to WatermelonDB schema v6 via migration. `linked_habit_id` and `uploaded_at` confirmed in local schema. | 0.2.0 |
+| BUG-007 | Code | `pull_changes` Edge Function removed from codebase — was an empty stub. Server-side status tracked separately as BUG-006. | 0.2.0 |
+| BUG-008 | Code Quality | `app/auth.tsx` deleted entirely — `error: any` issue no longer exists. | 0.2.0 |
+| BUG-009 | Code Quality | `app/auth.tsx` missing file path comment no longer relevant (file deleted). | 0.2.0 |
+| BUG-014 | Architecture | `SyncContext.tsx` deleted — replaced by `useSync` hook which exposes sync state directly. | 0.2.0 |
+| BUG-015 | Architecture | `ThemeContext.tsx` fully implemented — dark/light toggle, AsyncStorage persistence, NativeWind integration. | 0.2.0 |
+| BUG-016 | Architecture | `global.types.ts`, `navigation.types.ts`, `supabase.types.ts` deleted — types consolidated in `database.types.ts`. | 0.2.0 |
+| BUG-018 | Architecture | `useTimer.ts` deleted — decision made not to extract timer hook; inline timer in habits.tsx is acceptable. | 0.2.0 |
+| BUG-019 | Architecture | `syncManager.ts` fully implemented — performSync, forceFullSync, auto-sync, network reconnect listener. | 0.2.0 |
+| BUG-010 | Code Quality | `_layout.tsx` rewritten — hardcoded hex colors replaced. | 0.2.0 |
 
 ---
 
@@ -55,7 +69,8 @@
 | Severity | Total | Open | Fixed |
 |---|---|---|---|
 | Critical | 4 | 4 | 0 |
-| High | 6 | 6 | 0 |
+| High | 2 | 2 | 0 |
 | Medium | 6 | 6 | 0 |
-| Low | 3 | 3 | 0 |
-| **Total** | **19** | **19** | **0** |
+| Low | 4 | 4 | 0 |
+| **Open Total** | **16** | **16** | — |
+| **Fixed** | 10 | — | 10 |
