@@ -1,5 +1,5 @@
 // app/(tabs)/finance.tsx - REDESIGNED WITH CALENDAR ABOVE STATS
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,7 @@ export default function FinanceScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const [refreshing, setRefreshing] = useState(false);
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   // Find the week index that contains today's date
@@ -144,9 +145,13 @@ export default function FinanceScreen() {
     );
   }, [logs]);
 
+  useEffect(() => {
+    return () => { if (refreshTimeout.current) clearTimeout(refreshTimeout.current); };
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+    refreshTimeout.current = setTimeout(() => setRefreshing(false), 500);
   };
 
   const handlePreviousMonth = () => {

@@ -1,5 +1,5 @@
 // app/(tabs)/leisure.tsx - COMPACT VERSION
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,7 @@ export default function LeisureScreen() {
   const runningTimers = useRunningLeisureTimers();
   const completedSessions = useCompletedLeisureLogs(20);
   const [refreshing, setRefreshing] = useState(false);
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const groupedSessions = useMemo(
     () => groupByDate(completedSessions, (s) => s.startedAt),
@@ -42,9 +43,13 @@ export default function LeisureScreen() {
     router.push(`/leisure/complete?id=${timerId}&duration=${durationSeconds}`);
   };
 
+  useEffect(() => {
+    return () => { if (refreshTimeout.current) clearTimeout(refreshTimeout.current); };
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+    refreshTimeout.current = setTimeout(() => setRefreshing(false), 500);
   };
 
   const totalDuration = completedSessions.reduce((sum, log) => sum + (log.duration || 0), 0);

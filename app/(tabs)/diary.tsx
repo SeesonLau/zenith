@@ -1,5 +1,5 @@
 // app/(tabs)/diary.tsx - INLINE STYLES VERSION
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,7 @@ export default function DiaryScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const [refreshing, setRefreshing] = useState(false);
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const entries = useDiaryEntries(selectedDate.getFullYear(), selectedDate.getMonth());
@@ -26,9 +27,13 @@ export default function DiaryScreen() {
     if (__DEV__) console.log('📔 DIARY DEBUG: Entries Count:', entries.length);
   }, [entries]);
 
+  useEffect(() => {
+    return () => { if (refreshTimeout.current) clearTimeout(refreshTimeout.current); };
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+    refreshTimeout.current = setTimeout(() => setRefreshing(false), 500);
   };
 
   const handlePreviousMonth = () => {

@@ -1,5 +1,5 @@
 // app/(tabs)/habits.tsx - COMPACT VERSION
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ export default function HabitsScreen() {
   const runningTimers = useRunningHabitTimers();
   const [elapsedTimes, setElapsedTimes] = useState<Record<string, number>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const completedLogs = useCompletedHabitLogs();
 
   useEffect(() => {
@@ -49,9 +50,13 @@ export default function HabitsScreen() {
     }
   };
 
+  useEffect(() => {
+    return () => { if (refreshTimeout.current) clearTimeout(refreshTimeout.current); };
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+    refreshTimeout.current = setTimeout(() => setRefreshing(false), 500);
   };
 
   return (
