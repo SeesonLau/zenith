@@ -1,4 +1,4 @@
-// app/settings/index.tsx - REDESIGNED WITH THEME DEBUGGING
+// app/settings/index.tsx
 import React from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -9,7 +9,7 @@ import Button from '@/src/components/common/Button';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { theme, setTheme, isLight } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const handleClearCache = () => {
     Alert.alert(
@@ -49,37 +49,6 @@ export default function SettingsScreen() {
             </Text>
             <Text style={{ fontSize: 16, color: textSecondary }}>
               Customize your Zenith experience
-            </Text>
-          </View>
-
-          {/* THEME DEBUG PANEL - Shows current state */}
-          <View style={{
-            backgroundColor: theme === 'slate' ? '#22c55e20' : '#dcfce7',
-            borderWidth: 2,
-            borderColor: '#22c55e',
-            borderRadius: 16,
-            padding: 16,
-            marginBottom: 24
-          }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
-              <Text style={{ 
-                fontSize: 16, 
-                fontWeight: 'bold', 
-                color: '#22c55e',
-                marginLeft: 8
-              }}>
-                Theme System Active
-              </Text>
-            </View>
-            <Text style={{ fontSize: 14, color: '#22c55e', marginBottom: 4 }}>
-              Current Theme: <Text style={{ fontWeight: 'bold' }}>{theme === 'slate' ? 'SLATE MODE' : 'WHITE MODE'}</Text>
-            </Text>
-            <Text style={{ fontSize: 14, color: '#22c55e', marginBottom: 4 }}>
-              Is Light: <Text style={{ fontWeight: 'bold' }}>{isLight ? 'YES' : 'NO'}</Text>
-            </Text>
-            <Text style={{ fontSize: 12, color: '#16a34a', marginTop: 8 }}>
-              ✓ If you see this panel, theming is working!
             </Text>
           </View>
 
