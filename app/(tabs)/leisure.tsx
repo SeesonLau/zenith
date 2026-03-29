@@ -10,8 +10,9 @@ import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import LeisureTimerCard from '@/src/components/leisure/LeisureTimerCard';
 import CompletedLeisureCard from '@/src/components/leisure/CompletedLeisureCard';
-import { formatDate } from '@/src/utils/dateHelpers';
+import { groupByDate } from '@/src/utils/dateHelpers';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Strings } from '@/src/constants/strings';
 
 export default function LeisureScreen() {
   const router = useRouter();
@@ -20,22 +21,10 @@ export default function LeisureScreen() {
   const completedSessions = useCompletedLeisureLogs(20);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Group completed sessions by date (like finance transactions)
-  const groupedSessions = useMemo(() => {
-    const groups: Record<string, typeof completedSessions> = {};
-
-    completedSessions.forEach((session) => {
-      const dateKey = formatDate(session.startedAt, 'short');
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(session);
-    });
-
-    return Object.entries(groups).sort(
-      ([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime()
-    );
-  }, [completedSessions]);
+  const groupedSessions = useMemo(
+    () => groupByDate(completedSessions, (s) => s.startedAt),
+    [completedSessions]
+  );
 
   const handleStartTimer = async () => {
     try {
@@ -73,14 +62,14 @@ export default function LeisureScreen() {
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#ec4899" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.moduleLeisure} />
         }
       >
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ marginBottom: 16, marginTop: 12 }}>
             <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 4 }}>
-              Leisure Tracker
+              {Strings.leisure.screenTitle}
             </Text>
           </View>
 
@@ -97,12 +86,12 @@ export default function LeisureScreen() {
                   <View style={{
                     width: 6,
                     height: 6,
-                    backgroundColor: '#ec4899',
+                    backgroundColor: colors.moduleLeisure,
                     borderRadius: 3,
                     marginRight: 6
                   }} />
                   <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-                    Active Session
+                    {Strings.leisure.activeSession}
                   </Text>
                 </View>
                 <View style={{
@@ -146,12 +135,12 @@ export default function LeisureScreen() {
             marginBottom: 16
           }}>
             <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 15, marginBottom: 12 }}>
-              Today's Stats
+              {Strings.leisure.todayStats}
             </Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4, fontWeight: '500' }}>
-                  Sessions
+                  {Strings.leisure.statsSessions}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: 'bold' }}>
                   {todaysSessions.length}
@@ -160,7 +149,7 @@ export default function LeisureScreen() {
               <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4, fontWeight: '500' }}>
-                  Total Time
+                  {Strings.leisure.statsTotalTime}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: 'bold' }}>
                   {Math.floor(todaysSessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60)}m
@@ -169,7 +158,7 @@ export default function LeisureScreen() {
               <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4, fontWeight: '500' }}>
-                  All Time
+                  {Strings.leisure.statsAllTime}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 22, fontWeight: 'bold' }}>
                   {Math.floor(totalDuration / 3600)}h
@@ -187,7 +176,7 @@ export default function LeisureScreen() {
               marginBottom: 12
             }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-                Recent Sessions
+                {Strings.leisure.recentSessions}
               </Text>
               <View style={{
                 backgroundColor: colors.bgSurface,
@@ -206,12 +195,12 @@ export default function LeisureScreen() {
             {completedSessions.length === 0 && runningTimers.length === 0 ? (
               <EmptyState
                 icon="film-outline"
-                title="No Sessions Yet"
-                description="Start tracking your leisure time"
+                title={Strings.leisure.emptyTitle}
+                description={Strings.leisure.emptyDesc}
                 action={
                   <Button
                     onPress={handleStartTimer}
-                    title="Start Session"
+                    title={Strings.leisure.startSession}
                     icon="play"
                     variant="primary"
                   />

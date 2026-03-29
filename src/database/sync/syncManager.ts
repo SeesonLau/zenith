@@ -232,23 +232,16 @@ export function getSyncStatus() {
  * Get pending changes count
  */
 export async function getPendingChangesCount(): Promise<number> {
+  const tables = ['habit_logs', 'finance_logs', 'diary_entries', 'diary_images', 'leisure_logs'];
   try {
-    const tables = ['habit_logs', 'finance_logs', 'diary_entries', 'diary_images', 'leisure_logs'];
-    let count = 0;
-
-    for (const tableName of tables) {
-      const records = await database
-        .get(tableName)
-        .query()
-        .fetch();
-
-      const unsynced = records.filter((r: any) => !r.isSynced || r.isSynced === false);
-      count += unsynced.length;
-    }
-
-    return count;
+    const counts = await Promise.all(
+      tables.map((table) =>
+        database.get(table).query(Q.where('is_synced', false)).fetchCount()
+      )
+    );
+    return counts.reduce((sum, n) => sum + n, 0);
   } catch (error) {
-    console.error('Failed to get pending changes:', error);
+    if (__DEV__) console.error('Failed to get pending changes:', error);
     return 0;
   }
 }

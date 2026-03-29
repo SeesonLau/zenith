@@ -139,3 +139,22 @@ export function addMonths(date: Date, months: number): Date {
   result.setMonth(result.getMonth() + months);
   return result;
 }
+
+export function groupByDate<T>(
+  items: T[],
+  getDate: (item: T) => Date
+): [string, T[]][] {
+  const groups: Record<string, T[]> = {};
+  items.forEach((item) => {
+    const key = formatDate(getDate(item), 'short');
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  return Object.entries(groups).sort(
+    ([a], [b]) => new Date(b).getTime() - new Date(a).getTime()
+  );
+}
+
+export function calculateDurationSeconds(startedAt: Date): number {
+  return Math.floor((Date.now() - startedAt.getTime()) / 1000);
+}

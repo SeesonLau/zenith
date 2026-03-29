@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDiaryEntries } from '@/src/database/hooks/useDatabase';
 import { addMonths } from '@/src/utils/dateHelpers';
+import { Strings } from '@/src/constants/strings';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
@@ -22,7 +23,7 @@ export default function DiaryScreen() {
   const entries = useDiaryEntries(selectedDate.getFullYear(), selectedDate.getMonth());
 
   useEffect(() => {
-    console.log('📔 DIARY DEBUG: Entries Count:', entries.length);
+    if (__DEV__) console.log('📔 DIARY DEBUG: Entries Count:', entries.length);
   }, [entries]);
 
   const onRefresh = async () => {
@@ -53,14 +54,14 @@ export default function DiaryScreen() {
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0ea5e9" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.moduleDiary} />
         }
       >
         <View style={{ padding: 24 }}>
           {/* Header */}
           <View style={{ marginBottom: 24, marginTop: 16 }}>
             <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 8 }}>
-              My Diary
+              {Strings.diary.screenTitle}
             </Text>
           </View>
 
@@ -78,7 +79,7 @@ export default function DiaryScreen() {
                 onPress={handlePreviousMonth}
                 style={{ backgroundColor: colors.bgSurfaceHover, borderRadius: 8, padding: 12 }}
               >
-                <Ionicons name="chevron-back" size={20} color="#64748b" />
+                <Ionicons name="chevron-back" size={20} color={colors.textTertiary} />
               </Pressable>
 
               <Text style={{ color: colors.textPrimary, fontSize: 20, fontWeight: 'bold' }}>
@@ -89,7 +90,7 @@ export default function DiaryScreen() {
                 onPress={handleNextMonth}
                 style={{ backgroundColor: colors.bgSurfaceHover, borderRadius: 8, padding: 12 }}
               >
-                <Ionicons name="chevron-forward" size={20} color="#64748b" />
+                <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
               </Pressable>
             </View>
           </View>
@@ -105,13 +106,13 @@ export default function DiaryScreen() {
           }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 18 }}>
-                This Month
+                {Strings.diary.thisMonth}
               </Text>
               {currentStreak > 0 && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0ea5e920', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
-                  <Ionicons name="flame" size={14} color="#0ea5e9" />
-                  <Text style={{ color: '#0ea5e9', fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
-                    {currentStreak} day streak
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.moduleDiary + '20', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+                  <Ionicons name="flame" size={14} color={colors.moduleDiary} />
+                  <Text style={{ color: colors.moduleDiary, fontSize: 12, fontWeight: 'bold', marginLeft: 4 }}>
+                    {currentStreak} {Strings.diary.streakLabel}
                   </Text>
                 </View>
               )}
@@ -119,7 +120,7 @@ export default function DiaryScreen() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
-                  Entries
+                  {Strings.diary.statsEntries}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
                   {entries.length}
@@ -128,7 +129,7 @@ export default function DiaryScreen() {
               <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
-                  This Week
+                  {Strings.diary.statsThisWeek}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
                   {thisWeekEntries.length}
@@ -137,7 +138,7 @@ export default function DiaryScreen() {
               <View style={{ width: 1, backgroundColor: colors.borderSurface }} />
               <View style={{ alignItems: 'center', flex: 1 }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
-                  Total Words
+                  {Strings.diary.statsTotalWords}
                 </Text>
                 <Text style={{ color: colors.textPrimary, fontSize: 28, fontWeight: 'bold' }}>
                   {(totalWords / 1000).toFixed(1)}k
@@ -150,7 +151,7 @@ export default function DiaryScreen() {
           <View style={{ marginBottom: 24 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <Text style={{ fontSize: 20, fontWeight: '600', color: colors.textPrimary }}>
-                Recent Entries
+                {Strings.diary.recentEntries}
               </Text>
               <View style={{
                 backgroundColor: colors.bgSurface,
@@ -169,12 +170,12 @@ export default function DiaryScreen() {
             {entries.length === 0 ? (
               <EmptyState
                 icon="book-outline"
-                title="No Entries Yet"
-                description="Start journaling your thoughts and experiences"
+                title={Strings.diary.emptyTitle}
+                description={Strings.diary.emptyDesc}
                 action={
                   <Button
                     onPress={() => router.push('/diary/new')}
-                    title="Write Entry"
+                    title={Strings.diary.newEntry}
                     icon="create"
                     variant="primary"
                   />
@@ -203,7 +204,7 @@ export default function DiaryScreen() {
           {entries.length > 0 && (
             <Button
               onPress={() => router.push('/diary/calendar')}
-              title="Calendar View"
+              title={Strings.diary.calendarView}
               icon="calendar"
               variant="secondary"
               fullWidth

@@ -2,73 +2,39 @@
 import { useEffect, useState } from 'react';
 import { database } from '../index';
 import { Q } from '@nozbe/watermelondb';
+import type { Model, TableName } from '@nozbe/watermelondb';
 import type HabitLog from '../models/HabitLog';
 import type FinanceLog from '../models/FinanceLog';
 import type DiaryEntry from '../models/DiaryEntry';
 import type LeisureLog from '../models/LeisureLog';
 import type DiaryImage from '../models/DiaryImage';
 
+// ─── Generic single-record hook ──────────────────────────────────────────────
+
+function useObserveRecord<T extends Model>(
+  table: TableName<T>,
+  id: string
+): T | null {
+  const [record, setRecord] = useState<T | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const subscription = database
+      .get<T>(table)
+      .findAndObserve(id)
+      .subscribe({ next: setRecord, error: () => setRecord(null) });
+    return () => subscription.unsubscribe();
+  }, [table, id]);
+
+  return record;
+}
+
 // ─── Single-record hooks ─────────────────────────────────────────────────────
 
-export function useHabitLog(id: string) {
-  const [log, setLog] = useState<HabitLog | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    const subscription = database
-      .get<HabitLog>('habit_logs')
-      .findAndObserve(id)
-      .subscribe({ next: setLog, error: () => setLog(null) });
-    return () => subscription.unsubscribe();
-  }, [id]);
-
-  return log;
-}
-
-export function useFinanceLog(id: string) {
-  const [log, setLog] = useState<FinanceLog | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    const subscription = database
-      .get<FinanceLog>('finance_logs')
-      .findAndObserve(id)
-      .subscribe({ next: setLog, error: () => setLog(null) });
-    return () => subscription.unsubscribe();
-  }, [id]);
-
-  return log;
-}
-
-export function useDiaryEntry(id: string) {
-  const [entry, setEntry] = useState<DiaryEntry | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    const subscription = database
-      .get<DiaryEntry>('diary_entries')
-      .findAndObserve(id)
-      .subscribe({ next: setEntry, error: () => setEntry(null) });
-    return () => subscription.unsubscribe();
-  }, [id]);
-
-  return entry;
-}
-
-export function useLeisureLog(id: string) {
-  const [log, setLog] = useState<LeisureLog | null>(null);
-
-  useEffect(() => {
-    if (!id) return;
-    const subscription = database
-      .get<LeisureLog>('leisure_logs')
-      .findAndObserve(id)
-      .subscribe({ next: setLog, error: () => setLog(null) });
-    return () => subscription.unsubscribe();
-  }, [id]);
-
-  return log;
-}
+export const useHabitLog   = (id: string) => useObserveRecord<HabitLog>('habit_logs', id);
+export const useFinanceLog = (id: string) => useObserveRecord<FinanceLog>('finance_logs', id);
+export const useDiaryEntry = (id: string) => useObserveRecord<DiaryEntry>('diary_entries', id);
+export const useLeisureLog = (id: string) => useObserveRecord<LeisureLog>('leisure_logs', id);
 
 // ─── Collection hooks ────────────────────────────────────────────────────────
 

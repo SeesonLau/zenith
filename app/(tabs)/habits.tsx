@@ -7,13 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRunningHabitTimers, useCompletedHabitLogs } from '@/src/database/hooks/useDatabase';
 import { stopHabitTimer } from '@/src/database/actions/habitActions';
 import { formatDurationHMS } from '@/src/utils/formatters';
-import { formatDate } from '@/src/utils/dateHelpers';
+import { groupByDate } from '@/src/utils/dateHelpers';
 import { getHabitConfig } from '@/src/lib/constants';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
 import type { HabitCategory } from '@/src/types/database.types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { Strings } from '@/src/constants/strings';
 
 export default function HabitsScreen() {
   const router = useRouter();
@@ -27,8 +28,7 @@ export default function HabitsScreen() {
     const interval = setInterval(() => {
       const newElapsedTimes: Record<string, number> = {};
       runningTimers.forEach((timer) => {
-        const elapsed = Math.floor((Date.now() - timer.startedAt.getTime()) / 1000);
-        newElapsedTimes[timer.id] = elapsed;
+        newElapsedTimes[timer.id] = Math.floor((Date.now() - timer.startedAt.getTime()) / 1000);
       });
       setElapsedTimes(newElapsedTimes);
     }, 1000);
@@ -36,22 +36,10 @@ export default function HabitsScreen() {
     return () => clearInterval(interval);
   }, [runningTimers]);
 
-  // Group completed logs by date (like finance transactions)
-  const groupedLogs = useMemo(() => {
-    const groups: Record<string, typeof completedLogs> = {};
-
-    completedLogs.forEach((log) => {
-      const dateKey = formatDate(log.startedAt, 'short');
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(log);
-    });
-
-    return Object.entries(groups).sort(
-      ([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime()
-    );
-  }, [completedLogs]);
+  const groupedLogs = useMemo(
+    () => groupByDate(completedLogs, (log) => log.startedAt),
+    [completedLogs]
+  );
 
   const handleStopTimer = async (timerId: string) => {
     try {
@@ -71,14 +59,14 @@ export default function HabitsScreen() {
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#a855f7" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.moduleHabits} />
         }
       >
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ marginBottom: 16, marginTop: 12 }}>
             <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 4 }}>
-              Habit Tracker
+              {Strings.habits.screenTitle}
             </Text>
           </View>
 
@@ -94,12 +82,12 @@ export default function HabitsScreen() {
                 <View style={{
                   width: 6,
                   height: 6,
-                  backgroundColor: '#22c55e',
+                  backgroundColor: colors.success,
                   borderRadius: 3,
                   marginRight: 6
                 }} />
                 <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-                  Active Timers
+                  {Strings.habits.activeTimers}
                 </Text>
               </View>
               <View style={{
@@ -119,12 +107,12 @@ export default function HabitsScreen() {
             {runningTimers.length === 0 ? (
               <EmptyState
                 icon="hourglass-outline"
-                title="No Active Timers"
-                description="Start tracking your activities"
+                title={Strings.habits.emptyTimers}
+                description={Strings.habits.emptyTimersDesc}
                 action={
                   <Button
                     onPress={() => router.push('/habit/start')}
-                    title="Start Timer"
+                    title={Strings.habits.startTimer}
                     icon="add"
                     variant="primary"
                   />
@@ -153,7 +141,7 @@ export default function HabitsScreen() {
                         right: 12,
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: '#22c55e20',
+                        backgroundColor: colors.success + '20',
                         paddingHorizontal: 6,
                         paddingVertical: 3,
                         borderRadius: 6
@@ -161,11 +149,11 @@ export default function HabitsScreen() {
                         <View style={{
                           width: 4,
                           height: 4,
-                          backgroundColor: '#22c55e',
+                          backgroundColor: colors.success,
                           borderRadius: 2,
                           marginRight: 4
                         }} />
-                        <Text style={{ color: '#22c55e', fontSize: 9, fontWeight: '600' }}>LIVE</Text>
+                        <Text style={{ color: colors.success, fontSize: 9, fontWeight: '600' }}>{Strings.habits.liveBadge}</Text>
                       </View>
 
                       {/* Header */}
@@ -233,7 +221,7 @@ export default function HabitsScreen() {
                       {/* Stop Button */}
                       <Button
                         onPress={() => handleStopTimer(timer.id)}
-                        title="Stop Timer"
+                        title={Strings.habits.stopTimer}
                         icon="stop"
                         variant="danger"
                         fullWidth
@@ -254,11 +242,11 @@ export default function HabitsScreen() {
               marginBottom: 12
             }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-                Recent Sessions
+                {Strings.habits.recentSessions}
               </Text>
               <Pressable onPress={() => router.push('/habit/history')}>
                 <Text style={{ color: colors.moduleHabits, fontSize: 12, fontWeight: '600' }}>
-                  View All →
+                  {Strings.common.viewAll}
                 </Text>
               </Pressable>
             </View>
@@ -266,8 +254,8 @@ export default function HabitsScreen() {
             {completedLogs.length === 0 ? (
               <EmptyState
                 icon="time-outline"
-                title="No Sessions Yet"
-                description="Complete activities to see them here"
+                title={Strings.habits.emptySessions}
+                description={Strings.habits.emptySessionsDesc}
               />
             ) : (
               <View style={{ gap: 12 }}>
