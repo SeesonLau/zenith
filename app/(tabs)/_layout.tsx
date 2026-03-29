@@ -21,7 +21,7 @@ export default function TabLayout() {
           height: 56 + insets.bottom,
         },
         tabBarActiveTintColor: isLight ? '#0284c7' : '#38bdf8',
-        tabBarInactiveTintColor: isLight ? '#94a3b8' : '#64748b',
+        tabBarInactiveTintColor: isLight ? '#64748b' : '#94a3b8',
       }}
     >
       <Tabs.Screen

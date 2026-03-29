@@ -9,18 +9,22 @@ interface FloatingActionButtonProps {
   onPress: () => void;
   icon: IconProps<any>['name'];
   color?: string;
+  accessibilityLabel?: string;
 }
 
 export default function FloatingActionButton({
   onPress,
   icon,
   color = 'bg-sky-500',
+  accessibilityLabel = 'Add new',
 }: FloatingActionButtonProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
       className={`
         ${color} active:opacity-80
         absolute left-6
