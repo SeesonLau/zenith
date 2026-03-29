@@ -1,4 +1,4 @@
-// src/components/common/ScreenContent.tsx themed
+// src/components/common/ScreenContext.tsx
 import React from 'react';
 import { View } from 'react-native';
 

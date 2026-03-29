@@ -1,5 +1,5 @@
 // app/finance/add.tsx
-import React, { useState, useMemo, useEffect } from 'react'; // Added useMemo, useEffect
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,12 +14,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createFinanceLog } from '@/src/database/actions/financeActions';
-// Update import to include the new specific lists
-import { 
-  FINANCE_CATEGORIES, 
-  EXPENSE_CATEGORIES, 
-  INCOME_CATEGORIES, 
-  CURRENCIES 
+import {
+  FINANCE_CATEGORIES,
+  EXPENSE_CATEGORIES,
+  INCOME_CATEGORIES,
+  CURRENCIES
 } from '@/src/constants/categories';
 import type { TransactionType, FinanceTypeCategory, CurrencyCode } from '@/src/types/database.types';
 import { formatCurrency } from '@/src/utils/formatters';
@@ -35,8 +34,6 @@ const LOCATION_TAGS = ['to', 'House', 'Lipata', 'Punta', 'CIT-U'];
 // Quick tags for cost (additive)
 const COST_TAGS = [1, 5, 10, 50, 100];
 
-// ❌ REMOVED: Static category sorting at the top
-// ✅ KEEP: Currency sorting (since it doesn't change)
 const CURRENCIES_SORTED = [...CURRENCIES].sort();
 const CURRENCIES_COL1 = CURRENCIES_SORTED.slice(0, Math.ceil(CURRENCIES_SORTED.length / 2));
 const CURRENCIES_COL2 = CURRENCIES_SORTED.slice(Math.ceil(CURRENCIES_SORTED.length / 2));
@@ -54,24 +51,13 @@ export default function AddTransactionScreen() {
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ LOGIC: Calculate categories based on selected Type
   const { col1, col2 } = useMemo(() => {
-    // 1. Select the correct list
     const currentList = transactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-    
-    // 2. Sort them
     const sorted = [...currentList].sort();
-
-    // 3. Split into columns
     const half = Math.ceil(sorted.length / 2);
-    return {
-      col1: sorted.slice(0, half),
-      col2: sorted.slice(half)
-    };
+    return { col1: sorted.slice(0, half), col2: sorted.slice(half) };
   }, [transactionType]);
 
-  // ✅ LOGIC: Reset selected category when switching types 
-  // (Prevents having an Income type selected while on Expense tab)
   useEffect(() => {
     setCategory(null);
   }, [transactionType]);
@@ -129,7 +115,7 @@ export default function AddTransactionScreen() {
 
       router.back();
     } catch (error) {
-      console.error('Failed to create transaction:', error);
+      if (__DEV__) console.error('Failed to create transaction:', error);
       Alert.alert('Error', 'Failed to save transaction');
     } finally {
       setIsLoading(false);
