@@ -1,7 +1,7 @@
 // src/database/sync/syncManager.ts (COMPLETE FIXED VERSION)
 import { syncWithSupabase } from './supabaseSync';
 import { database } from '../index';
-import { Q } from '@nozbe/watermelondb'; // ADDED: Import Q
+import { Q } from '@nozbe/watermelondb';
 import NetInfo from '@react-native-community/netinfo';
 
 let syncInterval: ReturnType<typeof setInterval> | null = null;
@@ -26,29 +26,6 @@ interface SyncResult {
       deleted: number;
     };
   };
-}
-
-/**
- * Get last sync timestamp from local storage
- */
-async function getLastSyncTimestamp(): Promise<number | null> {
-  try {
-    const metadataCollection = database.get('sync_metadata');
-    
-    // FIXED: Use Q.where to filter by table_name
-    const records = await metadataCollection
-      .query(Q.where('table_name', 'last_sync'))
-      .fetch();
-
-    if (records.length > 0) {
-      const record = records[0] as any;
-      return record.lastPulledAt || null;
-    }
-    return null;
-  } catch (error) {
-    console.error('❌ Failed to get last sync timestamp:', error);
-    return null;
-  }
 }
 
 /**
@@ -203,7 +180,7 @@ export function startAutoSync() {
 
   setTimeout(() => {
     performSync();
-  }, 1000);
+  }, 15000);
 
   if (syncInterval) {
     clearInterval(syncInterval);
