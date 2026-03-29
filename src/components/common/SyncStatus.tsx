@@ -98,43 +98,44 @@ export default function SyncStatus() {
   const testSupabasePull = async () => {
     try {
       const deviceId = await getDeviceId();
-      
-      console.log('🧪 Testing Supabase pull_changes...');
-      console.log('📱 Device ID:', deviceId);
-      
+
+      if (__DEV__) {
+        console.log('🧪 Testing Supabase pull_changes...');
+        console.log('📱 Device ID:', deviceId);
+      }
+
       const { data, error } = await supabase.rpc('pull_changes', {
-        last_pulled_at: 0,  // Pull everything
+        last_pulled_at: 0,
         schema_version: 5,
         migration: null,
         device_id_param: deviceId,
       });
 
       if (error) {
-        console.error('❌ Supabase Error:', error);
+        if (__DEV__) console.error('❌ Supabase Error:', error);
         Alert.alert('Error', JSON.stringify(error, null, 2));
         return;
       }
 
-      console.log('✅ Raw data received from Supabase:');
-      console.log(JSON.stringify(data, null, 2));
-      
-      // Count records
       const changes = data?.changes || {};
       const financeCreated = changes.finance_logs?.created || [];
       const habitCreated = changes.habit_logs?.created || [];
       const diaryCreated = changes.diary_entries?.created || [];
       const leisureCreated = changes.leisure_logs?.created || [];
 
-      console.log('📊 Record counts:');
-      console.log('  💰 Finance:', financeCreated.length);
-      console.log('  ⏱️  Habits:', habitCreated.length);
-      console.log('  📔 Diary:', diaryCreated.length);
-      console.log('  🎮 Leisure:', leisureCreated.length);
-
-      if (financeCreated.length > 0) {
-        console.log('💰 Finance sample:', financeCreated[0]);
+      if (__DEV__) {
+        console.log('✅ Raw data received from Supabase:');
+        console.log(JSON.stringify(data, null, 2));
+        console.log('📊 Record counts:');
+        console.log('  💰 Finance:', financeCreated.length);
+        console.log('  ⏱️  Habits:', habitCreated.length);
+        console.log('  📔 Diary:', diaryCreated.length);
+        console.log('  🎮 Leisure:', leisureCreated.length);
+        if (financeCreated.length > 0) {
+          console.log('💰 Finance sample:', financeCreated[0]);
+        }
       }
-      
+
       Alert.alert(
         'Test Pull Result',
         `Records from Supabase:\n\n` +
@@ -145,32 +146,28 @@ export default function SyncStatus() {
         `Check console for full data`
       );
     } catch (error) {
-      console.error('❌ Test failed:', error);
+      if (__DEV__) console.error('❌ Test failed:', error);
       Alert.alert('Test Failed', String(error));
     }
   };
 
   const debugCheckLocalData = async () => {
     try {
-      console.log('🔍 Checking local database...');
-      
       const financeLogs = await database.get('finance_logs').query().fetch();
       const habitLogs = await database.get('habit_logs').query().fetch();
       const diaryEntries = await database.get('diary_entries').query().fetch();
       const leisureLogs = await database.get('leisure_logs').query().fetch();
 
-      console.log('📊 Local database counts:');
-      console.log('  💰 Finance:', financeLogs.length);
-      console.log('  ⏱️  Habits:', habitLogs.length);
-      console.log('  📔 Diary:', diaryEntries.length);
-      console.log('  🎮 Leisure:', leisureLogs.length);
-
-      if (financeLogs.length > 0) {
-        console.log('💰 Finance sample:');
-        const sample = financeLogs[0] as any;
-        console.log('  Item:', sample.item);
-        console.log('  Cost:', sample.totalCost);
-        console.log('  Date:', new Date(sample.transactionDate));
+      if (__DEV__) {
+        console.log('📊 Local database counts:');
+        console.log('  💰 Finance:', financeLogs.length);
+        console.log('  ⏱️  Habits:', habitLogs.length);
+        console.log('  📔 Diary:', diaryEntries.length);
+        console.log('  🎮 Leisure:', leisureLogs.length);
+        if (financeLogs.length > 0) {
+          const sample = financeLogs[0] as any;
+          console.log('💰 Finance sample — item:', sample.item, 'cost:', sample.totalCost, 'date:', new Date(sample.transactionDate));
+        }
       }
 
       Alert.alert(
@@ -182,29 +179,27 @@ export default function SyncStatus() {
         `🎮 Leisure: ${leisureLogs.length}`
       );
     } catch (error) {
-      console.error('❌ Local check failed:', error);
+      if (__DEV__) console.error('❌ Local check failed:', error);
       Alert.alert('Error', String(error));
     }
   };
 
   const debugCheckSupabaseData = async () => {
     try {
-      console.log('☁️ Checking Supabase database...');
-      
       const { data: financeLogs } = await supabase.from('finance_logs').select('*').limit(10);
       const { data: habitLogs } = await supabase.from('habit_logs').select('*').limit(10);
       const { data: diaryEntries } = await supabase.from('diary_entries').select('*').limit(10);
       const { data: leisureLogs } = await supabase.from('leisure_logs').select('*').limit(10);
 
-      console.log('📊 Supabase database counts (Limit 10):');
-      console.log('  💰 Finance:', financeLogs?.length || 0);
-      console.log('  ⏱️  Habits:', habitLogs?.length || 0);
-      console.log('  📔 Diary:', diaryEntries?.length || 0);
-      console.log('  🎮 Leisure:', leisureLogs?.length || 0);
-
-      if (financeLogs && financeLogs.length > 0) {
-        console.log('💰 Finance sample from Supabase:');
-        console.log(financeLogs[0]);
+      if (__DEV__) {
+        console.log('📊 Supabase database counts (Limit 10):');
+        console.log('  💰 Finance:', financeLogs?.length || 0);
+        console.log('  ⏱️  Habits:', habitLogs?.length || 0);
+        console.log('  📔 Diary:', diaryEntries?.length || 0);
+        console.log('  🎮 Leisure:', leisureLogs?.length || 0);
+        if (financeLogs && financeLogs.length > 0) {
+          console.log('💰 Finance sample from Supabase:', financeLogs[0]);
+        }
       }
 
       Alert.alert(
@@ -217,7 +212,7 @@ export default function SyncStatus() {
         `Check console for sample data`
       );
     } catch (error) {
-      console.error('❌ Supabase check failed:', error);
+      if (__DEV__) console.error('❌ Supabase check failed:', error);
       Alert.alert('Error', String(error));
     }
   };
@@ -315,52 +310,54 @@ export default function SyncStatus() {
         </Pressable>
       </View>
 
-      {/* Debug Tools Section */}
-      <View style={{ paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSurface }}>
-        <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
-          Debug Tools
-        </Text>
-        
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-          <Pressable
-            onPress={testSupabasePull}
-            style={{
-              flex: 1,
-              backgroundColor: '#d97706', // Amber
-              borderRadius: 8,
-              padding: 8,
-              alignItems: 'center'
-            }}
-          >
-            <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Test Pull</Text>
-          </Pressable>
+      {/* Debug Tools Section — dev builds only */}
+      {__DEV__ && (
+        <View style={{ paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSurface }}>
+          <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 8 }}>
+            Debug Tools
+          </Text>
+
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+            <Pressable
+              onPress={testSupabasePull}
+              style={{
+                flex: 1,
+                backgroundColor: '#d97706',
+                borderRadius: 8,
+                padding: 8,
+                alignItems: 'center'
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Test Pull</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={debugCheckLocalData}
+              style={{
+                flex: 1,
+                backgroundColor: '#2563eb',
+                borderRadius: 8,
+                padding: 8,
+                alignItems: 'center'
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Check Local</Text>
+            </Pressable>
+          </View>
 
           <Pressable
-            onPress={debugCheckLocalData}
+            onPress={debugCheckSupabaseData}
             style={{
-              flex: 1,
-              backgroundColor: '#2563eb', // Blue
+              backgroundColor: '#16a34a',
               borderRadius: 8,
               padding: 8,
               alignItems: 'center'
             }}
           >
-            <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Check Local</Text>
+            <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Check Supabase</Text>
           </Pressable>
         </View>
-
-        <Pressable
-          onPress={debugCheckSupabaseData}
-          style={{
-            backgroundColor: '#16a34a', // Green
-            borderRadius: 8,
-            padding: 8,
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ color: 'white', fontSize: 12, fontWeight: '600' }}>Check Supabase</Text>
-        </Pressable>
-      </View>
+      )}
 
       {/* Legend */}
       <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.borderSurface }}>
