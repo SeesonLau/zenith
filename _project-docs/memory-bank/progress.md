@@ -1,12 +1,13 @@
 # Progress — Zenith
 
-## Current Version: 0.2.0
+## Current Version: 0.2.1
 
 ## Version History
 | Version | Date | Summary |
 |---|---|---|
 | 0.1.0 | 2026-03-28 | Initial scaffold — DB setup, auth wired, tabs scaffolded, habits screen functional |
 | 0.2.0 | 2026-03-28 | All 4 tab screens + all sub-screens implemented, sync layer complete, theme system working |
+| 0.2.1 | 2026-03-29 | QA pass 1 complete — 26 additional issues fixed (debug guards, calendar, leisure, analytics, a11y) |
 
 ## Done
 
@@ -73,23 +74,15 @@
 - Nothing actively in progress
 
 ## Known Issues
-Full issue list in `_project-docs/progress/qa-bugs.md` (77 issues, QA-001–QA-077).
-Legacy bug tracker in `_project-docs/progress/bugs.md`.
+Full issue list in `_project-docs/progress/qa-bugs.md` (81 issues, 36 open).
 
-**Critical (crash / data leak):**
-- [CRASH] QA-053: Nested `database.write()` in `createDiaryEntry` — crashes when adding images
-- [CRASH] QA-060: Nested `database.write()` in `deleteDiaryEntry` — crashes when deleting entry with images
-- [DATALEAK] QA-010: `supabaseSync.ts` logs individual finance records via `JSON.stringify` in production
-- [DATALEAK] QA-009: `SyncStatus.tsx` logs raw sync payload in production
-- [CRITICAL] RLS policies allow all public access — no user_id column on Supabase tables
+**Critical (blocking production):**
 - [CRITICAL] Auth completely removed — no login/signup flow, supabase session disabled
+- [CRITICAL] RLS policies allow all public access — no user_id column on Supabase tables
+- [CRITICAL] QA-079: Supabase edge functions (pull_changes/push_changes) not deployed — sync broken
 
 **High:**
-- QA-050: Discard on leisure complete leaves phantom running timer
-- QA-040: Diary calendar day tap is a no-op (console.log only)
-- QA-024: Diary calendar hardcoded to December 2024
-- QA-047: Finance analytics screen unreachable from UI
-- QA-028: Settings preferences saves nothing — cosmetic only
-- QA-041: Settings preferences resets on every restart
-- QA-062: Finance analytics category colors render as `#green-500` (invalid CSS)
-- QA-077: 6 screens import directly from database layer (arch violation)
+- QA-028/041: Settings preferences saves nothing — resets on restart
+- QA-054–058: No user_id on any record type — RLS cannot function
+- QA-036: Home screen is a static splash with no domain data
+- QA-080/081: `diary/[id].tsx` missing SafeAreaView and still uses NativeWind (legacy)

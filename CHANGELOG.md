@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.1] — 2026-03-29
+### Fixed
+- All production `console.log`/`console.error` calls in sync layer, settings, layout, and calendar now guarded with `if (__DEV__)`
+- `SyncStatus.tsx` debug tools panel gated behind `{__DEV__ && ...}` — not rendered in production builds
+- Settings "Theme System Active" debug panel removed
+- `Button.tsx` — replaced `any` types with `React.ComponentProps<typeof Ionicons>['name']` for icon and `ViewStyle` for style
+- `LeisureTimerCard` — now uses `type` and `title` props (was showing hardcoded `❓` / "Untitled Session" for all timers)
+- Finance analytics category colors — added `hex` field to `FINANCE_CONFIG.categories` so `backgroundColor` is valid (was `#green-500`)
+- Finance analytics — reachable from Finance tab via new "Analytics" button in header
+- Diary calendar — now defaults to current month (was hardcoded to December 2024)
+- Diary calendar day tap — navigates to diary entry (single) or diary tab (multiple entries)
+- Leisure complete discard — now calls `deleteLeisureLog` before `router.back()` (was leaving orphaned running timer)
+- `FloatingActionButton` — added `accessibilityLabel` and `accessibilityRole="button"` props
+- Tab bar inactive tint colors corrected for WCAG AA contrast on both dark (`#94a3b8`) and light (`#64748b`) themes
+- `onRefresh` timeout in all four tab screens now stored in `useRef` and cleaned up on unmount
+- Leftover build comments (`// ✅ KEEP`, `// ❌ REMOVED`, `// Added useMemo`) removed from `finance/add.tsx`
+- `ScreenContext.tsx` path comment corrected (was `ScreenContent.tsx themed`)
+- Settings About section placeholder values replaced (`"Your Name"` → `"PotatoIV"`, `"2025.01.01"` → `"2026.03.29"`)
+- `console.error` in `finance/add.tsx` and `leisure/complete.tsx` now guarded with `__DEV__`
+
+---
+
 ## [0.2.0] — 2026-03-28
 ### Added
 - All 4 tab screens fully implemented: Habits, Finance, Diary, Leisure

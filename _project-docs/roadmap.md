@@ -6,11 +6,9 @@
 | R-01 | Restore auth — login/signup screens wired to Supabase auth | CRITICAL | Re-enable persistSession, add login + signup UI |
 | R-02 | Fix RLS: add user_id to all Supabase tables + rewrite policies | CRITICAL | Blocks any production use |
 | R-03 | Verify + redeploy Edge Functions (push_changes, pull_changes) | HIGH | Sync broken without these |
-| R-04 | Fix LeisureTimerCard — use type/title/notes props instead of hardcoded fallbacks | MED | BUG-021 |
 | R-05 | Delete financeConstants.ts — consolidate into categories.ts | MED | BUG-020 |
 | R-06 | Standardize styling — decide: inline style OR className, apply everywhere | MED | DiaryCard is the outlier |
 | R-07 | Fix version mismatch — align package.json, index.tsx, CHANGELOG to 0.2.0 | LOW | BUG-022 |
-| R-08 | Wrap all console.log in __DEV__ guards (supabaseSync.ts, syncManager.ts) | LOW | BUG-017, BUG-025 |
 | R-09 | Add sync_metadata table to Supabase | HIGH | Required for sync protocol |
 | R-10 | Add user_id to WatermelonDB schema + migration (for local ownership tracking) | MED | Needed for multi-account support later |
 
@@ -31,6 +29,8 @@
 ## Completed
 | ID | Description | Version | Date |
 |---|---|---|---|
+| R-04 | Fix LeisureTimerCard — use type/title/notes props instead of hardcoded fallbacks | 0.2.1 | 2026-03-29 |
+| R-08 | Wrap all console.log/error in `__DEV__` guards across sync, settings, screens | 0.2.1 | 2026-03-29 |
 | P-01 | WatermelonDB schema v6 — 7 tables, all models, migrations | 0.1.0–0.2.0 | 2026-03-28 |
 | P-03 | Habits screen — live timers, start/stop, history, sub-screens | 0.2.0 | 2026-03-28 |
 | P-04 | Finance screen — transaction list, add form, analytics, sub-screens | 0.2.0 | 2026-03-28 |

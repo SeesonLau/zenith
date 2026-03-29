@@ -1,35 +1,40 @@
 # Active Context — Zenith
 
 ## Current Version
-0.2.0
+0.2.1
 
 ## Current State
 - ✅ All 4 tab screens fully implemented (Habits, Finance, Diary, Leisure)
-- ✅ All sub-screens implemented: habit/start, habit/[id], habit/history, finance/add, finance/[id], finance/analytics, diary/new, diary/[id], diary/calendar, leisure/complete, leisure/[id], settings/index, settings/preferences
-- ✅ All common + domain components implemented
-- ✅ WatermelonDB schema v6 — 7 tables, device_id + linked_habit_id + uploaded_at in schema
+- ✅ All sub-screens implemented and navigable
+- ✅ WatermelonDB schema v6 — 7 tables, device_id + linked_habit_id + uploaded_at
 - ✅ SyncManager fully implemented — auto-sync every 5 min, performSync, forceFullSync
 - ✅ ThemeContext working — dark (slate) / light (white) toggle, persisted via AsyncStorage
-- ✅ Full QA audit complete (2026-03-28) — 77 issues logged in `_project-docs/progress/qa-bugs.md`
+- ✅ QA pass 1 complete — 45 of 81 issues fixed across 2 sessions
+- ✅ All production console.log/error calls guarded with __DEV__
+- ✅ All debug UI panels gated behind __DEV__ (SyncStatus panel, settings debug card)
+- ✅ Analytics screen reachable from Finance tab header
+- ✅ LeisureTimerCard shows correct type emoji/color and session title
+- ✅ Tab bar inactive tint fixed for WCAG AA compliance (both themes)
 - ❌ Auth removed — no login flow, supabase session disabled (CRITICAL)
 - ❌ RLS policies open (allow all public) — no user_id on any table (CRITICAL)
-- ❌ 2 crash bugs: nested `database.write()` in diaryActions.ts (QA-053, QA-060)
-- ❌ 2 data leak bugs: sync payload logged to console in production (QA-009, QA-010)
+- ❌ Edge functions (pull_changes/push_changes) not deployed — sync always fails (CRITICAL)
 
-## Critical Bugs (crash / data leak / broken feature)
-- QA-053: Nested `database.write()` in `createDiaryEntry` → crash when adding images
-- QA-060: Nested `database.write()` in `deleteDiaryEntry` → crash when deleting entry with images
-- QA-009: `SyncStatus.tsx` logs raw sync data in production (no `__DEV__` guard)
-- QA-010: `supabaseSync.ts` logs individual finance records via `JSON.stringify`
-- QA-050: Leisure discard → phantom running timer (never completable)
-- QA-040: Diary calendar day tap → `console.log` only, no navigation
-- QA-024: Diary calendar hardcoded to December 2024
+## Critical Bugs (blocking production)
+- QA-054–058: No `user_id` on any record — RLS cannot function
+- QA-079: Supabase edge functions not deployed — sync broken end-to-end
+- QA-028/041: Settings preferences UI saves nothing — resets on every restart
+
+## Open High-Priority Issues
+- QA-036: Home screen is a static splash — no domain data
+- QA-037/038: Silent failure on habit/leisure timer errors
+- QA-045: Diary cards always show 0 images
+- QA-073: DatabaseProvider not wrapping app (singleton pattern, works but undocumented)
+- QA-080/081: `diary/[id].tsx` missing SafeAreaView + still using NativeWind (legacy)
 
 ## Next Steps (Priority Order)
-1. Fix QA-053 + QA-060 — diary nested write crashes (blocking feature)
-2. Fix QA-009 + QA-010 — production data leak via console
-3. Fix QA-050 — phantom leisure timer on discard
-4. Fix QA-024 + QA-040 — diary calendar broken
-5. Restore auth (R-01) — login/signup with Supabase
-6. Fix RLS (R-02) — add user_id + rewrite policies
-7. See `_project-docs/progress/qa-bugs.md` for all 77 issues
+1. Restore auth (R-01) — login/signup screens wired to Supabase
+2. Fix RLS (R-02) — add user_id to schema + rewrite policies
+3. Deploy edge functions (R-03) — pull_changes + push_changes
+4. Add user_id to WatermelonDB schema + migrations (R-10)
+5. Fix settings preferences persistence (QA-028/041)
+6. See `_project-docs/progress/qa-bugs.md` for all 81 issues (36 remaining open)
