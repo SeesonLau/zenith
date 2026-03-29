@@ -13,7 +13,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { completeLeisureSession } from '@/src/database/actions/leisureActions';
+import { completeLeisureSession, deleteLeisureLog } from '@/src/database/actions/leisureActions';
 import type { LeisureType } from '@/src/types/database.types';
 import LeisureTypePicker from '@/src/components/leisure/LeisureTypePicker';
 import Button from '@/src/components/common/Button';
@@ -46,7 +46,7 @@ export default function CompleteLeisureScreen() {
       );
       router.replace('/leisure');
     } catch (error) {
-      console.error('Failed to complete leisure session:', error);
+      if (__DEV__) console.error('Failed to complete leisure session:', error);
       Alert.alert('Error', 'Failed to save session');
     } finally {
       setIsLoading(false);
@@ -76,10 +76,13 @@ export default function CompleteLeisureScreen() {
                     'Are you sure you want to discard this session?',
                     [
                       { text: 'Cancel', style: 'cancel' },
-                      { 
-                        text: 'Discard', 
+                      {
+                        text: 'Discard',
                         style: 'destructive',
-                        onPress: () => router.back()
+                        onPress: async () => {
+                          if (params.id) await deleteLeisureLog(params.id);
+                          router.back();
+                        },
                       },
                     ]
                   );
