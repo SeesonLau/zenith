@@ -267,7 +267,7 @@ export default function FinanceAnalyticsScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <View style={{
-                            backgroundColor: config.color.replace('bg-', '#'),
+                            backgroundColor: config.hex,
                             borderRadius: 14,
                             width: 24,
                             height: 24,
