@@ -26,12 +26,11 @@ interface SyncResult {
  */
 function filterSyncMetadata(changes: any): any {
   if (!changes) return changes;
-  
+
   const filtered = { ...changes };
-  
-  // Remove sync_metadata table from changes
+
   if (filtered.sync_metadata) {
-    console.log('🚫 Filtering out sync_metadata from push (local-only table)');
+    if (__DEV__) console.log('🚫 Filtering out sync_metadata from push (local-only table)');
     delete filtered.sync_metadata;
   }
   
@@ -45,18 +44,20 @@ export async function syncWithSupabase(): Promise<SyncResult> {
   };
 
   try {
-    console.log('🔄 Starting sync...');
+    if (__DEV__) console.log('🔄 Starting sync...');
 
     const deviceId = await getDeviceId();
-    console.log('📱 Device ID:', deviceId);
+    if (__DEV__) console.log('📱 Device ID:', deviceId);
 
     await synchronize({
       database,
       pullChanges: async ({ lastPulledAt, schemaVersion, migration }) => {
-        console.log('⬇️ Pulling changes from server...');
-        console.log('📅 Last pulled at:', lastPulledAt ? new Date(lastPulledAt).toISOString() : 'Never');
-        console.log('🔢 Last pulled at (raw):', lastPulledAt);
-        console.log('📋 Schema version:', schemaVersion);
+        if (__DEV__) {
+          console.log('⬇️ Pulling changes from server...');
+          console.log('📅 Last pulled at:', lastPulledAt ? new Date(lastPulledAt).toISOString() : 'Never');
+          console.log('🔢 Last pulled at (raw):', lastPulledAt);
+          console.log('📋 Schema version:', schemaVersion);
+        }
 
         const { data, error } = await supabase.rpc('pull_changes', {
           last_pulled_at: lastPulledAt || 0,
@@ -66,20 +67,19 @@ export async function syncWithSupabase(): Promise<SyncResult> {
         });
 
         if (error) {
-          console.error('❌ Pull error:', error);
+          if (__DEV__) console.error('❌ Pull error:', error);
           throw error;
         }
 
-        // DEBUG: Check what WatermelonDB will receive
-        console.log('🔍 What WatermelonDB will receive:');
-        console.log('  💰 Finance created:', data?.changes?.finance_logs?.created?.length || 0);
-        console.log('  ⏱️  Habits created:', data?.changes?.habit_logs?.created?.length || 0);
-        console.log('  📔 Diary created:', data?.changes?.diary_entries?.created?.length || 0);
-        console.log('  🎮 Leisure created:', data?.changes?.leisure_logs?.created?.length || 0);
-        
-        // Verify sync_metadata is NOT in the response
-        if (data?.changes?.sync_metadata) {
-          console.warn('⚠️ WARNING: sync_metadata found in pull response (should not be there!)');
+        if (__DEV__) {
+          console.log('🔍 Pull received:');
+          console.log('  💰 Finance:', data?.changes?.finance_logs?.created?.length || 0);
+          console.log('  ⏱️  Habits:', data?.changes?.habit_logs?.created?.length || 0);
+          console.log('  📔 Diary:', data?.changes?.diary_entries?.created?.length || 0);
+          console.log('  🎮 Leisure:', data?.changes?.leisure_logs?.created?.length || 0);
+          if (data?.changes?.sync_metadata) {
+            console.warn('⚠️ sync_metadata found in pull response');
+          }
         }
         
         // Log first finance record to verify structure (dev only — contains personal data)
@@ -101,8 +101,7 @@ export async function syncWithSupabase(): Promise<SyncResult> {
           });
         }
 
-        console.log('✅ Pull successful');
-        console.log('📥 Pulled:', changes.pulled);
+        if (__DEV__) console.log('✅ Pull successful — pulled:', changes.pulled);
 
         return {
           changes: data.changes,
@@ -110,7 +109,7 @@ export async function syncWithSupabase(): Promise<SyncResult> {
         };
       },
       pushChanges: async ({ changes: localChanges, lastPulledAt }) => {
-        console.log('⬆️ Pushing changes to server...');
+        if (__DEV__) console.log('⬆️ Pushing changes to server...');
 
         // CRITICAL: Filter out sync_metadata before pushing
         const filteredChanges = filterSyncMetadata(localChanges);
@@ -124,13 +123,12 @@ export async function syncWithSupabase(): Promise<SyncResult> {
           });
         }
 
-        console.log('📤 Pushing:', changes.pushed);
+        if (__DEV__) console.log('📤 Pushing:', changes.pushed);
 
-        // Only push if there are actual changes
-        if (changes.pushed.created === 0 && 
-            changes.pushed.updated === 0 && 
+        if (changes.pushed.created === 0 &&
+            changes.pushed.updated === 0 &&
             changes.pushed.deleted === 0) {
-          console.log('✅ No changes to push');
+          if (__DEV__) console.log('✅ No changes to push');
           return;
         }
 
@@ -141,24 +139,23 @@ export async function syncWithSupabase(): Promise<SyncResult> {
         });
 
         if (error) {
-          console.error('❌ Push error:', error);
+          if (__DEV__) console.error('❌ Push error:', error);
           throw error;
         }
 
-        console.log('✅ Push successful');
+        if (__DEV__) console.log('✅ Push successful');
       },
       migrationsEnabledAtVersion: 5,
     });
 
-    console.log('✅ Sync completed successfully');
-    console.log('📊 Total changes - Pulled:', changes.pulled, 'Pushed:', changes.pushed);
+    if (__DEV__) console.log('✅ Sync completed — pulled:', changes.pulled, 'pushed:', changes.pushed);
 
     return {
       success: true,
       changes,
     };
   } catch (error) {
-    console.error('❌ Sync failed:', error);
+    if (__DEV__) console.error('❌ Sync failed:', error);
     return {
       success: false,
       error,

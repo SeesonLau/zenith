@@ -104,7 +104,7 @@ export default function SettingsScreen() {
                 {/* Slate Mode Button */}
                 <Pressable
                   onPress={() => {
-                    console.log('🌙 Switching to SLATE mode');
+                    if (__DEV__) console.log('🌙 Switching to SLATE mode');
                     setTheme('slate');
                   }}
                   style={{
@@ -162,7 +162,7 @@ export default function SettingsScreen() {
                 {/* White Mode Button */}
                 <Pressable
                   onPress={() => {
-                    console.log('☀️ Switching to WHITE mode');
+                    if (__DEV__) console.log('☀️ Switching to WHITE mode');
                     setTheme('white');
                   }}
                   style={{

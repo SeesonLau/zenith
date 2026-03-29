@@ -12,10 +12,10 @@ export default function RootLayout() {
 
 
   useEffect(() => {
-    console.log('🚀 App starting...');
+    if (__DEV__) console.log('🚀 App starting...');
     startAutoSync();
     return () => {
-      console.log('🛑 App closing...');
+      if (__DEV__) console.log('🛑 App closing...');
       stopAutoSync();
     };
   }, []);

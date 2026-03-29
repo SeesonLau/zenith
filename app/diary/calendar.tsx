@@ -95,7 +95,7 @@ export default function DiaryCalendarScreen() {
                     key={day}
                     onPress={() => {
                       if (entryCount > 0) {
-                        console.log(`Selected date: ${dateKey}`);
+                        if (__DEV__) console.log(`Selected date: ${dateKey}`);
                       }
                     }}
                     style={{ width: CELL_SIZE, height: CELL_SIZE, padding: 4 }}

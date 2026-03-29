@@ -33,39 +33,37 @@ interface SyncResult {
  */
 async function saveLastSyncTimestamp(timestamp: number): Promise<void> {
   if (isForcingFullSync) {
-    console.log('⏭️ Skipping timestamp save during force sync');
+    if (__DEV__) console.log('⏭️ Skipping timestamp save during force sync');
     return;
   }
 
   try {
     await database.write(async () => {
       const metadataCollection = database.get('sync_metadata');
-      
+
       // FIXED: Use Q.where to find by table_name
       const existing = await metadataCollection
         .query(Q.where('table_name', 'last_sync'))
         .fetch();
 
       if (existing.length > 0) {
-        // Update existing record
         const record = existing[0];
         await record.update((r: any) => {
           r.lastPulledAt = timestamp;
           r.lastPushedAt = timestamp;
         });
-        console.log('💾 Updated sync timestamp:', new Date(timestamp).toISOString());
+        if (__DEV__) console.log('💾 Updated sync timestamp:', new Date(timestamp).toISOString());
       } else {
-        // Create new record only if none exists
         await metadataCollection.create((record: any) => {
           record.tableName = 'last_sync';
           record.lastPulledAt = timestamp;
           record.lastPushedAt = timestamp;
         });
-        console.log('💾 Created new sync timestamp:', new Date(timestamp).toISOString());
+        if (__DEV__) console.log('💾 Created new sync timestamp:', new Date(timestamp).toISOString());
       }
     });
   } catch (error) {
-    console.error('❌ Failed to save sync timestamp:', error);
+    if (__DEV__) console.error('❌ Failed to save sync timestamp:', error);
     // Don't throw - sync can continue even if timestamp save fails
   }
 }
@@ -75,21 +73,21 @@ async function saveLastSyncTimestamp(timestamp: number): Promise<void> {
  */
 export async function performSync(): Promise<SyncResult> {
   if (isSyncing) {
-    console.log('⏭️ Sync already in progress, skipping...');
+    if (__DEV__) console.log('⏭️ Sync already in progress, skipping...');
     return { success: false, message: 'Sync already in progress' };
   }
 
   const netInfo = await NetInfo.fetch();
   if (!netInfo.isConnected) {
-    console.log('📵 No internet connection, skipping sync');
+    if (__DEV__) console.log('📵 No internet connection, skipping sync');
     return { success: false, message: 'No internet connection' };
   }
 
   isSyncing = true;
 
   try {
-    console.log('🔄 Starting sync...');
-    console.log('📊 Last sync:', lastSyncTimestamp ? new Date(lastSyncTimestamp).toISOString() : 'Never');
+    if (__DEV__) console.log('🔄 Starting sync...');
+    if (__DEV__) console.log('📊 Last sync:', lastSyncTimestamp ? new Date(lastSyncTimestamp).toISOString() : 'Never');
 
     const result = await syncWithSupabase();
 
@@ -97,8 +95,8 @@ export async function performSync(): Promise<SyncResult> {
       lastSyncTimestamp = Date.now();
       await saveLastSyncTimestamp(lastSyncTimestamp);
 
-      console.log('✅ Sync completed successfully');
-      console.log('📈 Changes:', result.changes);
+      if (__DEV__) console.log('✅ Sync completed successfully');
+      if (__DEV__) console.log('📈 Changes:', result.changes);
 
       return {
         success: true,
@@ -109,7 +107,7 @@ export async function performSync(): Promise<SyncResult> {
       throw result.error;
     }
   } catch (error: any) {
-    console.error('❌ Sync error:', error);
+    if (__DEV__) console.error('❌ Sync error:', error);
     return {
       success: false,
       message: error.message || 'Sync failed',
@@ -124,14 +122,14 @@ export async function performSync(): Promise<SyncResult> {
  * Force a full sync (ignores last sync timestamp and pulls ALL data)
  */
 export async function forceFullSync(): Promise<SyncResult> {
-  console.log('🔄 Forcing full sync (pulling all data)...');
+  if (__DEV__) console.log('🔄 Forcing full sync (pulling all data)...');
 
   isForcingFullSync = true;
 
   try {
     await database.write(async () => {
       const metadataCollection = database.get('sync_metadata');
-      
+
       // FIXED: Use Q.where to find records
       const existing = await metadataCollection
         .query(Q.where('table_name', 'last_sync'))
@@ -143,21 +141,21 @@ export async function forceFullSync(): Promise<SyncResult> {
           r.lastPulledAt = 0;
           r.lastPushedAt = 0;
         });
-        console.log('✅ Reset existing sync metadata to 0');
+        if (__DEV__) console.log('✅ Reset existing sync metadata to 0');
       } else {
         await metadataCollection.create((record: any) => {
           record.tableName = 'last_sync';
           record.lastPulledAt = 0;
           record.lastPushedAt = 0;
         });
-        console.log('✅ Created new sync metadata with 0 timestamp');
+        if (__DEV__) console.log('✅ Created new sync metadata with 0 timestamp');
       }
     });
 
     lastSyncTimestamp = 0;
-    console.log('✅ Reset sync metadata to 0 - will pull ALL data from server');
+    if (__DEV__) console.log('✅ Reset sync metadata to 0 - will pull ALL data from server');
   } catch (error) {
-    console.error('Failed to reset sync metadata:', error);
+    if (__DEV__) console.error('Failed to reset sync metadata:', error);
   }
 
   const result = await performSync();
@@ -171,11 +169,11 @@ export async function forceFullSync(): Promise<SyncResult> {
  */
 export function startAutoSync() {
   if (isAutoSyncStarted) {
-    console.log('⚠️ Auto-sync already started, skipping...');
+    if (__DEV__) console.log('⚠️ Auto-sync already started, skipping...');
     return;
   }
 
-  console.log('🔄 Starting auto-sync...');
+  if (__DEV__) console.log('🔄 Starting auto-sync...');
   isAutoSyncStarted = true;
 
   setTimeout(() => {
@@ -198,7 +196,7 @@ export function startAutoSync() {
       }
       
       networkSyncTimeout = setTimeout(() => {
-        console.log('📡 Network connected, syncing...');
+        if (__DEV__) console.log('📡 Network connected, syncing...');
         performSync();
       }, 2000);
     }
@@ -209,7 +207,7 @@ export function startAutoSync() {
  * Stop automatic sync
  */
 export function stopAutoSync() {
-  console.log('⏸️ Stopping auto-sync...');
+  if (__DEV__) console.log('⏸️ Stopping auto-sync...');
   if (syncInterval) {
     clearInterval(syncInterval);
     syncInterval = null;

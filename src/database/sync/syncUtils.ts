@@ -269,7 +269,7 @@ ${stats.totalUnsynced > 0 ? `
 ` : ''}
 `;
 
-  console.log(report);
+  if (__DEV__) console.log(report);
   return report;
 }
 

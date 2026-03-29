@@ -32,7 +32,7 @@ export async function getDeviceId(): Promise<string> {
     // Generate a unique device ID
     deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     await AsyncStorage.setItem(DEVICE_ID_KEY, deviceId);
-    console.log('✅ Generated new device ID:', deviceId);
+    if (__DEV__) console.log('✅ Generated new device ID:', deviceId);
   }
   
   return deviceId;
