@@ -1,58 +1,58 @@
 # UI Completeness Checklist
-**Last verified:** 2026-03-28
-**Auditor:** Claude Code (automated full-read audit)
+**Last verified:** 2026-03-29
 
-Legend:
-- **Built**: ✅ Complete | 🔄 Partial | ❌ Stub/Missing
-- **Real Data**: ✅ WatermelonDB hooks | 🔄 Partial (some hardcoded) | ❌ None (all static)
-- **Loading**: ✅ Has loading state | ❌ No loading state | N/A Not applicable
-- **Error**: ✅ Error UI shown to user | ❌ Silently fails / console only | N/A Not applicable
-- **Empty State**: ✅ Handled | ❌ Unhandled (crash or blank) | N/A Not applicable
+**Legend**
+- Built: ✅ complete | 🔄 partial | ❌ stub
+- Real Data: ✅ WatermelonDB hooks | 🔄 partial | ❌ none / static
+- Loading: ✅ has indicator | ❌ none | N/A (data is sync/instant)
+- Error: ✅ user-visible alert | 🔄 console only | ❌ none | N/A
+- Empty State: ✅ shown | ❌ missing | N/A (screen is never empty)
 
 ---
 
-| ID | Screen | File | Built | Real Data | Loading | Error | Empty State | Notes |
-|---|---|---|---|---|---|---|---|---|
-| UI-01 | Home | `app/(tabs)/index.tsx` | 🔄 | ❌ | N/A | N/A | N/A | Static "System Ready" card only. No domain summary widgets. Hardcoded version string. SyncStatus component is real. QA-036. |
-| UI-02 | Habit Tracker | `app/(tabs)/habits.tsx` | ✅ | ✅ | ❌ | ❌ | ✅ | Real data from `useRunningHabitTimers` + `useCompletedHabitLogs`. No loading spinner on first render. Stop timer failure is console-only (QA-037). Empty states exist for both active and completed sections. |
-| UI-03 | Finance | `app/(tabs)/finance.tsx` | ✅ | ✅ | ❌ | ❌ | ✅ | Real data from `useFinanceLogs`. Weekly bar graph built. No loading state. Analytics screen unreachable from this tab (QA-047). Error handling is silent. |
-| UI-04 | Diary | `app/(tabs)/diary.tsx` | ✅ | 🔄 | ❌ | ❌ | ✅ | Real entries from `useDiaryEntries`. `imageCount` always passed as `0` — DB image count never loaded (QA-045). Unguarded debug `console.log` (QA-002). No loading state. |
-| UI-05 | Leisure Tracker | `app/(tabs)/leisure.tsx` | ✅ | ✅ | ❌ | ❌ | ✅ | Real data from `useRunningLeisureTimers` + direct DB query (arch violation QA-003/QA-059). Start timer failure is console-only (QA-038). Active timer cards show wrong info (QA-042). |
-| UI-06 | Habit Start | `app/habit/start.tsx` | ✅ | N/A | N/A | ❌ | N/A | Form screen. Calls `startHabitTimer`. No error feedback to user on failure beyond console. |
-| UI-07 | Habit Detail | `app/habit/[id].tsx` | ✅ | ✅ | ❌ | ❌ | N/A | Real record loaded via direct `database.find()` call (arch violation QA-005). No loading state while record loads. No error UI if record not found. `colors: any` type issue (QA-013). |
-| UI-08 | Habit History | `app/habit/history.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | Real data from `useCompletedHabitLogs`. Full analytics/history screen. No loading state. Empty state handled. |
-| UI-09 | Finance Add | `app/finance/add.tsx` | ✅ | N/A | N/A | ❌ | N/A | Form screen. Calls `createFinanceLog`. Build-comment artifacts in code (QA-019, QA-020). No user error feedback. |
-| UI-10 | Finance Detail | `app/finance/[id].tsx` | ✅ | ✅ | ❌ | ❌ | N/A | Real record via direct `database.find()` (arch violation QA-006). No loading or error state. `colors: any` (QA-014). |
-| UI-11 | Finance Analytics | `app/finance/analytics.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | Real data via direct DB query (arch violation QA-004). Unreachable from UI (QA-047). Category color rendering broken — `config.color.replace('bg-','#')` produces invalid CSS (QA-062). |
-| UI-12 | Diary New | `app/diary/new.tsx` | ✅ | N/A | N/A | ❌ | N/A | Full form with mood picker and text editor. Calls `createDiaryEntry`. Nested write crash risk when images added (QA-053). Mixed NativeWind + inline styles. |
-| UI-13 | Diary Detail | `app/diary/[id].tsx` | ✅ | ✅ | ❌ | ❌ | N/A | Real record via direct `database.find()` (arch violation QA-008). Hardcoded dark theme colors in some places. No loading or not-found error state. |
-| UI-14 | Diary Calendar | `app/diary/calendar.tsx` | 🔄 | 🔄 | ❌ | N/A | N/A | Calendar renders with real entry data. Critical bug: initialized to Dec 2024 not current month (QA-024). Tapping a date only console.logs — no navigation (QA-040). Calendar is non-functional as a navigation tool. |
-| UI-15 | Leisure Complete | `app/leisure/complete.tsx` | ✅ | N/A | N/A | ❌ | N/A | Complete session form. Discard button does `router.back()` without stopping timer — phantom timer bug (QA-050). No error UI on submit failure. |
-| UI-16 | Leisure Detail | `app/leisure/[id].tsx` | ✅ | ✅ | ❌ | ❌ | N/A | Real record via direct `database.find()` (arch violation QA-007). `icon: any` and `colors: any` types (QA-015). No loading or error state. |
-| UI-17 | Leisure Start | `app/leisure/start.tsx` | 🔄 | N/A | N/A | ❌ | N/A | Thin redirect — starts timer then `router.replace('/leisure')`. On error, silently calls `router.back()` with no user message (QA-039). No UI rendered — just a redirect. |
-| UI-18 | Settings | `app/settings/index.tsx` | 🔄 | ❌ | N/A | N/A | N/A | Theme toggle works. Debug panel visible to users (QA-021). Placeholder "Your Name" / "2025.01.01" (QA-043). Settings sub-nav works. No real data displayed. |
-| UI-19 | Settings Preferences | `app/settings/preferences.tsx` | 🔄 | ❌ | N/A | N/A | N/A | All toggles are local state only — no DB read on mount, no DB write on save (QA-028, QA-041). Shows fake "Success" alert. Completely non-functional persistence. |
+| ID | Screen | File | Built | Real Data | Loading | Error | Empty State | Open Issues | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| UI-001 | Home | `app/(tabs)/index.tsx` | 🔄 partial | ❌ none | N/A | N/A | N/A | QA-036, QA-046 | Shows "Zenith" header + SyncStatus widget + static navigation cards. No live domain data (entry counts, active timers, etc.) |
+| UI-002 | Habits List | `app/(tabs)/habits.tsx` | ✅ | ✅ | ❌ | 🔄 console | ✅ | QA-030, QA-037 | Running timers + completed sessions grouped by date. No loading indicator on first mount. No user-visible error on stopTimer failure. |
+| UI-003 | Finance List | `app/(tabs)/finance.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | QA-031, QA-044, QA-047 | Shows transactions + weekly chart. Analytics tab unreachable from UI (QA-047). No loading indicator. |
+| UI-004 | Diary List | `app/(tabs)/diary.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | QA-032, QA-045 | Month navigator + stats + entry list. `imageCount` always 0 (hardcoded). |
+| UI-005 | Leisure List | `app/(tabs)/leisure.tsx` | ✅ | ✅ | ❌ | 🔄 console | ✅ | QA-033, QA-038 | Active + completed sessions grouped by date. No user-visible error on startTimer failure. |
+| UI-006 | Habit Start | `app/habit/start.tsx` | ✅ | N/A | N/A | N/A | N/A | — | Form to start a new habit timer. Not fully audited this session. |
+| UI-007 | Habit Detail | `app/habit/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | QA-070 | Shows habit session detail + delete. Reactive via `useHabitLog`. If record not found, renders empty view with no user feedback. |
+| UI-008 | Habit History | `app/habit/history.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | — | Full history list. Not fully audited this session. |
+| UI-009 | Finance Add | `app/finance/add.tsx` | ✅ | ✅ | N/A | N/A | N/A | QA-019, QA-020 | Transaction entry form. Has leftover build comments (QA-019, QA-020). |
+| UI-010 | Finance Detail | `app/finance/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | — | Transaction detail + delete. Reactive via `useFinanceLog`. If record not found, renders empty view. |
+| UI-011 | Finance Analytics | `app/finance/analytics.tsx` | ✅ | ✅ | N/A | ❌ | ✅ | QA-047, QA-062 | Complete analytics screen with charts. Completely unreachable from UI (QA-047). Category icon colors broken (QA-062). |
+| UI-012 | Diary New | `app/diary/new.tsx` | ✅ | ✅ | N/A | N/A | N/A | — | New diary entry form. Not fully audited this session. |
+| UI-013 | Diary Detail | `app/diary/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | QA-071, QA-080, QA-081 | Entry view + inline editing. NativeWind legacy styling — no SafeAreaView, no theme switching. Reactive via `useDiaryEntry`. |
+| UI-014 | Diary Calendar | `app/diary/calendar.tsx` | 🔄 partial | ✅ | N/A | ❌ | N/A | QA-024, QA-025, QA-040 | Calendar grid with entry count dots. Default month hardcoded to Dec 2024 (QA-024). Day tap does console.log only — navigation broken (QA-040). |
+| UI-015 | Leisure Start | `app/leisure/start.tsx` | ✅ | N/A | N/A | 🔄 silent | N/A | QA-039 | Prompts user to start session. On error navigates back silently (QA-039). Not fully audited. |
+| UI-016 | Leisure Detail | `app/leisure/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | — | Session detail + delete. Reactive via `useLeisureLog`. If record not found, renders empty view. |
+| UI-017 | Leisure Complete | `app/leisure/complete.tsx` | ✅ | ✅ | N/A | 🔄 | N/A | QA-050 | Completion/discard screen. Discard does not stop running timer (QA-050) — timer persists in background. |
+| UI-018 | Settings | `app/settings/index.tsx` | 🔄 partial | ❌ | N/A | N/A | N/A | QA-021, QA-022, QA-043 | Theme switcher works. Has visible debug panel (QA-021), unguarded console.logs (QA-022), placeholder developer info (QA-043). |
+| UI-019 | Preferences | `app/settings/preferences.tsx` | ❌ stub | ❌ | N/A | N/A | N/A | QA-028, QA-041 | All toggles are cosmetic React state only. No read from DB on mount, no write on save. Shows success alert but saves nothing. |
 
 ---
 
 ## Summary
 
-| Metric | Count | % |
-|---|---|---|
-| Screens audited | 19 | 100% |
-| Built: ✅ Complete | 13 | 68% |
-| Built: 🔄 Partial | 5 | 26% |
-| Built: ❌ Stub | 1 | 6% |
-| Real Data: ✅ WatermelonDB | 10 | 53% |
-| Real Data: 🔄 Partial | 2 | 11% |
-| Real Data: ❌ None | 7 | 37% |
-| Loading state: ✅ | 0 | 0% |
-| Error state: ✅ | 0 | 0% |
-| Empty state: ✅ (where applicable) | 7 | — |
+| Category | Count |
+|---|---|
+| Screens audited | 19 |
+| ✅ Complete | 9 |
+| 🔄 Partial | 5 |
+| ❌ Stub | 1 |
+| Not fully audited | 4 (habit/start, habit/history, diary/new, leisure/start) |
+| Screens with real WatermelonDB data | 14 |
+| Screens with user-visible loading indicator | 0 |
+| Screens with user-visible error handling | 0 |
+| Screens with empty states | 7 |
+| Screens with open QA issues | 14 |
 
 **Critical gaps:**
-- 0 of 19 screens have a loading state
-- 0 of 19 screens show user-facing error UI on failure
-- Diary Calendar (UI-14) non-functional as navigation tool
-- Settings Preferences (UI-19) has no persistence whatsoever
-- Finance Analytics (UI-11) is unreachable from the UI
+- No screen shows a loading indicator on first data load
+- No screen shows a structured error state if a DB or network call fails
+- `finance/analytics.tsx` is fully built but unreachable from the UI
+- `preferences.tsx` saves nothing — all settings are cosmetic
+- `diary/calendar.tsx` day navigation is non-functional
+- `leisure/complete.tsx` discard leaves timer running
