@@ -1,9 +1,8 @@
 // src/components/common/Button.tsx
 import React from 'react';
-import { Pressable, Text, ActivityIndicator, ViewStyle } from 'react-native'; // Added ViewStyle for stricter typing if needed
+import { Pressable, Text, ActivityIndicator, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import type { IconProps } from '@expo/vector-icons/build/createIconSet';
 
 type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -13,19 +12,18 @@ interface ButtonProps {
   title: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  icon?: IconProps<any>['name'];
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
   iconPosition?: 'left' | 'right';
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
-  style?: any;
+  style?: ViewStyle;
 }
 
-// ✅ Fix: Define the shape of the style object
 type VariantStyle = {
   bg: string;
   text: string;
-  border?: string; // Explicitly say border is optional
+  border?: string;
 };
 
 export default function Button({
@@ -42,7 +40,6 @@ export default function Button({
 }: ButtonProps) {
   const colors = useThemeColors();
 
-  // ✅ Fix: Apply the type to the object
   const variantStyles: Record<ButtonVariant, VariantStyle> = {
     primary: { bg: '#0ea5e9', text: 'white' },
     secondary: { bg: colors.bgSurface, text: colors.textPrimary, border: colors.borderSurface },
@@ -76,7 +73,6 @@ export default function Button({
           justifyContent: 'center',
           opacity: isDisabled ? 0.5 : 1,
           width: fullWidth ? '100%' : undefined,
-          // ✅ Fix: Now safe to access .border because it's defined as optional on the type
           ...(variant === 'secondary' && {
             borderWidth: 1,
             borderColor: variantStyle.border 
@@ -93,8 +89,8 @@ export default function Button({
       ) : (
         <>
           {icon && iconPosition === 'left' && (
-            <Ionicons 
-              name={icon as any} 
+            <Ionicons
+              name={icon}
               size={sizing.icon} 
               color={variantStyle.text}
               style={{ marginRight: 8 }} 
@@ -108,8 +104,8 @@ export default function Button({
             {title}
           </Text>
           {icon && iconPosition === 'right' && (
-            <Ionicons 
-              name={icon as any} 
+            <Ionicons
+              name={icon}
               size={sizing.icon} 
               color={variantStyle.text}
               style={{ marginLeft: 8 }} 

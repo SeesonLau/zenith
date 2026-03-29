@@ -348,8 +348,8 @@ export default function SettingsScreen() {
                 <Text style={{ fontSize: 14, color: textSecondary }}>Version 1.0.0</Text>
               </View>
 
-              <InfoRow label="Developer" value="Your Name" textColor={textSecondary} valueColor={textPrimary} borderColor={borderColor} />
-              <InfoRow label="Build" value="2025.01.01" textColor={textSecondary} valueColor={textPrimary} borderColor={borderColor} />
+              <InfoRow label="Developer" value="PotatoIV" textColor={textSecondary} valueColor={textPrimary} borderColor={borderColor} />
+              <InfoRow label="Build" value="2026.03.29" textColor={textSecondary} valueColor={textPrimary} borderColor={borderColor} />
               <InfoRow label="Database" value="WatermelonDB + Supabase" textColor={textSecondary} valueColor={textPrimary} borderColor={borderColor} isLast />
             </View>
           </View>

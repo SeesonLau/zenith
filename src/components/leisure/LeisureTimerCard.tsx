@@ -6,6 +6,7 @@ import { formatDurationHMS } from '@/src/utils/formatters';
 import { getRelativeTime } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { LEISURE_CONFIG } from '@/src/lib/constants';
 import type { LeisureType } from '@/src/types/database.types';
 
 interface LeisureTimerCardProps {
@@ -20,11 +21,14 @@ interface LeisureTimerCardProps {
 
 export default function LeisureTimerCard({
   id,
+  type,
+  title,
   startedAt,
   onStop,
   onPress,
 }: LeisureTimerCardProps) {
   const colors = useThemeColors();
+  const config = LEISURE_CONFIG.types[type];
   const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
@@ -77,7 +81,7 @@ export default function LeisureTimerCard({
         paddingRight: 60 
       }}>
         <View style={{
-          backgroundColor: '#64748b',
+          backgroundColor: config.color,
           borderRadius: 20,
           width: 36,
           height: 36,
@@ -85,7 +89,7 @@ export default function LeisureTimerCard({
           justifyContent: 'center',
           marginRight: 10,
         }}>
-          <Text style={{ fontSize: 18 }}>❓</Text>
+          <Text style={{ fontSize: 18 }}>{config.emoji}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{
@@ -96,10 +100,10 @@ export default function LeisureTimerCard({
             fontWeight: '600',
             marginBottom: 2
           }}>
-            IN PROGRESS
+            {type}
           </Text>
           <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>
-            Untitled Session
+            {title || 'Untitled Session'}
           </Text>
         </View>
       </View>
