@@ -183,10 +183,27 @@ export default function FinanceScreen() {
       >
         <View style={{ padding: 20 }}>
           {/* Header */}
-          <View style={{ marginBottom: 16, marginTop: 12 }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, marginTop: 12 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary }}>
               Finance Tracker
             </Text>
+            <Pressable
+              onPress={() => router.push('/finance/analytics')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                gap: 4,
+              }}
+            >
+              <Ionicons name="bar-chart" size={16} color={colors.moduleFinance} />
+              <Text style={{ color: colors.moduleFinance, fontSize: 13, fontWeight: '600' }}>Analytics</Text>
+            </Pressable>
           </View>
 
           {/* Calendar Bar Graph with Navigation */}
