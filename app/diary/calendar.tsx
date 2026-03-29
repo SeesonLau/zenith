@@ -13,7 +13,7 @@ const CELL_SIZE = (SCREEN_WIDTH - 48 - 8) / 7; // (screen - padding - gaps) / 7 
 
 export default function DiaryCalendarScreen() {
   const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState(new Date(2024, 11, 1)); // December 2024
+  const [selectedDate, setSelectedDate] = useState(new Date());
   
   const entries = useDiaryEntries(selectedDate.getFullYear(), selectedDate.getMonth());
 
@@ -31,11 +31,12 @@ export default function DiaryCalendarScreen() {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Create entry map by date
-  const entryMap = new Map<string, number>();
+  // Create entry map by date: dateKey → [id, ...]
+  const entryMap = new Map<string, string[]>();
   entries.forEach((entry) => {
     const dateKey = entry.entryDate.toDateString();
-    entryMap.set(dateKey, (entryMap.get(dateKey) || 0) + 1);
+    const existing = entryMap.get(dateKey) || [];
+    entryMap.set(dateKey, [...existing, entry.id]);
   });
 
   const monthYear = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -87,15 +88,18 @@ export default function DiaryCalendarScreen() {
                 const day = i + 1;
                 const date = new Date(year, month, day);
                 const dateKey = date.toDateString();
-                const entryCount = entryMap.get(dateKey) || 0;
+                const dayEntries = entryMap.get(dateKey) || [];
+                const entryCount = dayEntries.length;
                 const isToday = dateKey === new Date().toDateString();
 
                 return (
                   <Pressable
                     key={day}
                     onPress={() => {
-                      if (entryCount > 0) {
-                        if (__DEV__) console.log(`Selected date: ${dateKey}`);
+                      if (entryCount === 1) {
+                        router.push(`/diary/${dayEntries[0]}`);
+                      } else if (entryCount > 1) {
+                        router.push('/(tabs)/diary');
                       }
                     }}
                     style={{ width: CELL_SIZE, height: CELL_SIZE, padding: 4 }}
