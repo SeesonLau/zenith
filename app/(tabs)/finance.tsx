@@ -409,13 +409,13 @@ export default function FinanceScreen() {
 
           {/* Balance Card - Compact */}
           <View style={{
-            backgroundColor: colors.moduleFinance,
+            backgroundColor: stats.balance >= 0 ? colors.moduleFinance : colors.danger,
             borderRadius: 14,
             padding: 18,
             marginBottom: 14
           }}>
-            <Text style={{ color: '#86efac', fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
-              Current Balance
+            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
+              Monthly Balance
             </Text>
             <Text style={{ color: '#ffffff', fontSize: 28, fontWeight: 'bold', marginBottom: 6 }}>
               {formatCurrency(stats.balance)}
@@ -424,9 +424,9 @@ export default function FinanceScreen() {
               <Ionicons
                 name={stats.balance >= 0 ? 'trending-up' : 'trending-down'}
                 size={14}
-                color={stats.balance >= 0 ? '#86efac' : '#fca5a5'}
+                color="rgba(255,255,255,0.8)"
               />
-              <Text style={{ marginLeft: 4, fontSize: 12, fontWeight: '500', color: '#d1fae5' }}>
+              <Text style={{ marginLeft: 4, fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.8)' }}>
                 {stats.balance >= 0 ? 'Positive' : 'Negative'} balance
               </Text>
             </View>
