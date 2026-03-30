@@ -183,7 +183,7 @@ export default function FinanceScreen() {
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#22c55e" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.success} />
         }
       >
         <View style={{ padding: 20 }}>
