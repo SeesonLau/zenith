@@ -327,12 +327,12 @@ export default function FinanceScreen() {
                       width: '60%',
                       alignItems: 'center',
                       marginBottom: 4,
-                      backgroundColor: isToday ? '#fef08a' : 'transparent',
+                      backgroundColor: isToday ? colors.warning : 'transparent',
                       borderRadius: 6,
                       paddingVertical: 2
                     }}>
                       <Text style={{
-                        color: isToday ? '#854d0e' : colors.textPrimary,
+                        color: isToday ? colors.bgPrimary : colors.textPrimary,
                         fontSize: 11,
                         fontWeight: isToday ? 'bold' : '600'
                       }}>
