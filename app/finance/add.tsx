@@ -23,6 +23,7 @@ import type { TransactionType, FinanceTypeCategory, CurrencyCode } from '@/src/t
 import { formatCurrency } from '@/src/utils/formatters';
 import Button from '@/src/components/common/Button';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { getFinanceCategoryConfig } from '@/src/lib/constants';
 
 // Quick tags for item
 const ITEM_TAGS = ['Fare'];
@@ -417,56 +418,80 @@ export default function AddTransactionScreen() {
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {/* Dynamic Column 1 */}
                 <View style={{ flex: 1, gap: 6 }}>
-                  {col1.map(cat => (
-                    <Pressable
-                      key={cat}
-                      onPress={() => setCategory(cat as FinanceTypeCategory)}
-                      style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 12,
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: category === cat ? colors.moduleFinance : colors.borderSurface,
-                        backgroundColor: category === cat ? colors.moduleFinance + '20' : colors.bgSurface,
-                      }}
-                    >
-                      <Text style={{
-                        fontWeight: '500',
-                        fontSize: 12,
-                        color: category === cat ? colors.moduleFinance : colors.textSecondary,
-                        textAlign: 'center'
-                      }}>
-                        {cat}
-                      </Text>
-                    </Pressable>
-                  ))}
+                  {col1.map(cat => {
+                    const config = getFinanceCategoryConfig(cat as FinanceTypeCategory);
+                    const isSelected = category === cat;
+                    return (
+                      <Pressable
+                        key={cat}
+                        onPress={() => setCategory(cat as FinanceTypeCategory)}
+                        style={{
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: isSelected ? config.hex : colors.borderSurface,
+                          backgroundColor: isSelected ? config.hex + '20' : colors.bgSurface,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <Ionicons
+                          name={config.icon as keyof typeof Ionicons.glyphMap}
+                          size={12}
+                          color={isSelected ? config.hex : colors.textSecondary}
+                        />
+                        <Text style={{
+                          fontWeight: '500',
+                          fontSize: 12,
+                          color: isSelected ? config.hex : colors.textSecondary,
+                          flex: 1,
+                        }}>
+                          {cat}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
 
                 {/* Dynamic Column 2 */}
                 <View style={{ flex: 1, gap: 6 }}>
-                  {col2.map(cat => (
-                    <Pressable
-                      key={cat}
-                      onPress={() => setCategory(cat as FinanceTypeCategory)}
-                      style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 12,
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: category === cat ? colors.moduleFinance : colors.borderSurface,
-                        backgroundColor: category === cat ? colors.moduleFinance + '20' : colors.bgSurface,
-                      }}
-                    >
-                      <Text style={{
-                        fontWeight: '500',
-                        fontSize: 12,
-                        color: category === cat ? colors.moduleFinance : colors.textSecondary,
-                        textAlign: 'center'
-                      }}>
-                        {cat}
-                      </Text>
-                    </Pressable>
-                  ))}
+                  {col2.map(cat => {
+                    const config = getFinanceCategoryConfig(cat as FinanceTypeCategory);
+                    const isSelected = category === cat;
+                    return (
+                      <Pressable
+                        key={cat}
+                        onPress={() => setCategory(cat as FinanceTypeCategory)}
+                        style={{
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: isSelected ? config.hex : colors.borderSurface,
+                          backgroundColor: isSelected ? config.hex + '20' : colors.bgSurface,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <Ionicons
+                          name={config.icon as keyof typeof Ionicons.glyphMap}
+                          size={12}
+                          color={isSelected ? config.hex : colors.textSecondary}
+                        />
+                        <Text style={{
+                          fontWeight: '500',
+                          fontSize: 12,
+                          color: isSelected ? config.hex : colors.textSecondary,
+                          flex: 1,
+                        }}>
+                          {cat}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </View>
             </View>
