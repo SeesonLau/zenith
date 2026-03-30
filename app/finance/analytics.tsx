@@ -299,7 +299,7 @@ export default function FinanceAnalyticsScreen() {
                           style={{
                             width: `${percentage}%`,
                             height: '100%',
-                            backgroundColor: colors.danger
+                            backgroundColor: config.hex
                           }}
                         />
                       </View>
