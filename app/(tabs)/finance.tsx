@@ -568,7 +568,7 @@ export default function FinanceScreen() {
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                               <View style={{ position: 'relative', marginRight: 12 }}>
                                 <View style={{
-                                  backgroundColor: typeConfig.color,
+                                  backgroundColor: typeConfig.hex,
                                   borderRadius: 20,
                                   width: 40,
                                   height: 40,

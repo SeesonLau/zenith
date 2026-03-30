@@ -125,12 +125,14 @@ export const FINANCE_CONFIG = {
   transactionTypes: {
     income: {
       color: 'bg-green-500',
+      hex: '#22c55e',
       textColor: 'text-green-400',
       icon: 'arrow-down' as const,
       label: 'Income',
     },
     expense: {
       color: 'bg-red-500',
+      hex: '#ef4444',
       textColor: 'text-red-400',
       icon: 'arrow-up' as const,
       label: 'Expense',
