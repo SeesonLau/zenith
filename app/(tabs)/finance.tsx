@@ -289,7 +289,15 @@ export default function FinanceScreen() {
               </Pressable>
 
               <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
-                {currentWeek.days[0].dayOfMonth} - {currentWeek.days[6].dayOfMonth}
+                {(() => {
+                  const startDay = currentWeek.days[0].date;
+                  const endDay = currentWeek.days[6].date;
+                  const startLabel = startDay.getMonth() !== endDay.getMonth()
+                    ? startDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : startDay.getDate().toString();
+                  const endLabel = endDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  return `${startLabel} – ${endLabel}`;
+                })()}
               </Text>
 
               <Pressable
