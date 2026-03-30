@@ -9,6 +9,7 @@ import { deleteFinanceLog } from '@/src/database/actions/financeActions';
 import { formatCurrency } from '@/src/utils/formatters';
 import { formatDate } from '@/src/utils/dateHelpers';
 import Button from '@/src/components/common/Button';
+import LoadingSpinner from '@/src/components/common/LoadingSpinner';
 import type { CurrencyCode } from '@/src/types/database.types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { ThemeColors } from '@/src/hooks/useThemeColors';
@@ -38,11 +39,7 @@ export default function TransactionDetailScreen() {
   };
 
   if (!transaction) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ color: colors.textPrimary }}>Loading...</Text>
-      </View>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   const isIncome = transaction.transactionType === 'income';
