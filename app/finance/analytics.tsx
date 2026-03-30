@@ -127,7 +127,11 @@ export default function FinanceAnalyticsScreen() {
                   borderRadius: 8,
                   padding: 10
                 }}
-                disabled={selectedMonth >= new Date()}
+                disabled={
+                selectedMonth.getFullYear() > new Date().getFullYear() ||
+                (selectedMonth.getFullYear() === new Date().getFullYear() &&
+                  selectedMonth.getMonth() >= new Date().getMonth())
+              }
               >
                 <Ionicons name="chevron-forward" size={18} color={colors.textPrimary} />
               </Pressable>
