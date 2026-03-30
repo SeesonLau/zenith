@@ -504,7 +504,7 @@ export default function FinanceScreen() {
               marginBottom: 12
             }}>
               <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-                Recent Transactions
+                Transactions This Month
               </Text>
               <View style={{
                 backgroundColor: colors.bgSurface,
