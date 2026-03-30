@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createFinanceLog } from '@/src/database/actions/financeActions';
 import {
-  FINANCE_CATEGORIES,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
   CURRENCIES
