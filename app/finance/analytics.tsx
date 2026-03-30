@@ -138,6 +138,27 @@ export default function FinanceAnalyticsScreen() {
             </View>
           </View>
 
+          {analytics.totalTransactions === 0 ? (
+            <View style={{
+              backgroundColor: colors.bgSurface,
+              borderWidth: 1,
+              borderColor: colors.borderSurface,
+              borderRadius: 14,
+              padding: 40,
+              alignItems: 'center',
+              marginBottom: 16,
+            }}>
+              <Ionicons name="bar-chart-outline" size={48} color={colors.textTertiary} />
+              <Text style={{ color: colors.textSecondary, fontSize: 16, fontWeight: '600', marginTop: 16, marginBottom: 6 }}>
+                No data for {monthName}
+              </Text>
+              <Text style={{ color: colors.textTertiary, fontSize: 13, textAlign: 'center' }}>
+                Add transactions to see your financial analytics here.
+              </Text>
+            </View>
+          ) : (
+          <>
+
           {/* Summary Cards */}
           <View style={{ marginBottom: 16 }}>
             {/* Balance */}
@@ -401,6 +422,8 @@ export default function FinanceAnalyticsScreen() {
 
           {/* Bottom padding */}
           <View style={{ height: 40 }} />
+          </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
