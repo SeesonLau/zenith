@@ -139,8 +139,8 @@ export default function AddTransactionScreen() {
           backgroundColor: colors.bgSurface
         }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
-              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            <Pressable onPress={() => router.back()} style={{ marginRight: 12 }} accessibilityLabel="Go back" accessibilityRole="button">
+              <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
             </Pressable>
             <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.textPrimary, flex: 1 }}>
               Add Transaction
