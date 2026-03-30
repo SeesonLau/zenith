@@ -49,10 +49,10 @@ export default function FinanceAnalyticsScreen() {
       .filter((log) => log.transactionType === 'income')
       .sort((a, b) => b.totalCost - a.totalCost)[0];
 
-    // Average
-    const avgTransaction = logs.length > 0
-      ? (income + expenses) / logs.length
-      : 0;
+    const expenseLogs = logs.filter((log) => log.transactionType === 'expense');
+    const incomeLogs = logs.filter((log) => log.transactionType === 'income');
+    const avgExpense = expenseLogs.length > 0 ? expenses / expenseLogs.length : 0;
+    const avgIncome = incomeLogs.length > 0 ? income / incomeLogs.length : 0;
 
     return {
       income,
@@ -61,7 +61,8 @@ export default function FinanceAnalyticsScreen() {
       byCategory,
       largestExpense,
       largestIncome,
-      avgTransaction,
+      avgExpense,
+      avgIncome,
       totalTransactions: logs.length,
     };
   }, [logs]);
@@ -259,10 +260,27 @@ export default function FinanceAnalyticsScreen() {
                 padding: 12
               }}>
                 <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4 }}>
-                  Average
+                  Avg Expense
                 </Text>
-                <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold' }}>
-                  {formatCurrency(analytics.avgTransaction)}
+                <Text style={{ color: colors.danger, fontSize: 16, fontWeight: 'bold' }}>
+                  {formatCurrency(analytics.avgExpense)}
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+              <View style={{
+                flex: 1,
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1,
+                borderColor: colors.borderSurface,
+                borderRadius: 12,
+                padding: 12
+              }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 11, marginBottom: 4 }}>
+                  Avg Income
+                </Text>
+                <Text style={{ color: colors.success, fontSize: 16, fontWeight: 'bold' }}>
+                  {formatCurrency(analytics.avgIncome)}
                 </Text>
               </View>
             </View>
