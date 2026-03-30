@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -49,6 +50,8 @@ export default function AddTransactionScreen() {
   const [currency, setCurrency] = useState<CurrencyCode>('PHP');
   const [category, setCategory] = useState<FinanceTypeCategory | null>(null);
   const [notes, setNotes] = useState('');
+  const [transactionDate, setTransactionDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { col1, col2 } = useMemo(() => {
@@ -111,6 +114,7 @@ export default function AddTransactionScreen() {
         currency,
         typeCategory: category,
         notes: notes.trim() || undefined,
+        transactionDate,
       });
 
       router.back();
@@ -203,6 +207,42 @@ export default function AddTransactionScreen() {
                   Income
                 </Text>
               </Pressable>
+            </View>
+
+            {/* Date */}
+            <View style={{ marginBottom: 14 }}>
+              <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 13, marginBottom: 6 }}>
+                Date
+              </Text>
+              <Pressable
+                onPress={() => setShowDatePicker(true)}
+                style={{
+                  backgroundColor: colors.bgSurface,
+                  borderWidth: 1,
+                  borderColor: colors.borderSurface,
+                  borderRadius: 10,
+                  padding: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                <Text style={{ color: colors.textPrimary, fontSize: 14 }}>
+                  {transactionDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </Text>
+              </Pressable>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={transactionDate}
+                  mode="date"
+                  maximumDate={new Date()}
+                  onChange={(_, date) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (date) setTransactionDate(date);
+                  }}
+                />
+              )}
             </View>
 
             {/* Item Name with Quick Tags */}

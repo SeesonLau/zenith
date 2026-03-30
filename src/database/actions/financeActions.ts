@@ -20,7 +20,7 @@ export async function createFinanceLog(input: CreateFinanceLogInput) {
       log.typeCategory = input.typeCategory;
       log.location = input.location;
       log.notes = input.notes;
-      log.transactionDate = new Date();
+      log.transactionDate = input.transactionDate ?? new Date();
       log.isSynced = false;
       log.deviceId = deviceId;
     });

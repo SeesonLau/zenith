@@ -120,6 +120,7 @@ export interface CreateFinanceLogInput {
   typeCategory: FinanceTypeCategory;
   location?: string;
   notes?: string;
+  transactionDate?: Date;
 }
 
 export interface CreateDiaryEntryInput {
