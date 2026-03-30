@@ -1,5 +1,5 @@
 // app/finance/add.tsx
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -53,6 +53,11 @@ export default function AddTransactionScreen() {
   const [transactionDate, setTransactionDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const locationRef = useRef<TextInput>(null);
+  const quantityRef = useRef<TextInput>(null);
+  const costRef = useRef<TextInput>(null);
+  const notesRef = useRef<TextInput>(null);
 
   const { col1, col2 } = useMemo(() => {
     const currentList = transactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -275,6 +280,8 @@ export default function AddTransactionScreen() {
                 onChangeText={setItem}
                 placeholder="e.g. Lunch, Salary, Bus fare"
                 placeholderTextColor={colors.textTertiary}
+                returnKeyType="next"
+                onSubmitEditing={() => locationRef.current?.focus()}
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
@@ -313,10 +320,13 @@ export default function AddTransactionScreen() {
                 ))}
               </View>
               <TextInput
+                ref={locationRef}
                 value={location}
                 onChangeText={setLocation}
                 placeholder="e.g. SM, Jollibee, Online"
                 placeholderTextColor={colors.textTertiary}
+                returnKeyType="next"
+                onSubmitEditing={() => quantityRef.current?.focus()}
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
@@ -336,11 +346,14 @@ export default function AddTransactionScreen() {
                   Qty
                 </Text>
                 <TextInput
+                  ref={quantityRef}
                   placeholder="1"
                   placeholderTextColor={colors.textTertiary}
                   value={quantity}
                   onChangeText={setQuantity}
                   keyboardType="decimal-pad"
+                  returnKeyType="next"
+                  onSubmitEditing={() => costRef.current?.focus()}
                   style={{
                     backgroundColor: colors.bgSurface,
                     borderWidth: 1,
@@ -377,11 +390,14 @@ export default function AddTransactionScreen() {
                   ))}
                 </View>
                 <TextInput
+                  ref={costRef}
                   placeholder="0.00"
                   placeholderTextColor={colors.textTertiary}
                   value={cost}
                   onChangeText={setCost}
                   keyboardType="decimal-pad"
+                  returnKeyType="next"
+                  onSubmitEditing={() => notesRef.current?.focus()}
                   style={{
                     backgroundColor: colors.bgSurface,
                     borderWidth: 1,
@@ -546,12 +562,14 @@ export default function AddTransactionScreen() {
                 Notes
               </Text>
               <TextInput
+                ref={notesRef}
                 placeholder="Add any notes..."
                 placeholderTextColor={colors.textTertiary}
                 value={notes}
                 onChangeText={setNotes}
                 multiline
                 numberOfLines={2}
+                returnKeyType="done"
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
