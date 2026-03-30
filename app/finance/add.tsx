@@ -388,6 +388,23 @@ export default function AddTransactionScreen() {
                       </Text>
                     </Pressable>
                   ))}
+                  {cost ? (
+                    <Pressable
+                      onPress={() => setCost('')}
+                      style={{
+                        backgroundColor: colors.danger + '20',
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 5,
+                        borderWidth: 1,
+                        borderColor: colors.danger + '40'
+                      }}
+                    >
+                      <Text style={{ color: colors.danger, fontSize: 10, fontWeight: '600' }}>
+                        Clear
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </View>
                 <TextInput
                   ref={costRef}
