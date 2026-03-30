@@ -273,6 +273,8 @@ export default function AddTransactionScreen() {
               <TextInput
                 value={item}
                 onChangeText={setItem}
+                placeholder="e.g. Lunch, Salary, Bus fare"
+                placeholderTextColor={colors.textTertiary}
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
@@ -313,6 +315,8 @@ export default function AddTransactionScreen() {
               <TextInput
                 value={location}
                 onChangeText={setLocation}
+                placeholder="e.g. SM, Jollibee, Online"
+                placeholderTextColor={colors.textTertiary}
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
