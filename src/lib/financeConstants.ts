@@ -6,60 +6,72 @@ import { Ionicons } from '@expo/vector-icons';
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
 export const FINANCE_CATEGORY_COLORS: Record<FinanceTypeCategory, string> = {
-  'Load/Data':   '#3b82f6',
-  'Transport':   '#06b6d4',
-  'School':      '#6366f1',
+  // Expenses
+  'Load/Data':   '#0ea5e9',
+  'Transport':   '#eab308',
+  'School':      '#a855f7',
   'Health':      '#f43f5e',
-  'Digital':     '#a855f7',
-  'Social':      '#eab308',
-  'Corrupt':     '#ef4444',
-  'Food':        '#f97316',
-  'Give':        '#22c55e',
-  'Shopping':    '#ec4899',
-  'Allowance':   '#10b981',
+  'Digital':     '#3b82f6',
+  'Social':      '#fb923c',
+  'Investment':  '#8b5cf6',
+  'Food':        '#ea580c',
+  'Give':        '#f472b6',
+  'Shopping':    '#14b8a6',
+  // Income
+  'Allowance':   '#22c55e',
   'Salary':      '#059669',
-  'Freelance':   '#84cc16',
-  'Gift':        '#0ea5e9',
-  'Repayment':   '#14b8a6',
+  'Freelance':   '#6366f1',
+  'Gift':        '#ec4899',
+  'Repayment':   '#06b6d4',
   'Investments': '#8b5cf6',
+  'Corrupt':     '#b91c1c',
+  'Borrowed':    '#f59e0b',
 };
 
 export const FINANCE_CATEGORY_ICONS: Record<FinanceTypeCategory, IoniconsName> = {
-  'Load/Data':   'phone-portrait-outline',
-  'Transport':   'car-outline',
+  // Expenses
+  'Load/Data':   'wifi-outline',
+  'Transport':   'bus-outline',
   'School':      'school-outline',
   'Health':      'medkit-outline',
-  'Digital':     'apps-outline',
-  'Social':      'hand-left-outline',
-  'Corrupt':     'warning-outline',
+  'Digital':     'laptop-outline',
+  'Social':      'people-outline',
+  'Investment':  'trending-up-outline',
   'Food':        'restaurant-outline',
-  'Give':        'gift-outline',
-  'Shopping':    'shirt-outline',
+  'Give':        'heart-outline',
+  'Shopping':    'cart-outline',
+  // Income
   'Allowance':   'wallet-outline',
   'Salary':      'cash-outline',
-  'Freelance':   'laptop-outline',
+  'Freelance':   'briefcase-outline',
   'Gift':        'gift-outline',
-  'Repayment':   'return-down-back-outline',
+  'Repayment':   'return-up-back-outline',
   'Investments': 'trending-up-outline',
+  'Corrupt':     'alert-circle-outline',
+  'Borrowed':    'swap-horizontal-outline',
 };
 
 export const FINANCE_CATEGORY_DESCRIPTIONS: Record<FinanceTypeCategory, string> = {
+  // Expenses
   'Load/Data':   'Mobile load and data credits',
   'Transport':   'Transportation and fare costs',
   'School':      'Education and school expenses',
   'Health':      'Medical and health expenses',
   'Digital':     'Apps, subscriptions, digital content',
   'Social':      'Social and interpersonal expenses',
-  'Corrupt':     'Unauthorized or fraudulent charges',
+  'Investment':  'Investment expense or capital put in',
   'Food':        'Food and beverages',
   'Give':        'Gifts and donations given',
   'Shopping':    'Physical items, clothing, gadgets',
+  // Income
   'Allowance':   'Regular allowance received',
   'Salary':      'Employment salary or wages',
   'Freelance':   'Freelance and contract income',
   'Gift':        'Gifts and money received',
   'Repayment':   'Money returned or repaid to you',
   'Investments': 'Investment returns and dividends',
+  'Corrupt':     'Unauthorized or irregular income',
+  'Borrowed':    'Money borrowed or loaned to you',
 };
 
 export interface TransactionTypeConfig {
@@ -71,12 +83,12 @@ export interface TransactionTypeConfig {
 export const TRANSACTION_TYPE_CONFIG: Record<TransactionType, TransactionTypeConfig> = {
   income: {
     color: '#22c55e',
-    icon: 'arrow-down',
+    icon: 'arrow-up',
     label: 'Income',
   },
   expense: {
     color: '#ef4444',
-    icon: 'arrow-up',
+    icon: 'arrow-down',
     label: 'Expense',
   },
 };
