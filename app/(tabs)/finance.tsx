@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native'
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFinanceLogs } from '@/src/database/hooks/useDatabase';
+import { useFinanceLogs, useAllFinanceLogs } from '@/src/database/hooks/useDatabase';
 import { formatCurrency } from '@/src/utils/formatters';
 import { formatDate, getStartOfMonth, getEndOfMonth, addMonths, getStartOfWeek, addDays } from '@/src/utils/dateHelpers';
 import { getTransactionTypeConfig } from '@/src/lib/constants';
@@ -39,6 +39,7 @@ export default function FinanceScreen() {
   const startDate = getStartOfMonth(selectedMonth);
   const endDate = getEndOfMonth(selectedMonth);
   const logs = useFinanceLogs(startDate, endDate);
+  const allLogs = useAllFinanceLogs();
 
   const stats = useMemo(() => {
     const income = logs
@@ -53,6 +54,12 @@ export default function FinanceScreen() {
 
     return { income, expenses, balance };
   }, [logs]);
+
+  const totalBalance = useMemo(() => {
+    const totalIncome = allLogs.filter(l => l.transactionType === 'income').reduce((s, l) => s + l.totalCost, 0);
+    const totalExpenses = allLogs.filter(l => l.transactionType === 'expense').reduce((s, l) => s + l.totalCost, 0);
+    return totalIncome - totalExpenses;
+  }, [allLogs]);
 
   // Calculate weekly data for calendar bar graph
   const weeklyData = useMemo(() => {
@@ -415,27 +422,27 @@ export default function FinanceScreen() {
             </View>
           </View>
 
-          {/* Balance Card - Compact */}
+          {/* Balance Card */}
           <View style={{
-            backgroundColor: stats.balance >= 0 ? colors.moduleFinance : colors.danger,
+            backgroundColor: totalBalance >= 0 ? colors.moduleFinance : colors.danger,
             borderRadius: 14,
             padding: 18,
             marginBottom: 14
           }}>
             <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 4, fontWeight: '500' }}>
-              Monthly Balance
+              Total Balance
             </Text>
             <Text style={{ color: '#ffffff', fontSize: 28, fontWeight: 'bold', marginBottom: 6 }}>
-              {formatCurrency(stats.balance)}
+              {formatCurrency(totalBalance)}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons
-                name={stats.balance >= 0 ? 'trending-up' : 'trending-down'}
+                name={totalBalance >= 0 ? 'trending-up' : 'trending-down'}
                 size={14}
                 color="rgba(255,255,255,0.8)"
               />
               <Text style={{ marginLeft: 4, fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.8)' }}>
-                {stats.balance >= 0 ? 'Positive' : 'Negative'} balance
+                {totalBalance >= 0 ? 'Positive' : 'Negative'} balance
               </Text>
             </View>
           </View>
