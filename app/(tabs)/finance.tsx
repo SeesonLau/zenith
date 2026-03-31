@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinanceLogs, useAllFinanceLogs } from '@/src/database/hooks/useDatabase';
 import { formatCurrency } from '@/src/utils/formatters';
 import { formatDate, getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpers';
-import { getTransactionTypeConfig } from '@/src/lib/constants';
+import { getTransactionTypeConfig, getFinanceCategoryConfig } from '@/src/lib/constants';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
@@ -328,6 +328,7 @@ export default function FinanceScreen() {
                     <View style={{ gap: 6 }}>
                       {dateLogs.map(log => {
                         const typeConfig = getTransactionTypeConfig(log.transactionType);
+                        const catConfig = getFinanceCategoryConfig(log.typeCategory as any);
                         const isIncome = log.transactionType === 'income';
 
                         return (
@@ -342,10 +343,10 @@ export default function FinanceScreen() {
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                               <View style={{ position: 'relative', marginRight: 12 }}>
                                 <View style={{
-                                  backgroundColor: typeConfig.hex, borderRadius: 20,
+                                  backgroundColor: catConfig.hex, borderRadius: 20,
                                   width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
                                 }}>
-                                  <Ionicons name={typeConfig.icon} size={18} color="white" />
+                                  <Ionicons name={catConfig.icon as any} size={18} color="white" />
                                 </View>
                                 <View style={{
                                   position: 'absolute', bottom: -2, right: -2,
