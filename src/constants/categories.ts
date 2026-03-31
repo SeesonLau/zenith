@@ -2,7 +2,6 @@
 // 🎯 SINGLE SOURCE OF TRUTH FOR ALL CATEGORIES
 // Edit this file to add/remove/modify categories across the entire app
 
-import { FINANCE_CATEGORY_COLORS } from "../lib/financeConstants";
 
 // ==========================================
 // HABIT TRACKER CATEGORIES

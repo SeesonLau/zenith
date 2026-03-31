@@ -1,4 +1,4 @@
-// app/finance/[id].tsx - THEME COMPATIBLE & COMPACT
+// app/finance/[id].tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -401,8 +401,12 @@ export default function TransactionDetailScreen() {
                   Category ({editTransactionType === 'income' ? 'Income' : 'Expense'})
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  {[editCategories.slice(0, Math.ceil(editCategories.length / 2)), editCategories.slice(Math.ceil(editCategories.length / 2))].map((col, colIdx) => (
-                    <View key={colIdx} style={{ flex: 1, gap: 6 }}>
+                  {(['left', 'right'] as const).map((side, colIdx) => {
+                  const col = colIdx === 0
+                    ? editCategories.slice(0, Math.ceil(editCategories.length / 2))
+                    : editCategories.slice(Math.ceil(editCategories.length / 2));
+                  return (
+                    <View key={side} style={{ flex: 1, gap: 6 }}>
                       {col.map(cat => {
                         const config = getFinanceCategoryConfig(cat as FinanceTypeCategory);
                         const isSelected = editCategory === cat;
@@ -430,7 +434,8 @@ export default function TransactionDetailScreen() {
                         );
                       })}
                     </View>
-                  ))}
+                  );
+                })}
                 </View>
               </View>
 
@@ -462,7 +467,7 @@ export default function TransactionDetailScreen() {
                 onPress={handleSave}
                 title="Save Changes"
                 icon="checkmark"
-                variant="primary"
+                variant={editTransactionType === 'income' ? 'success' : 'danger'}
                 fullWidth
                 disabled={isSaving}
               />
