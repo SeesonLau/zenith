@@ -168,6 +168,22 @@ export function useCompletedLeisureLogs(limit: number = 20) {
   return logs;
 }
 
+export function useAllFinanceLogs() {
+  const [logs, setLogs] = useState<FinanceLog[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<FinanceLog>('finance_logs')
+      .query(Q.sortBy('transaction_date', Q.desc))
+      .observe()
+      .subscribe(setLogs);
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return logs;
+}
+
 export function useAllDiaryEntries() {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 
