@@ -360,8 +360,10 @@ export function getMoodConfig(mood: MoodType) {
   return DIARY_CONFIG.moods[mood];
 }
 
+const FALLBACK_CATEGORY_CONFIG = { icon: 'help-circle' as const, color: 'bg-gray-500', hex: '#6b7280' };
+
 export function getFinanceCategoryConfig(category: FinanceTypeCategory) {
-  return FINANCE_CONFIG.categories[category];
+  return FINANCE_CONFIG.categories[category] ?? FALLBACK_CATEGORY_CONFIG;
 }
 
 export function getTransactionTypeConfig(type: 'income' | 'expense') {
