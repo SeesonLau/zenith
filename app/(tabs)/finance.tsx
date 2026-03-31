@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFinanceLogs, useAllFinanceLogs } from '@/src/database/hooks/useDatabase';
 import { formatCurrency } from '@/src/utils/formatters';
-import { formatDate, getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpers';
+import { getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpers';
 import { getTransactionTypeConfig, getFinanceCategoryConfig } from '@/src/lib/constants';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
@@ -70,11 +70,13 @@ export default function FinanceScreen() {
   const groupedLogs = useMemo(() => {
     const groups: Record<string, typeof allLogs> = {};
     allLogs.forEach(log => {
-      const dateKey = formatDate(log.transactionDate, 'short');
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(log);
+      const d = log.transactionDate;
+      // Use ISO date as key to ensure year is included — prevents prior-year dates sorting incorrectly
+      const isoKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!groups[isoKey]) groups[isoKey] = [];
+      groups[isoKey].push(log);
     });
-    return Object.entries(groups).sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime());
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [allLogs]);
 
   useEffect(() => {
@@ -323,7 +325,7 @@ export default function FinanceScreen() {
                       color: colors.textTertiary, fontSize: 11, fontWeight: '600',
                       marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5,
                     }}>
-                      {date}
+                      {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </Text>
                     <View style={{ gap: 6 }}>
                       {dateLogs.map(log => {
