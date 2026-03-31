@@ -44,6 +44,7 @@ export async function updateFinanceLog(logId: string, input: Partial<CreateFinan
       if (input.typeCategory !== undefined) record.typeCategory = input.typeCategory;
       if (input.location !== undefined) record.location = input.location;
       if (input.notes !== undefined) record.notes = input.notes;
+      if (input.transactionDate !== undefined) record.transactionDate = input.transactionDate;
       record.isSynced = false;
     });
 

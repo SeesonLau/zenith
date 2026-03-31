@@ -163,7 +163,7 @@ export default function FinanceScreen() {
                 padding: 10,
               }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 4 }}>
-                  <Ionicons name="arrow-down" size={11} color={colors.success} />
+                  <Ionicons name="arrow-up" size={11} color={colors.success} />
                   <Text style={{ color: colors.success, fontSize: 10, fontWeight: '600' }}>
                     Income · {monthName.split(' ')[0]}
                   </Text>
@@ -181,7 +181,7 @@ export default function FinanceScreen() {
                 padding: 10,
               }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 4 }}>
-                  <Ionicons name="arrow-up" size={11} color={colors.danger} />
+                  <Ionicons name="arrow-down" size={11} color={colors.danger} />
                   <Text style={{ color: colors.danger, fontSize: 10, fontWeight: '600' }}>
                     Expenses · {monthName.split(' ')[0]}
                   </Text>
@@ -354,7 +354,7 @@ export default function FinanceScreen() {
                                   alignItems: 'center', justifyContent: 'center',
                                   borderWidth: 2, borderColor: colors.bgSurface,
                                 }}>
-                                  <Ionicons name={isIncome ? 'arrow-up' : 'arrow-down'} size={8} color="white" />
+                                  <Ionicons name={typeConfig.icon} size={8} color="white" />
                                 </View>
                               </View>
 

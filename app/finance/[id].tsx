@@ -1,6 +1,7 @@
 // app/finance/[id].tsx - THEME COMPATIBLE & COMPACT
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,6 +35,9 @@ export default function TransactionDetailScreen() {
   const [editCategory, setEditCategory] = useState<FinanceTypeCategory | null>(null);
   const [editNotes, setEditNotes] = useState('');
   const [editTransactionType, setEditTransactionType] = useState<TransactionType>('expense');
+  const [editDate, setEditDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     if (transaction) {
@@ -45,6 +49,7 @@ export default function TransactionDetailScreen() {
       setEditCategory(transaction.typeCategory as FinanceTypeCategory);
       setEditNotes(transaction.notes || '');
       setEditTransactionType(transaction.transactionType as TransactionType);
+      setEditDate(transaction.transactionDate);
     }
   }, [transaction]);
 
@@ -92,6 +97,7 @@ export default function TransactionDetailScreen() {
         currency: editCurrency,
         typeCategory: editCategory,
         notes: editNotes.trim() || undefined,
+        transactionDate: editDate,
       });
       setIsEditing(false);
     } catch {
@@ -111,6 +117,7 @@ export default function TransactionDetailScreen() {
       setEditCategory(transaction.typeCategory as FinanceTypeCategory);
       setEditNotes(transaction.notes || '');
       setEditTransactionType(transaction.transactionType as TransactionType);
+      setEditDate(transaction.transactionDate);
     }
     setIsEditing(false);
   };
@@ -317,6 +324,83 @@ export default function TransactionDetailScreen() {
                     </View>
                   ))}
                 </View>
+              </View>
+
+              {/* Date & Time */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 13, marginBottom: 8 }}>
+                  Date & Time
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable
+                    onPress={() => setShowDatePicker(true)}
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: colors.bgSurface,
+                      borderWidth: 1,
+                      borderColor: showDatePicker ? colors.moduleFinance : colors.borderSurface,
+                      borderRadius: 10,
+                      padding: 12,
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={16} color={colors.moduleFinance} />
+                    <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '500' }}>
+                      {editDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setShowTimePicker(true)}
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: colors.bgSurface,
+                      borderWidth: 1,
+                      borderColor: showTimePicker ? colors.moduleFinance : colors.borderSurface,
+                      borderRadius: 10,
+                      padding: 12,
+                    }}
+                  >
+                    <Ionicons name="time-outline" size={16} color={colors.moduleFinance} />
+                    <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '500' }}>
+                      {editDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </Pressable>
+                </View>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={editDate}
+                    mode="date"
+                    display="default"
+                    onChange={(_, selected) => {
+                      setShowDatePicker(false);
+                      if (selected) {
+                        const updated = new Date(editDate);
+                        updated.setFullYear(selected.getFullYear(), selected.getMonth(), selected.getDate());
+                        setEditDate(updated);
+                      }
+                    }}
+                  />
+                )}
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={editDate}
+                    mode="time"
+                    display="default"
+                    onChange={(_, selected) => {
+                      setShowTimePicker(false);
+                      if (selected) {
+                        const updated = new Date(editDate);
+                        updated.setHours(selected.getHours(), selected.getMinutes());
+                        setEditDate(updated);
+                      }
+                    }}
+                  />
+                )}
               </View>
 
               {/* Notes */}
