@@ -241,7 +241,7 @@ export default function AddTransactionScreen() {
                 <DateTimePicker
                   value={transactionDate}
                   mode="date"
-                  maximumDate={new Date()}
+                  maximumDate={transactionType === 'expense' ? new Date() : undefined}
                   onChange={(_, date) => {
                     setShowDatePicker(Platform.OS === 'ios');
                     if (date) setTransactionDate(date);
