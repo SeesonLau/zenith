@@ -1,5 +1,5 @@
 # QA Report — Bugs & Issues
-**Last verified:** 2026-03-29
+**Last verified:** 2026-03-31
 **Auditor:** Claude Code (automated full-read audit)
 
 ---
@@ -24,6 +24,13 @@
 | QA-014 | `app/finance/[id].tsx` | 187 | `colors: any` in `DetailRowProps` | Medium | Same as QA-013 | Type as `ThemeColors` | ✅ Fixed 2026-03-29 |
 | QA-015 | `app/leisure/[id].tsx` | 244 | `icon: any` and `colors: any` in local `DetailRowProps` | Medium | Same as QA-013 | Type properly | ✅ Fixed 2026-03-29 |
 | QA-016 | `src/components/common/Button.tsx` | 17, 21 | `icon?: IconProps<any>['name']` and `style?: any` — two `any` usages | Medium | Weakens icon name type safety | Use `keyof typeof Ionicons.glyphMap` for icon; `ViewStyle` for style | ✅ Fixed 2026-03-29 |
+| QA-082 | `app/(tabs)/finance.tsx` | 25, 31 | `getTodayWeekIndex(weeks: any[])` and inner `(day: any)` — two untyped `any` usages | Medium | TypeScript cannot catch shape errors in week/day objects | Type the parameter with the inline shape used in `weeklyData` | Open |
+| QA-083 | `app/finance/add.tsx` | 173–208 | Transaction type toggle hardcodes `'#ef4444'` and `'#22c55e'` instead of `colors.danger`/`colors.success` — bypasses theme tokens | Medium | Colors won't update if theme tokens change | Replace with `FINANCE_CONFIG.transactionTypes[type].hex` or `colors.danger`/`colors.success` | Open |
+| QA-084 | `app/finance/analytics.tsx` | 124–135 | "Next month" `Pressable` has `disabled` prop but no visual feedback (no opacity, no color change when disabled) | Low | User cannot tell forward navigation is locked | Add `opacity: disabled ? 0.3 : 1` style | Open |
+| QA-085 | `app/finance/[id].tsx` | 125–360 | Edit mode has no date field — `transactionDate` cannot be changed; user cannot correct a misdated transaction | Medium | Misdated entries are permanently stuck on their original date | Add `DateTimePicker` for `transactionDate` in edit mode | Open |
+| QA-086 | `app/finance/[id].tsx` | 51–67 | `handleDelete` has no loading/disabled state — delete button stays tappable while `deleteFinanceLog` is awaited | Low | Double-tap can trigger double delete | Add `isDeleting` state, disable button while in flight | Open |
+| QA-087 | `src/constants/categories.ts` | 237–257 | `FINANCE_CATEGORY_CONFIG` exports Tailwind `color` strings with no `hex` field — duplicates `FINANCE_CONFIG.categories` in `constants.ts` which does have `hex`; callers that import the wrong one get invalid RN background colors | Medium | Callers of this stale export get `'bg-green-500'` as a backgroundColor, which renders transparent | Either add `hex` to this config or mark it deprecated and point callers to `FINANCE_CONFIG` | Open |
+| QA-088 | `app/(tabs)/finance.tsx` | 684 | `FloatingActionButton color="bg-green-600"` — FAB uses NativeWind legacy `className`; not theme-responsive unlike all other Finance UI | Low | FAB color won't follow theme changes | Convert FAB to use a `backgroundColor` style prop with `colors.success` | Open |
 | QA-017 | `src/utils/imageHelpers.ts` | 28 | `(fileInfo as any).size` — cast to `any` to access `.size` | Medium | Bypasses type checking | Use `(fileInfo as FileSystem.FileInfo & { size: number }).size` with a guard | Open |
 | QA-018 | `src/database/sync/syncManager.ts` | 44, 75, 82 | Multiple `as any` casts on WatermelonDB records | Medium | Hides type errors at sync layer | Create typed helper or use proper model types | Open |
 | QA-019 | `app/finance/add.tsx` | 1 | Comment on line 2: `// Added useMemo, useEffect` — inline artifact left in code | Low | Minor code noise | Remove comment | ✅ Fixed 2026-03-29 |
@@ -142,15 +149,54 @@
 
 ---
 
+---
+
+## Finance Module Audit — 2026-03-31
+
+### Code Quality
+
+| ID | File | Line | Issue | Severity | If Unaddressed | Fix Proposal | Status |
+|---|---|---|---|---|---|---|---|
+| QA-089 | `app/(tabs)/finance.tsx` | 71–78 | `groupedLogs` groups `allLogs` (all-time) while section header says "All Transactions" — month navigation changes chart/stats but not the transaction list below it. UX is confusing. | Medium | Users expect list to filter with month navigation | Either filter list to match selected month, or rename section to "All Transactions (all time)" | Open |
+| QA-090 | `app/(tabs)/finance.tsx` | 77 | `groupedLogs` sort key uses `new Date(dateKey)` where `dateKey` is `formatDate(log.transactionDate, 'short')` — if short format omits year (e.g. `"Mar 31"`), `new Date("Mar 31")` resolves to current year. Prior-year transactions sort incorrectly. | High | Old transactions sort as if they are from the current year | Use full ISO date string as group key, display short label separately | Open |
+| QA-091 | `app/(tabs)/finance.tsx` | 331 | `log.typeCategory as any` cast — should cast to `FinanceTypeCategory` for type safety | Medium | TypeScript cannot validate category lookup | Replace `as any` with `as FinanceTypeCategory` | Open |
+| QA-094 | `app/finance/add.tsx` | 244 | `maximumDate={new Date()}` blocks future dates; may be intentional but prevents forward-dating income entries (e.g. scheduled salary) | Low | Cannot pre-date future income transactions | Consider allowing future dates for income type | Open |
+| QA-096 | `app/finance/add.tsx` | 62–67 | Category `useMemo` sorts alphabetically — overrides declaration order from `categories.ts`. May be intentional but is inconsistent with detail screen which uses declaration order. | Low | Category order differs between add and edit screens | Decide on canonical order and apply consistently | Open |
+| QA-097 | `app/finance/[id].tsx` | 1 | File path comment has trailing text `- THEME COMPATIBLE & COMPACT` — violates CLAUDE.md path comment convention | Low | Developer confusion | Trim to `// app/finance/[id].tsx` | Open |
+| QA-100 | `app/finance/[id].tsx` | 373 | Category column split built inline in JSX with `[editCategories.slice(...), editCategories.slice(...)]` — new array created on every render; column keys are integer indices (`colIdx`) which are unstable | Low | React list reconciliation may be less efficient | Extract to `useMemo` | Open |
+| QA-101 | `app/finance/[id].tsx` | 430–437 | Edit mode Save button uses `variant="primary"`; Add screen uses `variant="success"`/`"danger"` based on type — inconsistent for same action | Low | Visual inconsistency | Use transaction-type-aware variant in edit mode | Open |
+| QA-104 | `src/constants/categories.ts` | 5 | `import { FINANCE_CATEGORY_COLORS } from "../lib/financeConstants"` — `FINANCE_CATEGORY_COLORS` is imported but never used in this file | Low | Unused import; dead code | Remove import | Open |
+
+### UI / UX
+
+| ID | File | Line | Issue | Severity | If Unaddressed | Fix Proposal | Status |
+|---|---|---|---|---|---|---|---|
+| QA-098 | `app/finance/[id].tsx` | 125–127 | When `transaction` is `null` (record not found or deleted), screen renders `<LoadingSpinner fullScreen />` indefinitely with no timeout or "not found" state | High | User stuck on infinite spinner for invalid/deleted record IDs | Add a timeout or check: if `id` resolves but record is null after initial load, show "Not found" and `router.back()` | Open |
+
+### Data & Sync Layer
+
+| ID | File | Line | Issue | Severity | If Unaddressed | Fix Proposal | Status |
+|---|---|---|---|---|---|---|---|
+| QA-105 | `src/constants/categories.ts` | 239–261 | `FINANCE_CATEGORY_CONFIG` is missing `Investment` (expense), `Borrowed`, and `Corrupt` (income) entries. Typed as `Record<FinanceTypeCategory, ...>` without `satisfies` — TypeScript may not surface the omission. Runtime lookups for these categories return `undefined`. | High | `getFinanceCategoryColor()` returns `undefined` for 3 valid categories; any caller using this record gets `undefined` silently | Add missing entries or add `satisfies` to surface the TS error | Open |
+| QA-106 | `src/lib/financeConstants.ts` | 27–44 | `FINANCE_CATEGORY_ICONS` is missing `Investment` (expense) and `Borrowed` (income) entries. Typed as `Record<FinanceTypeCategory, IoniconsName>` — if TS config permits it, runtime lookup for those categories returns `undefined`. | High | Icon lookup for `Investment` / `Borrowed` returns `undefined`; may crash or render blank icons | Add missing entries | Open |
+
+### Performance
+
+| ID | File | Line | Issue | Severity | If Unaddressed | Fix Proposal | Status |
+|---|---|---|---|---|---|---|---|
+| QA-107 | `src/database/hooks/useDatabase.ts` | 111–126 | `useFinanceLogs` takes `Date` objects as deps. In `finance.tsx`, `startDate`/`endDate` are computed inline (not memoized) — new object references every render, triggering unnecessary re-subscriptions. | Medium | WatermelonDB subscription re-created on every parent render | Memoize `startDate`/`endDate` in `finance.tsx` with `useMemo`, or change hook to accept timestamps | Open |
+
+---
+
 ## Tracking
 
 | Area | Total | Open | Fixed |
 |---|---|---|---|
-| Code Quality | 36 | 5 | 31 |
-| UI / UX | 12 | 9 | 3 |
+| Code Quality | 51 | 20 | 31 |
+| UI / UX | 15 | 12 | 3 |
 | Navigation | 5 | 3 | 2 |
-| Data & Sync Layer | 13 | 8 | 5 |
-| Performance | 4 | 4 | 0 |
+| Data & Sync Layer | 15 | 10 | 5 |
+| Performance | 5 | 5 | 0 |
 | Accessibility | 6 | 3 | 3 |
 | Architecture | 5 | 4 | 1 |
-| **Total** | **81** | **36** | **45** |
+| **Total** | **102** | **57** | **45** |

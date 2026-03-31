@@ -1,5 +1,5 @@
 # UI Completeness Checklist
-**Last verified:** 2026-03-29
+**Last verified:** 2026-03-31
 
 **Legend**
 - Built: ✅ complete | 🔄 partial | ❌ stub
@@ -14,15 +14,15 @@
 |---|---|---|---|---|---|---|---|---|---|
 | UI-001 | Home | `app/(tabs)/index.tsx` | 🔄 partial | ❌ none | N/A | N/A | N/A | QA-036, QA-046 | Shows "Zenith" header + SyncStatus widget + static navigation cards. No live domain data (entry counts, active timers, etc.) |
 | UI-002 | Habits List | `app/(tabs)/habits.tsx` | ✅ | ✅ | ❌ | 🔄 console | ✅ | QA-030, QA-037 | Running timers + completed sessions grouped by date. No loading indicator on first mount. No user-visible error on stopTimer failure. |
-| UI-003 | Finance List | `app/(tabs)/finance.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | QA-031, QA-044, QA-047 | Shows transactions + weekly chart. Analytics tab unreachable from UI (QA-047). No loading indicator. |
+| UI-003 | Finance List | `app/(tabs)/finance.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | QA-044, QA-082, QA-088, QA-089, QA-090, QA-091, QA-107 | Shows transactions + monthly chart. Analytics button added. Transaction list not filtered by selected month (QA-089). Group sort broken for prior-year dates (QA-090). `as any` cast on category (QA-091). `startDate`/`endDate` not memoized — causes unnecessary hook re-subscriptions (QA-107). |
 | UI-004 | Diary List | `app/(tabs)/diary.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | QA-032, QA-045 | Month navigator + stats + entry list. `imageCount` always 0 (hardcoded). |
 | UI-005 | Leisure List | `app/(tabs)/leisure.tsx` | ✅ | ✅ | ❌ | 🔄 console | ✅ | QA-033, QA-038 | Active + completed sessions grouped by date. No user-visible error on startTimer failure. |
 | UI-006 | Habit Start | `app/habit/start.tsx` | ✅ | N/A | N/A | N/A | N/A | — | Form to start a new habit timer. Not fully audited this session. |
 | UI-007 | Habit Detail | `app/habit/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | QA-070 | Shows habit session detail + delete. Reactive via `useHabitLog`. If record not found, renders empty view with no user feedback. |
 | UI-008 | Habit History | `app/habit/history.tsx` | ✅ | ✅ | ❌ | N/A | ✅ | — | Full history list. Not fully audited this session. |
-| UI-009 | Finance Add | `app/finance/add.tsx` | ✅ | ✅ | N/A | N/A | N/A | QA-019, QA-020 | Transaction entry form. Has leftover build comments (QA-019, QA-020). |
-| UI-010 | Finance Detail | `app/finance/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | — | Transaction detail + delete. Reactive via `useFinanceLog`. If record not found, renders empty view. |
-| UI-011 | Finance Analytics | `app/finance/analytics.tsx` | ✅ | ✅ | N/A | ❌ | ✅ | QA-047, QA-062 | Complete analytics screen with charts. Completely unreachable from UI (QA-047). Category icon colors broken (QA-062). |
+| UI-009 | Finance Add | `app/finance/add.tsx` | ✅ | ✅ | N/A | N/A | N/A | QA-083, QA-096 | Date picker added. Category icons added. Keyboard flow. Hardcoded hex in type toggle (QA-083). Categories sorted alphabetically vs declaration order (QA-096). |
+| UI-010 | Finance Detail | `app/finance/[id].tsx` | ✅ | ✅ | ✅ | ❌ | N/A | QA-085, QA-086, QA-097, QA-098, QA-100, QA-101 | Edit mode added with date+time picker. Delete has no loading state (QA-086). Invalid record ID shows infinite spinner (QA-098). Edit Save button uses wrong variant (QA-101). File path comment has trailing text (QA-097). |
+| UI-011 | Finance Analytics | `app/finance/analytics.tsx` | ✅ | ✅ | N/A | ❌ | ✅ | QA-084 | Analytics screen reachable. Empty state added. Category bars use correct hex. Disabled next-month button has no visual feedback (QA-084). |
 | UI-012 | Diary New | `app/diary/new.tsx` | ✅ | ✅ | N/A | N/A | N/A | — | New diary entry form. Not fully audited this session. |
 | UI-013 | Diary Detail | `app/diary/[id].tsx` | ✅ | ✅ | N/A | ❌ | N/A | QA-071, QA-080, QA-081 | Entry view + inline editing. NativeWind legacy styling — no SafeAreaView, no theme switching. Reactive via `useDiaryEntry`. |
 | UI-014 | Diary Calendar | `app/diary/calendar.tsx` | 🔄 partial | ✅ | N/A | ❌ | N/A | QA-024, QA-025, QA-040 | Calendar grid with entry count dots. Default month hardcoded to Dec 2024 (QA-024). Day tap does console.log only — navigation broken (QA-040). |
@@ -56,3 +56,7 @@
 - `preferences.tsx` saves nothing — all settings are cosmetic
 - `diary/calendar.tsx` day navigation is non-functional
 - `leisure/complete.tsx` discard leaves timer running
+- `finance/[id].tsx` shows infinite spinner for invalid/deleted record IDs (QA-098)
+- `FINANCE_CATEGORY_CONFIG` in `categories.ts` missing 3 valid categories — runtime `undefined` on lookup (QA-105)
+- `FINANCE_CATEGORY_ICONS` in `financeConstants.ts` missing 2 valid categories (QA-106)
+- Finance list group sort is broken for prior-year transactions (QA-090)
