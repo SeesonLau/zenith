@@ -26,6 +26,7 @@ export default function TransactionDetailScreen() {
   const transaction = useFinanceLog(id);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editItem, setEditItem] = useState('');
   const [editLocation, setEditLocation] = useState('');
@@ -51,6 +52,15 @@ export default function TransactionDetailScreen() {
       setEditTransactionType(transaction.transactionType as TransactionType);
       setEditDate(transaction.transactionDate);
     }
+  }, [transaction]);
+
+  useEffect(() => {
+    if (transaction) {
+      setNotFound(false);
+      return;
+    }
+    const timer = setTimeout(() => setNotFound(true), 600);
+    return () => clearTimeout(timer);
   }, [transaction]);
 
   const handleDelete = () => {
@@ -123,6 +133,27 @@ export default function TransactionDetailScreen() {
   };
 
   if (!transaction) {
+    if (notFound) {
+      return (
+        <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+            <Ionicons name="alert-circle-outline" size={48} color={colors.textTertiary} />
+            <Text style={{ color: colors.textPrimary, fontSize: 18, fontWeight: 'bold', marginTop: 16, marginBottom: 8 }}>
+              Transaction Not Found
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 24 }}>
+              This transaction may have been deleted or does not exist.
+            </Text>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ backgroundColor: colors.moduleFinance, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 }}
+            >
+              <Text style={{ color: '#ffffff', fontWeight: '600', fontSize: 14 }}>Go Back</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      );
+    }
     return <LoadingSpinner fullScreen />;
   }
 
