@@ -278,7 +278,7 @@ export default function AddTransactionScreen() {
               <TextInput
                 value={item}
                 onChangeText={setItem}
-                placeholder="e.g. Lunch, Salary, Bus fare"
+                placeholder="Name, Unit Size"
                 placeholderTextColor={colors.textTertiary}
                 returnKeyType="next"
                 onSubmitEditing={() => locationRef.current?.focus()}
@@ -323,7 +323,7 @@ export default function AddTransactionScreen() {
                 ref={locationRef}
                 value={location}
                 onChangeText={setLocation}
-                placeholder="e.g. SM, Jollibee, Online"
+                placeholder="Name, Place"
                 placeholderTextColor={colors.textTertiary}
                 returnKeyType="next"
                 onSubmitEditing={() => quantityRef.current?.focus()}

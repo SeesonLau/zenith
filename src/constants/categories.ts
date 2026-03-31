@@ -53,7 +53,7 @@ export const EXPENSE_CATEGORIES = [
   'Health',
   'Digital',
   'Social',
-  'Corrupt',
+  'Investment',
   'Food',
   'Give',
   'Shopping',
@@ -66,6 +66,8 @@ export const INCOME_CATEGORIES = [
   'Gift',
   'Repayment',
   'Investments',
+  'Corrupt',
+  'Borrowed',
 ] as const;
 
 export const FINANCE_CATEGORIES = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES] as const;
@@ -236,24 +238,26 @@ export const HABIT_CATEGORY_COLORS: Record<HabitCategory, string> = {
 
 export const FINANCE_CATEGORY_CONFIG: Record<FinanceTypeCategory, { icon: string; color: string }> = {
   // --- INCOME ---
-  Allowance: { icon: 'wallet', color: 'bg-green-500' },
-  Salary: { icon: 'cash', color: 'bg-emerald-600' },
-  Gift: { icon: 'gift', color: 'bg-pink-500' },
-  Repayment: { icon: 'return-up-back', color: 'bg-cyan-500' },
-  Freelance: { icon: 'briefcase', color: 'bg-indigo-500' },
-  Investments: { icon: 'trending-up', color: 'bg-violet-500' },
+  Allowance:   { icon: 'wallet',          color: 'bg-green-500' },
+  Salary:      { icon: 'cash',            color: 'bg-emerald-600' },
+  Gift:        { icon: 'gift',            color: 'bg-pink-500' },
+  Repayment:   { icon: 'return-up-back',  color: 'bg-cyan-500' },
+  Freelance:   { icon: 'briefcase',       color: 'bg-indigo-500' },
+  Investments: { icon: 'trending-up',     color: 'bg-violet-500' },
+  Corrupt:     { icon: 'alert-circle',    color: 'bg-red-700' },
+  Borrowed:    { icon: 'swap-horizontal', color: 'bg-amber-500' },
 
   // --- EXPENSES ---
-  'Load/Data': { icon: 'wifi', color: 'bg-sky-500' },
-  Transport: { icon: 'bus', color: 'bg-yellow-500' },
-  School: { icon: 'school', color: 'bg-purple-500' },
-  Health: { icon: 'medkit', color: 'bg-rose-500' },
-  Digital: { icon: 'laptop', color: 'bg-blue-500' },
-  Social: { icon: 'people', color: 'bg-orange-400' },
-  Corrupt: { icon: 'alert-circle', color: 'bg-red-700' },
-  Food: { icon: 'restaurant', color: 'bg-orange-600' },
-  Give: { icon: 'heart', color: 'bg-pink-400' },
-  Shopping: { icon: 'cart', color: 'bg-teal-500' },
+  'Load/Data': { icon: 'wifi',            color: 'bg-sky-500' },
+  Transport:   { icon: 'bus',             color: 'bg-yellow-500' },
+  School:      { icon: 'school',          color: 'bg-purple-500' },
+  Health:      { icon: 'medkit',          color: 'bg-rose-500' },
+  Digital:     { icon: 'laptop',          color: 'bg-blue-500' },
+  Social:      { icon: 'people',          color: 'bg-orange-400' },
+  Investment:  { icon: 'trending-up',     color: 'bg-violet-500' },
+  Food:        { icon: 'restaurant',      color: 'bg-orange-600' },
+  Give:        { icon: 'heart',           color: 'bg-pink-400' },
+  Shopping:    { icon: 'cart',            color: 'bg-teal-500' },
 };
 
 export function getHabitCategoryColor(category: HabitCategory): string {

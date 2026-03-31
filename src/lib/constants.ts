@@ -108,6 +108,10 @@ export const FINANCE_CONFIG = {
     Freelance:   { icon: 'briefcase' as const,        color: 'bg-indigo-500',  hex: '#6366f1' },
     Investments: { icon: 'trending-up' as const,      color: 'bg-violet-500',  hex: '#8b5cf6' },
 
+    // --- INCOME CATEGORIES (additional) ---
+    Corrupt:     { icon: 'alert-circle' as const,     color: 'bg-red-700',     hex: '#b91c1c' },
+    Borrowed:    { icon: 'swap-horizontal' as const,  color: 'bg-amber-500',   hex: '#f59e0b' },
+
     // --- EXPENSE CATEGORIES ---
     'Load/Data': { icon: 'wifi' as const,             color: 'bg-sky-500',     hex: '#0ea5e9' },
     Transport:   { icon: 'bus' as const,              color: 'bg-yellow-500',  hex: '#eab308' },
@@ -115,7 +119,7 @@ export const FINANCE_CONFIG = {
     Health:      { icon: 'medkit' as const,           color: 'bg-rose-500',    hex: '#f43f5e' },
     Digital:     { icon: 'laptop' as const,           color: 'bg-blue-500',    hex: '#3b82f6' },
     Social:      { icon: 'people' as const,           color: 'bg-orange-400',  hex: '#fb923c' },
-    Corrupt:     { icon: 'alert-circle' as const,     color: 'bg-red-700',     hex: '#b91c1c' },
+    Investment:  { icon: 'trending-up' as const,      color: 'bg-violet-500',  hex: '#8b5cf6' },
     Food:        { icon: 'restaurant' as const,       color: 'bg-orange-600',  hex: '#ea580c' },
     Give:        { icon: 'heart' as const,            color: 'bg-pink-400',    hex: '#f472b6' },
     Shopping:    { icon: 'cart' as const,             color: 'bg-teal-500',    hex: '#14b8a6' },
