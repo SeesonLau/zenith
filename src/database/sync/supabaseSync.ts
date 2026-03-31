@@ -146,6 +146,7 @@ export async function syncWithSupabase(): Promise<SyncResult> {
         if (__DEV__) console.log('✅ Push successful');
       },
       migrationsEnabledAtVersion: 5,
+      sendCreatedAsUpdated: true,
     });
 
     if (__DEV__) console.log('✅ Sync completed — pulled:', changes.pulled, 'pushed:', changes.pushed);
