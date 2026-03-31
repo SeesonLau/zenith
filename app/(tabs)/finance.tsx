@@ -11,7 +11,7 @@ import { getTransactionTypeConfig, getFinanceCategoryConfig } from '@/src/lib/co
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
-import type { CurrencyCode } from '@/src/types/database.types';
+import type { CurrencyCode, FinanceTypeCategory } from '@/src/types/database.types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function FinanceScreen() {
@@ -21,8 +21,8 @@ export default function FinanceScreen() {
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  const startDate = getStartOfMonth(selectedMonth);
-  const endDate = getEndOfMonth(selectedMonth);
+  const startDate = useMemo(() => getStartOfMonth(selectedMonth), [selectedMonth]);
+  const endDate = useMemo(() => getEndOfMonth(selectedMonth), [selectedMonth]);
   const logs = useFinanceLogs(startDate, endDate);
   const allLogs = useAllFinanceLogs();
 
@@ -330,7 +330,7 @@ export default function FinanceScreen() {
                     <View style={{ gap: 6 }}>
                       {dateLogs.map(log => {
                         const typeConfig = getTransactionTypeConfig(log.transactionType);
-                        const catConfig = getFinanceCategoryConfig(log.typeCategory as any);
+                        const catConfig = getFinanceCategoryConfig(log.typeCategory as FinanceTypeCategory);
                         const isIncome = log.transactionType === 'income';
 
                         return (
@@ -348,7 +348,7 @@ export default function FinanceScreen() {
                                   backgroundColor: catConfig.hex, borderRadius: 20,
                                   width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
                                 }}>
-                                  <Ionicons name={catConfig.icon as any} size={18} color="white" />
+                                  <Ionicons name={catConfig.icon as keyof typeof Ionicons.glyphMap} size={18} color="white" />
                                 </View>
                                 <View style={{
                                   position: 'absolute', bottom: -2, right: -2,
