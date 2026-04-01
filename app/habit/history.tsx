@@ -1,6 +1,6 @@
 // app/habit/history.tsx - COMPACT VERSION
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, Pressable, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +15,12 @@ export default function HabitHistoryScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
+  const changePeriod = useCallback((p: 'week' | 'month' | 'all') => {
+    setSelectedPeriod(p);
+    setVisibleGroups(PAGE_GROUPS);
+  }, []);
+  const PAGE_GROUPS = 15;
+  const [visibleGroups, setVisibleGroups] = useState(PAGE_GROUPS);
   const completedLogs = useCompletedHabitLogs();
 
   // Filter logs by period
@@ -80,9 +86,21 @@ export default function HabitHistoryScreen() {
     );
   }, [filteredLogs]);
 
+  const visibleGroupedLogs = useMemo(
+    () => groupedLogs.slice(0, visibleGroups),
+    [groupedLogs, visibleGroups]
+  );
+
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 400) {
+      setVisibleGroups(v => Math.min(v + PAGE_GROUPS, groupedLogs.length));
+    }
+  }, [groupedLogs.length]);
+
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }} scrollEventThrottle={200} onScroll={handleScroll}>
         <View style={{ padding: 20 }}>
           {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20, marginTop: 8 }}>
@@ -99,7 +117,7 @@ export default function HabitHistoryScreen() {
             {(['week', 'month', 'all'] as const).map((period) => (
               <Pressable
                 key={period}
-                onPress={() => setSelectedPeriod(period)}
+                onPress={() => changePeriod(period)}
                 style={{
                   flex: 1,
                   paddingVertical: 10,
@@ -243,7 +261,7 @@ export default function HabitHistoryScreen() {
               </View>
             ) : (
               <View style={{ gap: 12 }}>
-                {groupedLogs.map(([date, dateLogs]) => (
+                {visibleGroupedLogs.map(([date, dateLogs]) => (
                   <View key={date}>
                     <Text style={{
                       color: colors.textTertiary,

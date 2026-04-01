@@ -1,12 +1,11 @@
 // app/(tabs)/leisure.tsx
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, RefreshControl, Pressable, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   useRunningLeisureTimers,
-  useCompletedLeisureLogs,
   useAllLeisureLogs,
 } from '@/src/database/hooks/useDatabase';
 import { startLeisureTimer } from '@/src/database/actions/leisureActions';
@@ -23,10 +22,11 @@ export default function LeisureScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const runningTimers = useRunningLeisureTimers();
-  const completedSessions = useCompletedLeisureLogs(20);
   const allLogs = useAllLeisureLogs();
   const [refreshing, setRefreshing] = useState(false);
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const PAGE_GROUPS = 15;
+  const [visibleGroups, setVisibleGroups] = useState(PAGE_GROUPS);
 
   useEffect(() => {
     return () => { if (refreshTimeout.current) clearTimeout(refreshTimeout.current); };
@@ -52,15 +52,19 @@ export default function LeisureScreen() {
     router.push(`/leisure/complete?id=${timerId}&duration=${durationSeconds}`);
   };
 
-  // Today's sessions from the recent 20
+  const completedLogs = useMemo(
+    () => allLogs.filter(s => s.endedAt != null).sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime()),
+    [allLogs]
+  );
+
   const todaysSessions = useMemo(() => {
     const today = new Date();
-    return completedSessions.filter(s =>
+    return completedLogs.filter(s =>
       s.startedAt.getDate() === today.getDate() &&
       s.startedAt.getMonth() === today.getMonth() &&
       s.startedAt.getFullYear() === today.getFullYear()
     );
-  }, [completedSessions]);
+  }, [completedLogs]);
 
   const todaySeconds = useMemo(
     () => todaysSessions.reduce((sum, s) => sum + (s.duration ?? 0), 0),
@@ -76,22 +80,35 @@ export default function LeisureScreen() {
     [allLogs]
   );
 
-  // Group recent sessions by ISO date key (newest first)
-  const groupedSessions = useMemo(() => {
-    const grouped: Record<string, typeof completedSessions> = {};
-    completedSessions.forEach(s => {
+  const allGroupedSessions = useMemo(() => {
+    const grouped: Record<string, typeof completedLogs> = {};
+    completedLogs.forEach(s => {
       const d = s.startedAt;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(s);
     });
     return Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a));
-  }, [completedSessions]);
+  }, [completedLogs]);
+
+  const groupedSessions = useMemo(
+    () => allGroupedSessions.slice(0, visibleGroups),
+    [allGroupedSessions, visibleGroups]
+  );
+
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 400) {
+      setVisibleGroups(v => Math.min(v + PAGE_GROUPS, allGroupedSessions.length));
+    }
+  }, [allGroupedSessions.length]);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
+        scrollEventThrottle={200}
+        onScroll={handleScroll}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.moduleLeisure} />
         }
@@ -218,12 +235,12 @@ export default function LeisureScreen() {
                 paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8,
               }}>
                 <Text style={{ color: colors.textSecondary, fontWeight: '600', fontSize: 11 }}>
-                  {completedSessions.length}
+                  {completedLogs.length}
                 </Text>
               </View>
             </View>
 
-            {completedSessions.length === 0 && runningTimers.length === 0 ? (
+            {completedLogs.length === 0 && runningTimers.length === 0 ? (
               <EmptyState
                 icon="film-outline"
                 title={Strings.leisure.emptyTitle}

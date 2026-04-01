@@ -1,6 +1,6 @@
 // app/(tabs)/finance.tsx
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,8 @@ export default function FinanceScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const PAGE_GROUPS = 15;
+  const [visibleGroups, setVisibleGroups] = useState(PAGE_GROUPS);
 
   const startDate = useMemo(() => getStartOfMonth(selectedMonth), [selectedMonth]);
   const endDate = useMemo(() => getEndOfMonth(selectedMonth), [selectedMonth]);
@@ -79,6 +81,18 @@ export default function FinanceScreen() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [allLogs]);
 
+  const visibleGroupedLogs = useMemo(
+    () => groupedLogs.slice(0, visibleGroups),
+    [groupedLogs, visibleGroups]
+  );
+
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 400) {
+      setVisibleGroups(v => Math.min(v + PAGE_GROUPS, groupedLogs.length));
+    }
+  }, [groupedLogs.length]);
+
   useEffect(() => {
     return () => { if (refreshTimeout.current) clearTimeout(refreshTimeout.current); };
   }, []);
@@ -96,6 +110,8 @@ export default function FinanceScreen() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
+        scrollEventThrottle={200}
+        onScroll={handleScroll}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.success} />
         }
@@ -319,7 +335,7 @@ export default function FinanceScreen() {
               />
             ) : (
               <View style={{ gap: 12 }}>
-                {groupedLogs.map(([date, dateLogs]) => (
+                {visibleGroupedLogs.map(([date, dateLogs]) => (
                   <View key={date}>
                     <Text style={{
                       color: colors.textTertiary, fontSize: 11, fontWeight: '600',
