@@ -159,6 +159,39 @@ export default function LeisureDetailScreen() {
                 </Text>
               </View>
 
+              {/* Date & Time */}
+              <View style={{ marginBottom: 14 }}>
+                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 13, marginBottom: 8 }}>
+                  Date &amp; Time
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <Pressable
+                    onPress={() => setShowDatePicker(true)}
+                    style={{
+                      flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+                      backgroundColor: colors.bgSurface, borderWidth: 1,
+                      borderColor: showDatePicker ? colors.moduleLeisure : colors.borderSurface,
+                      borderRadius: 10, padding: 12,
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={16} color={colors.moduleLeisure} />
+                    <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '500' }}>{dateLabel}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setShowTimePicker(true)}
+                    style={{
+                      flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+                      backgroundColor: colors.bgSurface, borderWidth: 1,
+                      borderColor: showTimePicker ? colors.moduleLeisure : colors.borderSurface,
+                      borderRadius: 10, padding: 12,
+                    }}
+                  >
+                    <Ionicons name="time-outline" size={16} color={colors.moduleLeisure} />
+                    <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '500' }}>{timeLabel}</Text>
+                  </Pressable>
+                </View>
+              </View>
+
               {/* Type */}
               <View style={{ marginBottom: 14 }}>
                 <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 13, marginBottom: 8 }}>
@@ -204,39 +237,6 @@ export default function LeisureDetailScreen() {
                     textAlignVertical: 'top', minHeight: 80,
                   }}
                 />
-              </View>
-
-              {/* Date & Time */}
-              <View style={{ marginBottom: 14 }}>
-                <Text style={{ color: colors.textPrimary, fontWeight: '600', fontSize: 13, marginBottom: 8 }}>
-                  Date &amp; Time
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <Pressable
-                    onPress={() => setShowDatePicker(true)}
-                    style={{
-                      flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-                      backgroundColor: colors.bgSurface, borderWidth: 1,
-                      borderColor: showDatePicker ? colors.moduleLeisure : colors.borderSurface,
-                      borderRadius: 10, padding: 12,
-                    }}
-                  >
-                    <Ionicons name="calendar-outline" size={16} color={colors.moduleLeisure} />
-                    <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '500' }}>{dateLabel}</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => setShowTimePicker(true)}
-                    style={{
-                      flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-                      backgroundColor: colors.bgSurface, borderWidth: 1,
-                      borderColor: showTimePicker ? colors.moduleLeisure : colors.borderSurface,
-                      borderRadius: 10, padding: 12,
-                    }}
-                  >
-                    <Ionicons name="time-outline" size={16} color={colors.moduleLeisure} />
-                    <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '500' }}>{timeLabel}</Text>
-                  </Pressable>
-                </View>
               </View>
 
               {/* Duration */}

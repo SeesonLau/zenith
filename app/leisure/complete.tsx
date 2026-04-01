@@ -24,7 +24,7 @@ export default function CompleteLeisureScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const params = useLocalSearchParams<{ id: string; duration: string }>();
-  const [type, setType] = useState<LeisureType>('Manga');
+  const [type, setType] = useState<LeisureType | null>(null);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +32,10 @@ export default function CompleteLeisureScreen() {
   const handleComplete = async () => {
     if (!params.id) {
       Alert.alert('Error', 'Invalid session');
+      return;
+    }
+    if (!type) {
+      Alert.alert('Required', 'Please select a content type.');
       return;
     }
 
@@ -150,7 +154,7 @@ export default function CompleteLeisureScreen() {
                   </Text>
                 </View>
               </View>
-              <LeisureTypePicker selected={type} onSelect={setType} />
+              <LeisureTypePicker selected={type ?? undefined} onSelect={setType} />
             </View>
 
             {/* Title Section */}

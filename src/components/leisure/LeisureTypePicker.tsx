@@ -31,9 +31,7 @@ const GROUP_COLORS: Record<LeisureTypeGroup, string> = {
 
 export default function LeisureTypePicker({ selected, onSelect }: LeisureTypePickerProps) {
   const colors = useThemeColors();
-  const [expandedGroups, setExpandedGroups] = useState<Set<LeisureTypeGroup>>(
-    new Set(['I']) // Start with Group I expanded
-  );
+  const [expandedGroups, setExpandedGroups] = useState<Set<LeisureTypeGroup>>(new Set());
 
   const toggleGroup = (group: LeisureTypeGroup) => {
     setExpandedGroups((prev) => {
