@@ -754,12 +754,12 @@ export default function LeisureAnalyticsScreen() {
                   {(() => {
                     const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                     const LEVELS = [
-                      { max: 0,   color: null,      label: '0' },
-                      { max: 2,   color: '#bbf7d0', label: '1–2' },
-                      { max: 5,   color: '#4ade80', label: '3–5' },
-                      { max: 9,   color: '#16a34a', label: '6–9' },
-                      { max: 14,  color: '#14532d', label: '10–14' },
-                      { max: Infinity, color: '#ec4899', label: '15+' },
+                      { max: 0,        color: null,      label: '0' },
+                      { max: 2,        color: '#4ade80', label: '1–2' },   // green
+                      { max: 5,        color: '#facc15', label: '3–5' },   // yellow
+                      { max: 9,        color: '#fb923c', label: '6–9' },   // orange
+                      { max: 14,       color: '#ef4444', label: '10–14' }, // red
+                      { max: Infinity, color: '#ec4899', label: '15+' },   // pink
                     ];
                     const getColor = (count: number): string =>
                       count === 0 ? colors.bgSurfaceHover
