@@ -103,6 +103,18 @@ export async function syncWithSupabase(): Promise<SyncResult> {
 
         if (__DEV__) console.log('✅ Pull successful — pulled:', changes.pulled);
 
+        // Normalize pull response: move all `created` records into `updated`.
+        // sendCreatedAsUpdated: true handles `updated` records that don't exist locally
+        // by creating them — so this is safe. Without this, WatermelonDB logs a
+        // diagnostic warning because it expects only `updated` when that flag is set.
+        const rawChanges = data.changes as Record<string, { created: any[]; updated: any[]; deleted: string[] }>;
+        for (const tableChanges of Object.values(rawChanges ?? {})) {
+          if (tableChanges.created?.length) {
+            tableChanges.updated = [...(tableChanges.updated ?? []), ...tableChanges.created];
+            tableChanges.created = [];
+          }
+        }
+
         return {
           changes: data.changes,
           timestamp: data.timestamp,

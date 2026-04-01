@@ -61,9 +61,8 @@ export default function AddTransactionScreen() {
 
   const { col1, col2 } = useMemo(() => {
     const currentList = transactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
-    const sorted = [...currentList].sort();
-    const half = Math.ceil(sorted.length / 2);
-    return { col1: sorted.slice(0, half), col2: sorted.slice(half) };
+    const half = Math.ceil(currentList.length / 2);
+    return { col1: currentList.slice(0, half), col2: currentList.slice(half) };
   }, [transactionType]);
 
   useEffect(() => {
@@ -170,17 +169,17 @@ export default function AddTransactionScreen() {
                   padding: 12,
                   borderRadius: 10,
                   borderWidth: 2,
-                  borderColor: transactionType === 'expense' ? '#ef4444' : colors.borderSurface,
-                  backgroundColor: transactionType === 'expense' ? '#ef444420' : colors.bgSurface,
+                  borderColor: transactionType === 'expense' ? colors.danger : colors.borderSurface,
+                  backgroundColor: transactionType === 'expense' ? colors.danger + '20' : colors.bgSurface,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6
                 }}
               >
-                <Ionicons name="arrow-up" size={16} color={transactionType === 'expense' ? '#ef4444' : colors.textSecondary} />
-                <Text style={{ 
-                  color: transactionType === 'expense' ? '#ef4444' : colors.textSecondary, 
+                <Ionicons name="arrow-down" size={16} color={transactionType === 'expense' ? colors.danger : colors.textSecondary} />
+                <Text style={{
+                  color: transactionType === 'expense' ? colors.danger : colors.textSecondary,
                   fontWeight: '600',
                   fontSize: 14
                 }}>
@@ -195,17 +194,17 @@ export default function AddTransactionScreen() {
                   padding: 12,
                   borderRadius: 10,
                   borderWidth: 2,
-                  borderColor: transactionType === 'income' ? '#22c55e' : colors.borderSurface,
-                  backgroundColor: transactionType === 'income' ? '#22c55e20' : colors.bgSurface,
+                  borderColor: transactionType === 'income' ? colors.success : colors.borderSurface,
+                  backgroundColor: transactionType === 'income' ? colors.success + '20' : colors.bgSurface,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6
                 }}
               >
-                <Ionicons name="arrow-down" size={16} color={transactionType === 'income' ? '#22c55e' : colors.textSecondary} />
-                <Text style={{ 
-                  color: transactionType === 'income' ? '#22c55e' : colors.textSecondary, 
+                <Ionicons name="arrow-up" size={16} color={transactionType === 'income' ? colors.success : colors.textSecondary} />
+                <Text style={{
+                  color: transactionType === 'income' ? colors.success : colors.textSecondary,
                   fontWeight: '600',
                   fontSize: 14
                 }}>
