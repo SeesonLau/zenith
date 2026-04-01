@@ -20,6 +20,8 @@ export default function LeisureAnalyticsScreen() {
   const [activeTab, setActiveTab] = useState<TabView>('monthly');
   const [chartMode, setChartMode] = useState<ChartMode>('time');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [expandedType, setExpandedType] = useState<Partial<Record<TabView, LeisureType | null>>>({});
+  const [expandedTitle, setExpandedTitle] = useState<Partial<Record<TabView, string | null>>>({});
 
   const startDate = useMemo(() => getStartOfMonth(selectedMonth), [selectedMonth]);
   const endDate = useMemo(() => getEndOfMonth(selectedMonth), [selectedMonth]);
@@ -137,6 +139,29 @@ export default function LeisureAnalyticsScreen() {
   const maxTypeSeconds = useMemo(() =>
     overallTypeBreakdown.length > 0 ? overallTypeBreakdown[0][1].seconds : 1,
   [overallTypeBreakdown]);
+
+  type TitleData = { title: string; count: number; seconds: number; sessions: { id: string; startedAt: Date; duration: number; notes?: string }[] };
+
+  const buildTitlesByType = (logs: typeof allLogs): Partial<Record<LeisureType, TitleData[]>> => {
+    const map: Partial<Record<LeisureType, Record<string, TitleData>>> = {};
+    logs.forEach(l => {
+      const type = l.type as LeisureType;
+      const title = l.title?.trim() || '(untitled)';
+      if (!map[type]) map[type] = {};
+      if (!map[type]![title]) map[type]![title] = { title, count: 0, seconds: 0, sessions: [] };
+      map[type]![title].count += 1;
+      map[type]![title].seconds += l.duration ?? 0;
+      map[type]![title].sessions.push({ id: l.id, startedAt: l.startedAt, duration: l.duration ?? 0, notes: l.notes });
+    });
+    const result: Partial<Record<LeisureType, TitleData[]>> = {};
+    for (const [type, titles] of Object.entries(map)) {
+      result[type as LeisureType] = Object.values(titles).sort((a, b) => b.count - a.count);
+    }
+    return result;
+  };
+
+  const monthTitlesByType = useMemo(() => buildTitlesByType(monthLogs), [monthLogs]);
+  const overallTitlesByType = useMemo(() => buildTitlesByType(allLogs), [allLogs]);
 
   // Gap between consecutive sessions (sorted oldest→newest, then reversed for display)
   const intervals = useMemo(() => {
@@ -436,38 +461,99 @@ export default function LeisureAnalyticsScreen() {
                       const timePct = monthStats.totalSeconds > 0 ? (data.seconds / monthStats.totalSeconds) : 0;
                       const sessPct = monthStats.sessions > 0 ? (data.count / monthStats.sessions) : 0;
                       const pct = chartMode === 'time' ? timePct : sessPct;
+                      const isTypeExpanded = expandedType.monthly === type;
+                      const titles = monthTitlesByType[type] ?? [];
+                      const activeTitle = expandedTitle.monthly ?? null;
                       return (
                         <View key={type}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-                            <Ionicons name={config.icon as any} size={13} color={hex} />
-                            <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
-                              {config.emoji} {type}
-                            </Text>
-                            <View style={{ alignItems: 'flex-end' }}>
-                              {chartMode === 'time' ? (
-                                <>
-                                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                                    {formatDuration(data.seconds)}
-                                  </Text>
-                                  <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
-                                    {Math.round(timePct * 100)}%
-                                  </Text>
-                                </>
-                              ) : (
-                                <>
-                                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                                    {data.count} sess
-                                  </Text>
-                                  <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
-                                    {Math.round(sessPct * 100)}%
-                                  </Text>
-                                </>
-                              )}
+                          <Pressable onPress={() => {
+                            setExpandedType(p => ({ ...p, monthly: isTypeExpanded ? null : type }));
+                            setExpandedTitle(p => ({ ...p, monthly: null }));
+                          }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                              <Ionicons name={config.icon as any} size={13} color={hex} />
+                              <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
+                                {config.emoji} {type}
+                              </Text>
+                              <View style={{ alignItems: 'flex-end', marginRight: 6 }}>
+                                {chartMode === 'time' ? (
+                                  <>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                      {formatDuration(data.seconds)}
+                                    </Text>
+                                    <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                      {Math.round(timePct * 100)}%
+                                    </Text>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                      {data.count} sess
+                                    </Text>
+                                    <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                      {Math.round(sessPct * 100)}%
+                                    </Text>
+                                  </>
+                                )}
+                              </View>
+                              <Ionicons name={isTypeExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={colors.textTertiary} />
                             </View>
-                          </View>
-                          <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
-                            <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
-                          </View>
+                            <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
+                              <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
+                            </View>
+                          </Pressable>
+
+                          {isTypeExpanded && titles.length > 0 && (
+                            <View style={{ marginTop: 10, gap: 6 }}>
+                              {titles.map(t => {
+                                const isTitleExpanded = activeTitle === t.title;
+                                return (
+                                  <View key={t.title} style={{
+                                    backgroundColor: colors.bgSurfaceHover,
+                                    borderRadius: 10, overflow: 'hidden',
+                                    borderLeftWidth: 2, borderLeftColor: hex,
+                                  }}>
+                                    <Pressable
+                                      onPress={() => setExpandedTitle(p => ({ ...p, monthly: isTitleExpanded ? null : t.title }))}
+                                      style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}
+                                    >
+                                      <Text style={{ flex: 1, color: colors.textPrimary, fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
+                                        {t.title}
+                                      </Text>
+                                      <Text style={{ color: colors.textTertiary, fontSize: 11, marginRight: 6 }}>
+                                        {t.count}× · {formatDuration(t.seconds)}
+                                      </Text>
+                                      <Ionicons name={isTitleExpanded ? 'chevron-up' : 'chevron-down'} size={12} color={colors.textTertiary} />
+                                    </Pressable>
+                                    {isTitleExpanded && (
+                                      <View style={{ paddingHorizontal: 10, paddingBottom: 10, gap: 6 }}>
+                                        {[...t.sessions].sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime()).map(s => (
+                                          <View key={s.id} style={{
+                                            flexDirection: 'row', alignItems: 'center',
+                                            backgroundColor: colors.bgSurface, borderRadius: 8, padding: 8,
+                                          }}>
+                                            <View style={{ flex: 1 }}>
+                                              <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                                                {s.startedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {s.startedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                              </Text>
+                                              {s.notes ? (
+                                                <Text style={{ color: colors.textTertiary, fontSize: 10, marginTop: 2 }} numberOfLines={2}>
+                                                  {s.notes}
+                                                </Text>
+                                              ) : null}
+                                            </View>
+                                            <Text style={{ color: hex, fontSize: 11, fontWeight: '600' }}>
+                                              {formatDuration(s.duration)}
+                                            </Text>
+                                          </View>
+                                        ))}
+                                      </View>
+                                    )}
+                                  </View>
+                                );
+                              })}
+                            </View>
+                          )}
                         </View>
                       );
                     })}
@@ -606,26 +692,89 @@ export default function LeisureAnalyticsScreen() {
                         const pct = chartMode === 'time'
                           ? (maxTypeSeconds > 0 ? data.seconds / maxTypeSeconds : 0)
                           : (maxOverallCount > 0 ? data.count / maxOverallCount : 0);
+                        const isTypeExpanded = expandedType.overall === type;
+                        const titles = overallTitlesByType[type] ?? [];
+                        const activeTitle = expandedTitle.overall ?? null;
                         return (
                           <View key={type}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-                              <Ionicons name={config.icon as any} size={13} color={hex} />
-                              <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
-                                {config.emoji} {type}
-                              </Text>
-                              {chartMode === 'time' ? (
-                                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                                  {formatDuration(data.seconds)}
+                            <Pressable onPress={() => {
+                              setExpandedType(p => ({ ...p, overall: isTypeExpanded ? null : type }));
+                              setExpandedTitle(p => ({ ...p, overall: null }));
+                            }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                                <Ionicons name={config.icon as any} size={13} color={hex} />
+                                <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
+                                  {config.emoji} {type}
                                 </Text>
-                              ) : (
-                                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                                  {data.count} sess
-                                </Text>
-                              )}
-                            </View>
-                            <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
-                              <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
-                            </View>
+                                <View style={{ alignItems: 'flex-end', marginRight: 6 }}>
+                                  {chartMode === 'time' ? (
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                      {formatDuration(data.seconds)}
+                                    </Text>
+                                  ) : (
+                                    <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                      {data.count} sess
+                                    </Text>
+                                  )}
+                                </View>
+                                <Ionicons name={isTypeExpanded ? 'chevron-up' : 'chevron-down'} size={14} color={colors.textTertiary} />
+                              </View>
+                              <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
+                                <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
+                              </View>
+                            </Pressable>
+
+                            {isTypeExpanded && titles.length > 0 && (
+                              <View style={{ marginTop: 10, gap: 6 }}>
+                                {titles.map(t => {
+                                  const isTitleExpanded = activeTitle === t.title;
+                                  return (
+                                    <View key={t.title} style={{
+                                      backgroundColor: colors.bgSurfaceHover,
+                                      borderRadius: 10, overflow: 'hidden',
+                                      borderLeftWidth: 2, borderLeftColor: hex,
+                                    }}>
+                                      <Pressable
+                                        onPress={() => setExpandedTitle(p => ({ ...p, overall: isTitleExpanded ? null : t.title }))}
+                                        style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}
+                                      >
+                                        <Text style={{ flex: 1, color: colors.textPrimary, fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
+                                          {t.title}
+                                        </Text>
+                                        <Text style={{ color: colors.textTertiary, fontSize: 11, marginRight: 6 }}>
+                                          {t.count}× · {formatDuration(t.seconds)}
+                                        </Text>
+                                        <Ionicons name={isTitleExpanded ? 'chevron-up' : 'chevron-down'} size={12} color={colors.textTertiary} />
+                                      </Pressable>
+                                      {isTitleExpanded && (
+                                        <View style={{ paddingHorizontal: 10, paddingBottom: 10, gap: 6 }}>
+                                          {[...t.sessions].sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime()).map(s => (
+                                            <View key={s.id} style={{
+                                              flexDirection: 'row', alignItems: 'center',
+                                              backgroundColor: colors.bgSurface, borderRadius: 8, padding: 8,
+                                            }}>
+                                              <View style={{ flex: 1 }}>
+                                                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                                                  {s.startedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {s.startedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                                </Text>
+                                                {s.notes ? (
+                                                  <Text style={{ color: colors.textTertiary, fontSize: 10, marginTop: 2 }} numberOfLines={2}>
+                                                    {s.notes}
+                                                  </Text>
+                                                ) : null}
+                                              </View>
+                                              <Text style={{ color: hex, fontSize: 11, fontWeight: '600' }}>
+                                                {formatDuration(s.duration)}
+                                              </Text>
+                                            </View>
+                                          ))}
+                                        </View>
+                                      )}
+                                    </View>
+                                  );
+                                })}
+                              </View>
+                            )}
                           </View>
                         );
                       });
