@@ -108,17 +108,17 @@ export default function CompleteLeisureScreen() {
 
             {/* Duration Badge */}
             <View style={{
-              backgroundColor: '#ec489915',
+              backgroundColor: colors.moduleLeisure + '18',
               borderWidth: 1,
-              borderColor: '#ec4899',
+              borderColor: colors.moduleLeisure,
               borderRadius: 10,
               paddingHorizontal: 10,
               paddingVertical: 6,
             }}>
-              <Text style={{ 
-                color: '#ec4899', 
-                fontSize: 14, 
-                fontFamily: 'monospace', 
+              <Text style={{
+                color: colors.moduleLeisure,
+                fontSize: 14,
+                fontFamily: 'monospace',
                 fontWeight: 'bold',
               }}>
                 {formatDurationHMS(parseInt(params.duration || '0'))}
@@ -139,13 +139,13 @@ export default function CompleteLeisureScreen() {
                   Content Type
                 </Text>
                 <View style={{
-                  backgroundColor: '#ef444420',
+                  backgroundColor: colors.danger + '20',
                   paddingHorizontal: 6,
                   paddingVertical: 2,
                   borderRadius: 6,
                   marginLeft: 6,
                 }}>
-                  <Text style={{ color: '#ef4444', fontSize: 9, fontWeight: '700' }}>
+                  <Text style={{ color: colors.danger, fontSize: 9, fontWeight: '700' }}>
                     REQUIRED
                   </Text>
                 </View>
@@ -166,7 +166,7 @@ export default function CompleteLeisureScreen() {
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
-                  borderColor: title ? '#ec4899' : colors.borderSurface,
+                  borderColor: title ? colors.moduleLeisure : colors.borderSurface,
                   borderRadius: 12,
                   padding: 12,
                   fontSize: 13,
@@ -190,7 +190,7 @@ export default function CompleteLeisureScreen() {
                 style={{
                   backgroundColor: colors.bgSurface,
                   borderWidth: 1,
-                  borderColor: notes ? '#ec4899' : colors.borderSurface,
+                  borderColor: notes ? colors.moduleLeisure : colors.borderSurface,
                   borderRadius: 12,
                   padding: 12,
                   fontSize: 13,

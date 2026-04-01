@@ -3,9 +3,11 @@ import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { startLeisureTimer } from '@/src/database/actions/leisureActions';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function StartLeisureScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
 
   useEffect(() => {
     const startTimer = async () => {
@@ -13,7 +15,7 @@ export default function StartLeisureScreen() {
         await startLeisureTimer();
         router.replace('/leisure');
       } catch (error) {
-        console.error('Failed to start leisure timer:', error);
+        if (__DEV__) console.error('Failed to start leisure timer:', error);
         router.back();
       }
     };
@@ -22,8 +24,8 @@ export default function StartLeisureScreen() {
   }, []);
 
   return (
-    <View className="flex-1 bg-primary items-center justify-center">
-      <ActivityIndicator size="large" color="#ec4899" />
+    <View style={{ flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="large" color={colors.moduleLeisure} />
     </View>
   );
 }

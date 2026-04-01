@@ -152,24 +152,27 @@ export const LEISURE_CONFIG = {
     // Group I - General
     Anime: {
       color: 'bg-sky-500',
+      hex: '#0ea5e9',
       textColor: 'text-sky-400',
       borderColor: 'border-sky-500',
       bgColor: 'bg-sky-900/20',
       icon: 'tv' as const,
       emoji: '📺',
     },
-    
+
     Manga: {
       color: 'bg-purple-500',
+      hex: '#a855f7',
       textColor: 'text-purple-400',
       borderColor: 'border-purple-500',
       bgColor: 'bg-purple-900/20',
       icon: 'book-open' as const,
       emoji: '📘',
     },
-    
+
     Manhwa: {
       color: 'bg-blue-500',
+      hex: '#3b82f6',
       textColor: 'text-blue-400',
       borderColor: 'border-blue-500',
       bgColor: 'bg-blue-900/20',
@@ -179,6 +182,7 @@ export const LEISURE_CONFIG = {
 
     Manhua: {
       color: 'bg-red-500',
+      hex: '#ef4444',
       textColor: 'text-red-400',
       borderColor: 'border-red-500',
       bgColor: 'bg-red-900/20',
@@ -188,6 +192,7 @@ export const LEISURE_CONFIG = {
 
     Webtoon: {
       color: 'bg-teal-500',
+      hex: '#14b8a6',
       textColor: 'text-teal-400',
       borderColor: 'border-teal-500',
       bgColor: 'bg-teal-900/20',
@@ -198,15 +203,17 @@ export const LEISURE_CONFIG = {
     // Group II - Adult
     Animeh: {
       color: 'bg-pink-600',
+      hex: '#db2777',
       textColor: 'text-pink-400',
       borderColor: 'border-pink-600',
       bgColor: 'bg-pink-900/30',
       icon: 'tv' as const,
       emoji: '📹',
     },
-    
+
     Mangah: {
       color: 'bg-fuchsia-600',
+      hex: '#c026d3',
       textColor: 'text-fuchsia-400',
       borderColor: 'border-fuchsia-600',
       bgColor: 'bg-fuchsia-900/30',
@@ -216,6 +223,7 @@ export const LEISURE_CONFIG = {
 
     Manhwah: {
       color: 'bg-rose-600',
+      hex: '#e11d48',
       textColor: 'text-rose-400',
       borderColor: 'border-rose-600',
       bgColor: 'bg-rose-900/30',
@@ -225,6 +233,7 @@ export const LEISURE_CONFIG = {
 
     Manhuah: {
       color: 'bg-red-600',
+      hex: '#dc2626',
       textColor: 'text-red-400',
       borderColor: 'border-red-600',
       bgColor: 'bg-red-900/30',
@@ -235,6 +244,7 @@ export const LEISURE_CONFIG = {
     // Group III - Other
     Fanart: {
       color: 'bg-violet-500',
+      hex: '#8b5cf6',
       textColor: 'text-violet-400',
       borderColor: 'border-violet-500',
       bgColor: 'bg-violet-900/20',
@@ -244,6 +254,7 @@ export const LEISURE_CONFIG = {
 
     Imagination: {
       color: 'bg-indigo-500',
+      hex: '#6366f1',
       textColor: 'text-indigo-400',
       borderColor: 'border-indigo-500',
       bgColor: 'bg-indigo-900/20',
@@ -253,6 +264,7 @@ export const LEISURE_CONFIG = {
 
     Acquainted: {
       color: 'bg-amber-500',
+      hex: '#f59e0b',
       textColor: 'text-amber-400',
       borderColor: 'border-amber-500',
       bgColor: 'bg-amber-900/20',
@@ -262,6 +274,7 @@ export const LEISURE_CONFIG = {
 
     Stranger: {
       color: 'bg-orange-500',
+      hex: '#f97316',
       textColor: 'text-orange-400',
       borderColor: 'border-orange-500',
       bgColor: 'bg-orange-900/20',
@@ -271,6 +284,7 @@ export const LEISURE_CONFIG = {
 
     Sensual: {
       color: 'bg-red-700',
+      hex: '#b91c1c',
       textColor: 'text-red-400',
       borderColor: 'border-red-700',
       bgColor: 'bg-red-900/40',
@@ -280,6 +294,7 @@ export const LEISURE_CONFIG = {
 
   } as const satisfies Record<LeisureType, {
     color: string;
+    hex: string;
     textColor: string;
     borderColor: string;
     bgColor: string;

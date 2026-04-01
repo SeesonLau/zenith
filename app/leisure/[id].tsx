@@ -1,5 +1,5 @@
 // app/leisure/[id].tsx - COMPACT VERSION
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,13 @@ export default function LeisureDetailScreen() {
   const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const leisureLog = useLeisureLog(id);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (leisureLog) return;
+    const t = setTimeout(() => setNotFound(true), 600);
+    return () => clearTimeout(t);
+  }, [leisureLog]);
 
   const handleDelete = () => {
     Alert.alert(
@@ -45,7 +52,14 @@ export default function LeisureDetailScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bgPrimary, alignItems: 'center', justifyContent: 'center' }}>
         <Ionicons name="film-outline" size={36} color={colors.textTertiary} />
-        <Text style={{ color: colors.textPrimary, marginTop: 12 }}>Loading...</Text>
+        <Text style={{ color: colors.textPrimary, marginTop: 12 }}>
+          {notFound ? 'Session not found' : 'Loading...'}
+        </Text>
+        {notFound && (
+          <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+            <Text style={{ color: colors.moduleLeisure, fontWeight: '600' }}>Go Back</Text>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -114,17 +128,17 @@ export default function LeisureDetailScreen() {
               borderRadius: 12,
               padding: 16,
               borderWidth: 1,
-              borderColor: '#0ea5e930'
+              borderColor: colors.moduleLeisure + '30',
             }}>
               <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 4, textAlign: 'center' }}>
                 Total Duration
               </Text>
               <Text style={{
-                color: '#0ea5e9',
+                color: colors.moduleLeisure,
                 fontSize: 40,
                 fontFamily: 'monospace',
                 fontWeight: 'bold',
-                textAlign: 'center'
+                textAlign: 'center',
               }}>
                 {formatDurationHMS(durationSeconds)}
               </Text>

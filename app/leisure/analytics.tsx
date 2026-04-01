@@ -14,24 +14,6 @@ import type { LeisureType } from '@/src/types/database.types';
 type TabView = 'monthly' | 'overall' | 'intervals';
 type ChartMode = 'time' | 'sessions';
 
-// Tailwind → hex map for leisure types (used in charts)
-const LEISURE_HEX: Record<LeisureType, string> = {
-  Anime:       '#0ea5e9',
-  Manga:       '#a855f7',
-  Manhwa:      '#3b82f6',
-  Manhua:      '#ef4444',
-  Webtoon:     '#14b8a6',
-  Animeh:      '#db2777',
-  Mangah:      '#c026d3',
-  Manhwah:     '#e11d48',
-  Manhuah:     '#dc2626',
-  Fanart:      '#8b5cf6',
-  Imagination: '#6366f1',
-  Acquainted:  '#f59e0b',
-  Stranger:    '#f97316',
-  Sensual:     '#b91c1c',
-};
-
 export default function LeisureAnalyticsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
@@ -439,7 +421,7 @@ export default function LeisureAnalyticsScreen() {
                       .sort(([, a], [, b]) => chartMode === 'time' ? b.seconds - a.seconds : b.count - a.count)
                       .map(([type, data]) => {
                       const config = getLeisureConfig(type);
-                      const hex = LEISURE_HEX[type];
+                      const hex = config.hex;
                       const timePct = monthStats.totalSeconds > 0 ? (data.seconds / monthStats.totalSeconds) : 0;
                       const sessPct = monthStats.sessions > 0 ? (data.count / monthStats.sessions) : 0;
                       const pct = chartMode === 'time' ? timePct : sessPct;
@@ -609,7 +591,7 @@ export default function LeisureAnalyticsScreen() {
                       const maxOverallCount = sorted.length > 0 ? sorted[0][1].count : 1;
                       return sorted.map(([type, data]) => {
                         const config = getLeisureConfig(type);
-                        const hex = LEISURE_HEX[type];
+                        const hex = config.hex;
                         const pct = chartMode === 'time'
                           ? (maxTypeSeconds > 0 ? data.seconds / maxTypeSeconds : 0)
                           : (maxOverallCount > 0 ? data.count / maxOverallCount : 0);
@@ -717,8 +699,8 @@ export default function LeisureAnalyticsScreen() {
                         const pct = maxGapSeconds > 0 ? gap.gapSeconds / maxGapSeconds : 0;
                         const fromConfig = getLeisureConfig(gap.fromType);
                         const toConfig = getLeisureConfig(gap.toType);
-                        const fromHex = LEISURE_HEX[gap.fromType];
-                        const toHex = LEISURE_HEX[gap.toType];
+                        const fromHex = fromConfig.hex;
+                        const toHex = toConfig.hex;
                         const dateStr = gap.toDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         const timeStr = gap.toDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
