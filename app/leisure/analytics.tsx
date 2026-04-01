@@ -197,33 +197,27 @@ export default function LeisureAnalyticsScreen() {
 
           {/* Chart Mode Toggle */}
           <View style={{
-            flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
-            marginBottom: 16, gap: 6,
+            flexDirection: 'row', backgroundColor: colors.bgSurface,
+            borderRadius: 8, padding: 3, marginBottom: 16,
+            borderWidth: 1, borderColor: colors.borderSurface,
           }}>
-            <Text style={{ color: colors.textTertiary, fontSize: 11, fontWeight: '500' }}>Charts:</Text>
-            <View style={{
-              flexDirection: 'row', backgroundColor: colors.bgSurface,
-              borderWidth: 1, borderColor: colors.borderSurface,
-              borderRadius: 8, padding: 3, gap: 2,
-            }}>
-              {(['time', 'sessions'] as ChartMode[]).map(mode => (
-                <Pressable
-                  key={mode}
-                  onPress={() => setChartMode(mode)}
-                  style={{
-                    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6,
-                    backgroundColor: chartMode === mode ? colors.moduleLeisure : 'transparent',
-                  }}
-                >
-                  <Text style={{
-                    color: chartMode === mode ? '#ffffff' : colors.textSecondary,
-                    fontSize: 12, fontWeight: '600',
-                  }}>
-                    {mode === 'time' ? 'Time' : 'Sessions'}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            {(['time', 'sessions'] as ChartMode[]).map(mode => (
+              <Pressable
+                key={mode}
+                onPress={() => setChartMode(mode)}
+                style={{
+                  flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 6,
+                  backgroundColor: chartMode === mode ? colors.moduleLeisure + 'cc' : 'transparent',
+                }}
+              >
+                <Text style={{
+                  color: chartMode === mode ? '#ffffff' : colors.textTertiary,
+                  fontSize: 12, fontWeight: '600',
+                }}>
+                  {mode === 'time' ? 'View: Time' : 'View: Sessions'}
+                </Text>
+              </Pressable>
+            ))}
           </View>
 
           {/* ── MONTHLY TAB ── */}
@@ -254,37 +248,49 @@ export default function LeisureAnalyticsScreen() {
 
               {/* Monthly Hero */}
               <View style={{
-                backgroundColor: colors.moduleLeisure,
+                backgroundColor: colors.bgSurface,
+                borderWidth: 1, borderColor: colors.borderSurface,
+                borderLeftWidth: 4, borderLeftColor: colors.moduleLeisure,
                 borderRadius: 14, padding: 18, marginBottom: 14,
               }}>
-                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '500', marginBottom: 4 }}>
-                  Total Time · {monthName.split(' ')[0]}
+                <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '500', marginBottom: 4 }}>
+                  Total Time · {monthName}
                 </Text>
-                <Text style={{ color: '#ffffff', fontSize: 30, fontWeight: 'bold', marginBottom: 10 }}>
+                <Text style={{ color: colors.moduleLeisure, fontSize: 30, fontWeight: 'bold', marginBottom: 12 }}>
                   {monthStats.totalSeconds > 0 ? formatDuration(monthStats.totalSeconds) : '—'}
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Sessions</Text>
-                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>{monthStats.sessions}</Text>
+                <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                  <View style={{
+                    backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                    borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                  }}>
+                    <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Sessions</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>{monthStats.sessions}</Text>
                   </View>
-                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Active Days</Text>
-                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>
+                  <View style={{
+                    backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                    borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                  }}>
+                    <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Active Days</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>
                       {monthStats.activeDays} / {monthStats.daysInMonth}
                     </Text>
                   </View>
-                </View>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Avg Session</Text>
-                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>
+                  <View style={{
+                    backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                    borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                  }}>
+                    <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Avg Session</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>
                       {monthStats.avgSeconds > 0 ? formatDuration(monthStats.avgSeconds) : '—'}
                     </Text>
                   </View>
-                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Sess / Active Day</Text>
-                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>{monthStats.avgSessionsPerDay}</Text>
+                  <View style={{
+                    backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                    borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                  }}>
+                    <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Sess / Day</Text>
+                    <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>{monthStats.avgSessionsPerDay}</Text>
                   </View>
                 </View>
               </View>
@@ -351,7 +357,9 @@ export default function LeisureAnalyticsScreen() {
                     By Type
                   </Text>
                   <View style={{ gap: 12 }}>
-                    {monthTypeBreakdown.map(([type, data]) => {
+                    {[...monthTypeBreakdown]
+                      .sort(([, a], [, b]) => chartMode === 'time' ? b.seconds - a.seconds : b.count - a.count)
+                      .map(([type, data]) => {
                       const config = getLeisureConfig(type);
                       const hex = LEISURE_HEX[type];
                       const timePct = monthStats.totalSeconds > 0 ? (data.seconds / monthStats.totalSeconds) : 0;
@@ -518,8 +526,10 @@ export default function LeisureAnalyticsScreen() {
                   </Text>
                   <View style={{ gap: 12 }}>
                     {(() => {
-                      const maxOverallCount = overallTypeBreakdown.length > 0 ? overallTypeBreakdown[0][1].count : 1;
-                      return overallTypeBreakdown.map(([type, data]) => {
+                      const sorted = [...overallTypeBreakdown]
+                        .sort(([, a], [, b]) => chartMode === 'time' ? b.seconds - a.seconds : b.count - a.count);
+                      const maxOverallCount = sorted.length > 0 ? sorted[0][1].count : 1;
+                      return sorted.map(([type, data]) => {
                         const config = getLeisureConfig(type);
                         const hex = LEISURE_HEX[type];
                         const pct = chartMode === 'time'
