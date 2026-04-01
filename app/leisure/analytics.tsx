@@ -50,23 +50,26 @@ export default function LeisureAnalyticsScreen() {
     const totalSeconds = monthLogs.reduce((s, l) => s + (l.duration ?? 0), 0);
     const sessions = monthLogs.length;
     const avgSeconds = sessions > 0 ? Math.round(totalSeconds / sessions) : 0;
-    return { totalSeconds, sessions, avgSeconds };
-  }, [monthLogs]);
+    const activeDays = new Set(monthLogs.map(l => l.startedAt.toDateString())).size;
+    const daysInMonth = endDate.getDate();
+    const avgSessionsPerDay = activeDays > 0 ? (sessions / activeDays).toFixed(1) : '0';
+    const avgTimePerDay = daysInMonth > 0 ? Math.round(totalSeconds / daysInMonth) : 0;
+    return { totalSeconds, sessions, avgSeconds, activeDays, daysInMonth, avgSessionsPerDay, avgTimePerDay };
+  }, [monthLogs, endDate]);
 
   // Per-day data for the selected month
   const dailyData = useMemo(() => {
-    const days: { date: Date; dayOfMonth: number; dayName: string; seconds: number }[] = [];
+    const days: { date: Date; dayOfMonth: number; dayName: string; seconds: number; count: number }[] = [];
     const current = new Date(startDate);
     while (current <= endDate) {
       const dateStr = current.toDateString();
-      const seconds = monthLogs
-        .filter(l => l.startedAt.toDateString() === dateStr)
-        .reduce((s, l) => s + (l.duration ?? 0), 0);
+      const dayLogs = monthLogs.filter(l => l.startedAt.toDateString() === dateStr);
       days.push({
         date: new Date(current),
         dayOfMonth: current.getDate(),
         dayName: current.toLocaleDateString('en-US', { weekday: 'short' }),
-        seconds,
+        seconds: dayLogs.reduce((s, l) => s + (l.duration ?? 0), 0),
+        count: dayLogs.length,
       });
       current.setDate(current.getDate() + 1);
     }
@@ -219,16 +222,28 @@ export default function LeisureAnalyticsScreen() {
                 <Text style={{ color: '#ffffff', fontSize: 30, fontWeight: 'bold', marginBottom: 10 }}>
                   {monthStats.totalSeconds > 0 ? formatDuration(monthStats.totalSeconds) : '—'}
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
                   <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
                     <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Sessions</Text>
                     <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>{monthStats.sessions}</Text>
                   </View>
                   <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Active Days</Text>
+                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>
+                      {monthStats.activeDays} / {monthStats.daysInMonth}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
                     <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Avg Session</Text>
                     <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>
                       {monthStats.avgSeconds > 0 ? formatDuration(monthStats.avgSeconds) : '—'}
                     </Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 10, padding: 10 }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginBottom: 3 }}>Sess / Active Day</Text>
+                    <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold' }}>{monthStats.avgSessionsPerDay}</Text>
                   </View>
                 </View>
               </View>
@@ -261,6 +276,11 @@ export default function LeisureAnalyticsScreen() {
                             </Text>
                           </View>
                           <View style={{ height: 80, justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                            {day.count > 0 && (
+                              <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }}>
+                                {day.count}
+                              </Text>
+                            )}
                             <View style={{
                               width: 16, height: barH || 2,
                               backgroundColor: barH > 0 ? colors.moduleLeisure : colors.bgSurfaceHover,
@@ -298,12 +318,14 @@ export default function LeisureAnalyticsScreen() {
                             <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
                               {config.emoji} {type}
                             </Text>
-                            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                              {formatDuration(data.seconds)}
-                            </Text>
-                            <Text style={{ color: colors.textTertiary, fontSize: 11, marginLeft: 8, width: 32, textAlign: 'right' }}>
-                              {Math.round(pct * 100)}%
-                            </Text>
+                            <View style={{ alignItems: 'flex-end' }}>
+                              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                {formatDuration(data.seconds)}
+                              </Text>
+                              <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                {data.count} sess · {Math.round(pct * 100)}%
+                              </Text>
+                            </View>
                           </View>
                           <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
                             <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
@@ -407,9 +429,16 @@ export default function LeisureAnalyticsScreen() {
                             }} />
                           )}
                         </View>
-                        <Text style={{ color: colors.textTertiary, fontSize: 11, width: 50, textAlign: 'right' }}>
-                          {m.seconds > 0 ? formatDuration(m.seconds) : '—'}
-                        </Text>
+                        <View style={{ alignItems: 'flex-end', width: 64 }}>
+                          <Text style={{ color: colors.textTertiary, fontSize: 11 }}>
+                            {m.seconds > 0 ? formatDuration(m.seconds) : '—'}
+                          </Text>
+                          {m.sessions > 0 && (
+                            <Text style={{ color: colors.textTertiary, fontSize: 10, opacity: 0.7 }}>
+                              {m.sessions} sess
+                            </Text>
+                          )}
+                        </View>
                       </View>
                     );
                   })}
