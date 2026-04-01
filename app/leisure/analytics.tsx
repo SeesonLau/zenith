@@ -11,7 +11,7 @@ import { getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpe
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { LeisureType } from '@/src/types/database.types';
 
-type TabView = 'monthly' | 'overall';
+type TabView = 'monthly' | 'overall' | 'sessions';
 type ChartMode = 'time' | 'sessions';
 
 // Tailwind → hex map for leisure types (used in charts)
@@ -176,7 +176,7 @@ export default function LeisureAnalyticsScreen() {
             borderRadius: 10, padding: 4, marginBottom: 12,
             borderWidth: 1, borderColor: colors.borderSurface,
           }}>
-            {(['monthly', 'overall'] as TabView[]).map(tab => (
+            {([['monthly', 'Monthly'], ['overall', 'Overall'], ['sessions', 'Sessions']] as [TabView, string][]).map(([tab, label]) => (
               <Pressable
                 key={tab}
                 onPress={() => setActiveTab(tab)}
@@ -187,38 +187,40 @@ export default function LeisureAnalyticsScreen() {
               >
                 <Text style={{
                   color: activeTab === tab ? '#ffffff' : colors.textSecondary,
-                  fontWeight: '600', fontSize: 13, textTransform: 'capitalize',
+                  fontWeight: '600', fontSize: 13,
                 }}>
-                  {tab === 'monthly' ? 'Monthly' : 'Overall'}
+                  {label}
                 </Text>
               </Pressable>
             ))}
           </View>
 
-          {/* Chart Mode Toggle */}
-          <View style={{
-            flexDirection: 'row', backgroundColor: colors.bgSurface,
-            borderRadius: 8, padding: 3, marginBottom: 16,
-            borderWidth: 1, borderColor: colors.borderSurface,
-          }}>
-            {(['time', 'sessions'] as ChartMode[]).map(mode => (
-              <Pressable
-                key={mode}
-                onPress={() => setChartMode(mode)}
-                style={{
-                  flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 6,
-                  backgroundColor: chartMode === mode ? colors.moduleLeisure + 'cc' : 'transparent',
-                }}
-              >
-                <Text style={{
-                  color: chartMode === mode ? '#ffffff' : colors.textTertiary,
-                  fontSize: 12, fontWeight: '600',
-                }}>
-                  {mode === 'time' ? 'View: Time' : 'View: Sessions'}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          {/* Chart Mode Toggle — hidden on Sessions tab */}
+          {activeTab !== 'sessions' && (
+            <View style={{
+              flexDirection: 'row', backgroundColor: colors.bgSurface,
+              borderRadius: 8, padding: 3, marginBottom: 16,
+              borderWidth: 1, borderColor: colors.borderSurface,
+            }}>
+              {(['time', 'sessions'] as ChartMode[]).map(mode => (
+                <Pressable
+                  key={mode}
+                  onPress={() => setChartMode(mode)}
+                  style={{
+                    flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 6,
+                    backgroundColor: chartMode === mode ? colors.moduleLeisure + 'cc' : 'transparent',
+                  }}
+                >
+                  <Text style={{
+                    color: chartMode === mode ? '#ffffff' : colors.textTertiary,
+                    fontSize: 12, fontWeight: '600',
+                  }}>
+                    {mode === 'time' ? 'Time' : 'Sessions'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
 
           {/* ── MONTHLY TAB ── */}
           {activeTab === 'monthly' && (
@@ -303,48 +305,73 @@ export default function LeisureAnalyticsScreen() {
                 <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 12 }}>
                   Daily Activity
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: 'row', gap: 5, paddingBottom: 4 }}>
-                    {dailyData.map((day, index) => {
-                      const isToday = day.date.toDateString() === new Date().toDateString();
-                      const barH = chartMode === 'time'
-                        ? (day.seconds > 0 ? Math.max((day.seconds / maxDaySeconds) * 72, 4) : 0)
-                        : (day.count > 0 ? Math.max((day.count / maxDayCount) * 72, 4) : 0);
-                      const hasActivity = chartMode === 'time' ? day.seconds > 0 : day.count > 0;
-                      return (
-                        <View key={index} style={{ width: 28, alignItems: 'center' }}>
-                          <View style={{
-                            alignItems: 'center', marginBottom: 6,
-                            backgroundColor: isToday ? colors.warning : 'transparent',
-                            borderRadius: 4, paddingHorizontal: 2, paddingVertical: 1,
-                          }}>
-                            <Text style={{
-                              color: isToday ? colors.bgPrimary : colors.textSecondary,
-                              fontSize: 9, fontWeight: isToday ? 'bold' : '500',
+                <View style={{ position: 'relative' }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ flexDirection: 'row', gap: 5, paddingBottom: 4 }}>
+                      {dailyData.map((day, index) => {
+                        const isToday = day.date.toDateString() === new Date().toDateString();
+                        const barH = chartMode === 'time'
+                          ? (day.seconds > 0 ? Math.max((day.seconds / maxDaySeconds) * 72, 4) : 0)
+                          : (day.count > 0 ? Math.max((day.count / maxDayCount) * 72, 4) : 0);
+                        const hasActivity = chartMode === 'time' ? day.seconds > 0 : day.count > 0;
+                        return (
+                          <View key={index} style={{ width: 28, alignItems: 'center' }}>
+                            <View style={{
+                              alignItems: 'center', marginBottom: 6,
+                              backgroundColor: isToday ? colors.warning : 'transparent',
+                              borderRadius: 4, paddingHorizontal: 2, paddingVertical: 1,
                             }}>
-                              {day.dayOfMonth}
+                              <Text style={{
+                                color: isToday ? colors.bgPrimary : colors.textSecondary,
+                                fontSize: 9, fontWeight: isToday ? 'bold' : '500',
+                              }}>
+                                {day.dayOfMonth}
+                              </Text>
+                            </View>
+                            <View style={{ height: 80, justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                              {chartMode === 'sessions' && day.count > 0 && (
+                                <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }}>
+                                  {day.count}
+                                </Text>
+                              )}
+                              <View style={{
+                                width: 16, height: barH || 2,
+                                backgroundColor: hasActivity ? colors.moduleLeisure : colors.bgSurfaceHover,
+                                borderRadius: 3,
+                              }} />
+                            </View>
+                            <Text style={{ color: colors.textTertiary, fontSize: 8, marginTop: 4 }}>
+                              {day.dayName.charAt(0)}
                             </Text>
                           </View>
-                          <View style={{ height: 80, justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                            {chartMode === 'sessions' && day.count > 0 && (
-                              <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }}>
-                                {day.count}
-                              </Text>
-                            )}
-                            <View style={{
-                              width: 16, height: barH || 2,
-                              backgroundColor: hasActivity ? colors.moduleLeisure : colors.bgSurfaceHover,
-                              borderRadius: 3,
-                            }} />
-                          </View>
-                          <Text style={{ color: colors.textTertiary, fontSize: 8, marginTop: 4 }}>
-                            {day.dayName.charAt(0)}
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                  {/* Average time reference line */}
+                  {chartMode === 'time' && monthStats.avgTimePerDay > 0 && (() => {
+                    const avgBarH = Math.min(Math.max((monthStats.avgTimePerDay / maxDaySeconds) * 72, 2), 72);
+                    // day badge ~20px + bar container 80px, line at (80 - avgBarH) from top of bar area
+                    const lineTop = 20 + (80 - avgBarH);
+                    return (
+                      <View pointerEvents="none" style={{
+                        position: 'absolute', top: lineTop, left: 0, right: 0,
+                        flexDirection: 'row', alignItems: 'center',
+                      }}>
+                        <View style={{ flex: 1, height: 1, backgroundColor: colors.warning, opacity: 0.5 }} />
+                        <View style={{
+                          backgroundColor: colors.bgSurface,
+                          borderWidth: 1, borderColor: colors.warning + '80',
+                          borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2, marginLeft: 4,
+                        }}>
+                          <Text style={{ color: colors.warning, fontSize: 9, fontWeight: '700' }}>
+                            avg {formatDuration(monthStats.avgTimePerDay)}
                           </Text>
                         </View>
-                      );
-                    })}
-                  </View>
-                </ScrollView>
+                      </View>
+                    );
+                  })()}
+                </View>
               </View>
 
               {/* Monthly Type Breakdown */}
@@ -570,6 +597,125 @@ export default function LeisureAnalyticsScreen() {
                     No sessions recorded yet
                   </Text>
                 </View>
+              )}
+            </View>
+          )}
+
+          {/* ── SESSIONS TAB ── */}
+          {activeTab === 'sessions' && (
+            <View>
+              {allLogs.length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 48 }}>
+                  <Ionicons name="time-outline" size={40} color={colors.textTertiary} />
+                  <Text style={{ color: colors.textTertiary, marginTop: 10, fontSize: 14 }}>
+                    No sessions recorded yet
+                  </Text>
+                </View>
+              ) : (
+                (() => {
+                  // Group by ISO date key (newest first)
+                  const grouped: Record<string, typeof allLogs> = {};
+                  allLogs.forEach(s => {
+                    const d = s.startedAt;
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(s);
+                  });
+                  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+                  return (
+                    <View style={{ gap: 16, marginBottom: 20 }}>
+                      {sortedDates.map(dateKey => {
+                        const daySessions = grouped[dateKey];
+                        const dayDate = new Date(dateKey + 'T12:00:00');
+                        const dayLabel = dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+                        const dayTotal = daySessions.reduce((s, l) => s + (l.duration ?? 0), 0);
+
+                        return (
+                          <View key={dateKey}>
+                            {/* Date header */}
+                            <View style={{
+                              flexDirection: 'row', alignItems: 'center',
+                              justifyContent: 'space-between', marginBottom: 8,
+                            }}>
+                              <Text style={{
+                                color: colors.textTertiary, fontSize: 11, fontWeight: '600',
+                                textTransform: 'uppercase', letterSpacing: 0.5,
+                              }}>
+                                {dayLabel}
+                              </Text>
+                              <Text style={{ color: colors.textTertiary, fontSize: 11 }}>
+                                {formatDuration(dayTotal)}
+                              </Text>
+                            </View>
+
+                            {/* Session rows */}
+                            <View style={{
+                              backgroundColor: colors.bgSurface,
+                              borderWidth: 1, borderColor: colors.borderSurface,
+                              borderRadius: 12, overflow: 'hidden',
+                            }}>
+                              {daySessions.map((session, idx) => {
+                                const config = getLeisureConfig(session.type as LeisureType);
+                                const hex = LEISURE_HEX[session.type as LeisureType];
+                                const endTime = new Date(session.startedAt.getTime() + (session.duration ?? 0) * 1000);
+                                const startStr = session.startedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                                const endStr = endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                                return (
+                                  <View
+                                    key={session.id}
+                                    style={{
+                                      flexDirection: 'row', alignItems: 'center',
+                                      paddingHorizontal: 14, paddingVertical: 12,
+                                      borderTopWidth: idx === 0 ? 0 : 1,
+                                      borderTopColor: colors.borderSurface,
+                                    }}
+                                  >
+                                    {/* Type dot */}
+                                    <View style={{
+                                      width: 8, height: 8, borderRadius: 4,
+                                      backgroundColor: hex, marginRight: 12,
+                                    }} />
+
+                                    {/* Type + title */}
+                                    <View style={{ flex: 1, marginRight: 12 }}>
+                                      <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600' }}>
+                                        {config.emoji} {session.type}
+                                      </Text>
+                                      {session.title ? (
+                                        <Text style={{ color: colors.textTertiary, fontSize: 11, marginTop: 1 }} numberOfLines={1}>
+                                          {session.title}
+                                        </Text>
+                                      ) : null}
+                                    </View>
+
+                                    {/* Time interval + duration */}
+                                    <View style={{ alignItems: 'flex-end' }}>
+                                      <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '500' }}>
+                                        {startStr} – {endStr}
+                                      </Text>
+                                      <View style={{
+                                        marginTop: 3,
+                                        backgroundColor: hex + '22',
+                                        borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
+                                        borderWidth: 1, borderColor: hex + '50',
+                                      }}>
+                                        <Text style={{ color: hex, fontSize: 10, fontWeight: '700' }}>
+                                          {formatDuration(session.duration ?? 0)}
+                                        </Text>
+                                      </View>
+                                    </View>
+                                  </View>
+                                );
+                              })}
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  );
+                })()
               )}
             </View>
           )}
