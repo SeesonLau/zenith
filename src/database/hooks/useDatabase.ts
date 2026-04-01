@@ -175,7 +175,9 @@ export function useAllFinanceLogs() {
     const subscription = database
       .get<FinanceLog>('finance_logs')
       .query(Q.sortBy('transaction_date', Q.desc))
-      .observe()
+      // observeWithColumns re-emits when transaction_date changes on existing records,
+      // not just when records are added/deleted (which is all observe() does)
+      .observeWithColumns(['transaction_date'])
       .subscribe(setLogs);
 
     return () => subscription.unsubscribe();
