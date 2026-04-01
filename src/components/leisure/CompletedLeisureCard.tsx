@@ -1,6 +1,6 @@
 // src/components/leisure/CompletedLeisureCard.tsx
 import React from 'react';
-import { View, Text, Pressable, Alert } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getLeisureConfig } from '@/src/lib/constants';
 import { formatDuration } from '@/src/utils/formatters';
@@ -15,8 +15,6 @@ interface CompletedLeisureCardProps {
   duration: number;
   notes?: string;
   onPress: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
 }
 
 export default function CompletedLeisureCard({
@@ -26,8 +24,6 @@ export default function CompletedLeisureCard({
   duration,
   notes,
   onPress,
-  onEdit,
-  onDelete,
 }: CompletedLeisureCardProps) {
   const colors = useThemeColors();
   const config = getLeisureConfig(type);
@@ -35,16 +31,6 @@ export default function CompletedLeisureCard({
   const startStr = startedAt.toLocaleTimeString('en-US', {
     hour: 'numeric', minute: '2-digit', hour12: true,
   });
-
-  const hasActions = !!onEdit || !!onDelete;
-
-  const handleActionsPress = () => {
-    const buttons: Parameters<typeof Alert.alert>[2] = [];
-    if (onEdit) buttons.push({ text: 'Edit', onPress: onEdit });
-    if (onDelete) buttons.push({ text: 'Delete', style: 'destructive', onPress: onDelete });
-    buttons.push({ text: 'Cancel', style: 'cancel' });
-    Alert.alert(title || `${type} Session`, undefined, buttons);
-  };
 
   return (
     <Pressable
@@ -96,7 +82,7 @@ export default function CompletedLeisureCard({
           </View>
         </View>
 
-        {/* Duration badge + action */}
+        {/* Duration badge + chevron */}
         <View style={{ alignItems: 'flex-end', gap: 4 }}>
           <View style={{
             backgroundColor: config.hex + '20',
@@ -110,17 +96,7 @@ export default function CompletedLeisureCard({
               {formatDuration(duration)}
             </Text>
           </View>
-          {hasActions ? (
-            <Pressable
-              onPress={handleActionsPress}
-              hitSlop={8}
-              style={{ padding: 2 }}
-            >
-              <Ionicons name="ellipsis-vertical" size={14} color={colors.textTertiary} />
-            </Pressable>
-          ) : (
-            <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
-          )}
+          <Ionicons name="chevron-forward" size={14} color={colors.textTertiary} />
         </View>
       </View>
     </Pressable>
