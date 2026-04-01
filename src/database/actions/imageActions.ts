@@ -46,7 +46,7 @@ export async function uploadDiaryImage(imageId: string): Promise<boolean> {
     const remoteUrl = await uploadImageToSupabase(
       image.diaryEntryId,
       image.localUri,
-      image.fileSize
+      image.fileSize ?? 0
     );
 
     if (!remoteUrl) {

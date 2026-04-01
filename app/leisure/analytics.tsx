@@ -12,6 +12,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { LeisureType } from '@/src/types/database.types';
 
 type TabView = 'monthly' | 'overall';
+type ChartMode = 'time' | 'sessions';
 
 // Tailwind → hex map for leisure types (used in charts)
 const LEISURE_HEX: Record<LeisureType, string> = {
@@ -35,6 +36,7 @@ export default function LeisureAnalyticsScreen() {
   const router = useRouter();
   const colors = useThemeColors();
   const [activeTab, setActiveTab] = useState<TabView>('monthly');
+  const [chartMode, setChartMode] = useState<ChartMode>('time');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const startDate = useMemo(() => getStartOfMonth(selectedMonth), [selectedMonth]);
@@ -78,6 +80,10 @@ export default function LeisureAnalyticsScreen() {
 
   const maxDaySeconds = useMemo(() =>
     Math.max(...dailyData.map(d => d.seconds), 1800),
+  [dailyData]);
+
+  const maxDayCount = useMemo(() =>
+    Math.max(...dailyData.map(d => d.count), 1),
   [dailyData]);
 
   // Type breakdown for selected month
@@ -129,6 +135,10 @@ export default function LeisureAnalyticsScreen() {
     Math.max(...monthlyTrend.map(m => m.seconds), 1),
   [monthlyTrend]);
 
+  const maxTrendSessions = useMemo(() =>
+    Math.max(...monthlyTrend.map(m => m.sessions), 1),
+  [monthlyTrend]);
+
   // All-time type breakdown
   const overallTypeBreakdown = useMemo(() => {
     const map: Partial<Record<LeisureType, { seconds: number; count: number }>> = {};
@@ -163,7 +173,7 @@ export default function LeisureAnalyticsScreen() {
           {/* Tab Toggle */}
           <View style={{
             flexDirection: 'row', backgroundColor: colors.bgSurface,
-            borderRadius: 10, padding: 4, marginBottom: 20,
+            borderRadius: 10, padding: 4, marginBottom: 12,
             borderWidth: 1, borderColor: colors.borderSurface,
           }}>
             {(['monthly', 'overall'] as TabView[]).map(tab => (
@@ -183,6 +193,37 @@ export default function LeisureAnalyticsScreen() {
                 </Text>
               </Pressable>
             ))}
+          </View>
+
+          {/* Chart Mode Toggle */}
+          <View style={{
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
+            marginBottom: 16, gap: 6,
+          }}>
+            <Text style={{ color: colors.textTertiary, fontSize: 11, fontWeight: '500' }}>Charts:</Text>
+            <View style={{
+              flexDirection: 'row', backgroundColor: colors.bgSurface,
+              borderWidth: 1, borderColor: colors.borderSurface,
+              borderRadius: 8, padding: 3, gap: 2,
+            }}>
+              {(['time', 'sessions'] as ChartMode[]).map(mode => (
+                <Pressable
+                  key={mode}
+                  onPress={() => setChartMode(mode)}
+                  style={{
+                    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6,
+                    backgroundColor: chartMode === mode ? colors.moduleLeisure : 'transparent',
+                  }}
+                >
+                  <Text style={{
+                    color: chartMode === mode ? '#ffffff' : colors.textSecondary,
+                    fontSize: 12, fontWeight: '600',
+                  }}>
+                    {mode === 'time' ? 'Time' : 'Sessions'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
 
           {/* ── MONTHLY TAB ── */}
@@ -260,7 +301,10 @@ export default function LeisureAnalyticsScreen() {
                   <View style={{ flexDirection: 'row', gap: 5, paddingBottom: 4 }}>
                     {dailyData.map((day, index) => {
                       const isToday = day.date.toDateString() === new Date().toDateString();
-                      const barH = day.seconds > 0 ? Math.max((day.seconds / maxDaySeconds) * 72, 4) : 0;
+                      const barH = chartMode === 'time'
+                        ? (day.seconds > 0 ? Math.max((day.seconds / maxDaySeconds) * 72, 4) : 0)
+                        : (day.count > 0 ? Math.max((day.count / maxDayCount) * 72, 4) : 0);
+                      const hasActivity = chartMode === 'time' ? day.seconds > 0 : day.count > 0;
                       return (
                         <View key={index} style={{ width: 28, alignItems: 'center' }}>
                           <View style={{
@@ -276,14 +320,14 @@ export default function LeisureAnalyticsScreen() {
                             </Text>
                           </View>
                           <View style={{ height: 80, justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                            {day.count > 0 && (
+                            {chartMode === 'sessions' && day.count > 0 && (
                               <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }}>
                                 {day.count}
                               </Text>
                             )}
                             <View style={{
                               width: 16, height: barH || 2,
-                              backgroundColor: barH > 0 ? colors.moduleLeisure : colors.bgSurfaceHover,
+                              backgroundColor: hasActivity ? colors.moduleLeisure : colors.bgSurfaceHover,
                               borderRadius: 3,
                             }} />
                           </View>
@@ -310,7 +354,9 @@ export default function LeisureAnalyticsScreen() {
                     {monthTypeBreakdown.map(([type, data]) => {
                       const config = getLeisureConfig(type);
                       const hex = LEISURE_HEX[type];
-                      const pct = monthStats.totalSeconds > 0 ? (data.seconds / monthStats.totalSeconds) : 0;
+                      const timePct = monthStats.totalSeconds > 0 ? (data.seconds / monthStats.totalSeconds) : 0;
+                      const sessPct = monthStats.sessions > 0 ? (data.count / monthStats.sessions) : 0;
+                      const pct = chartMode === 'time' ? timePct : sessPct;
                       return (
                         <View key={type}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
@@ -319,12 +365,25 @@ export default function LeisureAnalyticsScreen() {
                               {config.emoji} {type}
                             </Text>
                             <View style={{ alignItems: 'flex-end' }}>
-                              <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                                {formatDuration(data.seconds)}
-                              </Text>
-                              <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
-                                {data.count} sess · {Math.round(pct * 100)}%
-                              </Text>
+                              {chartMode === 'time' ? (
+                                <>
+                                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                    {formatDuration(data.seconds)}
+                                  </Text>
+                                  <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                    {Math.round(timePct * 100)}%
+                                  </Text>
+                                </>
+                              ) : (
+                                <>
+                                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                    {data.count} sess
+                                  </Text>
+                                  <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                    {Math.round(sessPct * 100)}%
+                                  </Text>
+                                </>
+                              )}
                             </View>
                           </View>
                           <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
@@ -410,7 +469,9 @@ export default function LeisureAnalyticsScreen() {
                 </Text>
                 <View style={{ gap: 10 }}>
                   {monthlyTrend.map((m, i) => {
-                    const pct = maxTrendSeconds > 0 ? m.seconds / maxTrendSeconds : 0;
+                    const pct = chartMode === 'time'
+                      ? (maxTrendSeconds > 0 ? m.seconds / maxTrendSeconds : 0)
+                      : (maxTrendSessions > 0 ? m.sessions / maxTrendSessions : 0);
                     const isCurrentMonth = i === monthlyTrend.length - 1;
                     return (
                       <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -430,12 +491,13 @@ export default function LeisureAnalyticsScreen() {
                           )}
                         </View>
                         <View style={{ alignItems: 'flex-end', width: 64 }}>
-                          <Text style={{ color: colors.textTertiary, fontSize: 11 }}>
-                            {m.seconds > 0 ? formatDuration(m.seconds) : '—'}
-                          </Text>
-                          {m.sessions > 0 && (
-                            <Text style={{ color: colors.textTertiary, fontSize: 10, opacity: 0.7 }}>
-                              {m.sessions} sess
+                          {chartMode === 'time' ? (
+                            <Text style={{ color: colors.textTertiary, fontSize: 11 }}>
+                              {m.seconds > 0 ? formatDuration(m.seconds) : '—'}
+                            </Text>
+                          ) : (
+                            <Text style={{ color: colors.textTertiary, fontSize: 11 }}>
+                              {m.sessions > 0 ? `${m.sessions} sess` : '—'}
                             </Text>
                           )}
                         </View>
@@ -455,30 +517,38 @@ export default function LeisureAnalyticsScreen() {
                     All-Time by Type
                   </Text>
                   <View style={{ gap: 12 }}>
-                    {overallTypeBreakdown.map(([type, data]) => {
-                      const config = getLeisureConfig(type);
-                      const hex = LEISURE_HEX[type];
-                      const pct = maxTypeSeconds > 0 ? data.seconds / maxTypeSeconds : 0;
-                      return (
-                        <View key={type}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-                            <Ionicons name={config.icon as any} size={13} color={hex} />
-                            <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
-                              {config.emoji} {type}
-                            </Text>
-                            <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                              {formatDuration(data.seconds)}
-                            </Text>
-                            <Text style={{ color: colors.textTertiary, fontSize: 11, marginLeft: 8, width: 38, textAlign: 'right' }}>
-                              {data.count} sess
-                            </Text>
+                    {(() => {
+                      const maxOverallCount = overallTypeBreakdown.length > 0 ? overallTypeBreakdown[0][1].count : 1;
+                      return overallTypeBreakdown.map(([type, data]) => {
+                        const config = getLeisureConfig(type);
+                        const hex = LEISURE_HEX[type];
+                        const pct = chartMode === 'time'
+                          ? (maxTypeSeconds > 0 ? data.seconds / maxTypeSeconds : 0)
+                          : (maxOverallCount > 0 ? data.count / maxOverallCount : 0);
+                        return (
+                          <View key={type}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                              <Ionicons name={config.icon as any} size={13} color={hex} />
+                              <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 6, flex: 1 }}>
+                                {config.emoji} {type}
+                              </Text>
+                              {chartMode === 'time' ? (
+                                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                  {formatDuration(data.seconds)}
+                                </Text>
+                              ) : (
+                                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                                  {data.count} sess
+                                </Text>
+                              )}
+                            </View>
+                            <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
+                              <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
+                            </View>
                           </View>
-                          <View style={{ height: 5, backgroundColor: colors.bgSurfaceHover, borderRadius: 3 }}>
-                            <View style={{ height: 5, width: `${pct * 100}%`, backgroundColor: hex, borderRadius: 3 }} />
-                          </View>
-                        </View>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </View>
                 </View>
               )}
