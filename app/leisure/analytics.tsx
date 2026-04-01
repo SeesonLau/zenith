@@ -170,14 +170,16 @@ export default function LeisureAnalyticsScreen() {
     intervals.length > 0 ? intervals.reduce((m, g) => Math.max(m, g.gapSeconds), 1) : 1,
   [intervals]);
 
-  // 24-hour session frequency (index = hour 0-23)
-  const hourlyData = useMemo(() => {
-    const buckets = Array(24).fill(0) as number[];
-    allLogs.forEach(l => { buckets[l.startedAt.getHours()] += 1; });
-    return buckets;
+  // [dayOfWeek 0=Mon…6=Sun][hour 0-23] session counts
+  const dowHourData = useMemo(() => {
+    const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0) as number[]);
+    allLogs.forEach(l => {
+      const jsDay = l.startedAt.getDay(); // 0=Sun
+      const dow = jsDay === 0 ? 6 : jsDay - 1; // Mon=0…Sun=6
+      grid[dow][l.startedAt.getHours()] += 1;
+    });
+    return grid;
   }, [allLogs]);
-
-  const maxHourCount = useMemo(() => Math.max(...hourlyData, 1), [hourlyData]);
 
   // Format a gap duration including days
   const formatGap = (seconds: number): string => {
@@ -748,70 +750,105 @@ export default function LeisureAnalyticsScreen() {
                     </View>
                   </View>
 
-                  {/* Time-of-Day Heatmap */}
-                  <View style={{
-                    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
-                    borderRadius: 14, padding: 16, marginBottom: 14,
-                  }}>
-                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
-                      When Do You Usually Watch?
-                    </Text>
-                    <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 14 }}>
-                      Darker = more sessions started at that hour
-                    </Text>
-                    {/* 4 rows × 6 cols = 24 hours */}
-                    <View style={{ gap: 6 }}>
-                      {[0, 6, 12, 18].map(rowStart => (
-                        <View key={rowStart} style={{ flexDirection: 'row', gap: 6 }}>
-                          {Array.from({ length: 6 }, (_, col) => {
-                            const hour = rowStart + col;
-                            const count = hourlyData[hour];
-                            const intensity = count > 0 ? Math.max(count / maxHourCount, 0.12) : 0;
-                            const isPeak = count > 0 && count === maxHourCount;
-                            const label = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
-                            return (
-                              <View
-                                key={hour}
-                                style={{
-                                  flex: 1, aspectRatio: 1,
-                                  borderRadius: 8,
-                                  backgroundColor: count > 0
-                                    ? colors.moduleLeisure + Math.round(intensity * 255).toString(16).padStart(2, '0')
-                                    : colors.bgSurfaceHover,
-                                  borderWidth: isPeak ? 1 : 0,
-                                  borderColor: colors.moduleLeisure,
-                                  alignItems: 'center', justifyContent: 'center', padding: 4,
-                                }}
-                              >
-                                <Text style={{
-                                  color: intensity > 0.5 ? '#ffffff' : colors.textTertiary,
-                                  fontSize: 10, fontWeight: isPeak ? '700' : '400',
-                                }}>
-                                  {label}
-                                </Text>
-                                {count > 0 && (
-                                  <Text style={{
-                                    color: intensity > 0.5 ? 'rgba(255,255,255,0.8)' : colors.textTertiary,
-                                    fontSize: 9, fontWeight: '600',
-                                  }}>
-                                    {count}
-                                  </Text>
-                                )}
-                              </View>
-                            );
-                          })}
-                        </View>
-                      ))}
-                    </View>
-                    {/* Row labels */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingHorizontal: 2 }}>
-                      {['Midnight', 'Morning', 'Afternoon', 'Evening'].map(label => (
-                        <Text key={label} style={{ color: colors.textTertiary, fontSize: 9, flex: 1, textAlign: 'center' }}>
-                          {label}
+                  {/* Session Count Heatmap — GitHub contribution style */}
+                  {(() => {
+                    const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    const LEVELS = [
+                      { max: 0,   color: null,      label: '0' },
+                      { max: 2,   color: '#bbf7d0', label: '1–2' },
+                      { max: 5,   color: '#4ade80', label: '3–5' },
+                      { max: 9,   color: '#16a34a', label: '6–9' },
+                      { max: 14,  color: '#14532d', label: '10–14' },
+                      { max: Infinity, color: '#ec4899', label: '15+' },
+                    ];
+                    const getColor = (count: number): string =>
+                      count === 0 ? colors.bgSurfaceHover
+                        : (LEVELS.find(l => count <= l.max)?.color ?? '#ec4899');
+                    const CELL = 11;
+                    const GAP = 3;
+                    const Y_WIDTH = 28;
+
+                    return (
+                      <View style={{
+                        backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
+                        borderRadius: 14, padding: 16, marginBottom: 14,
+                      }}>
+                        <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 2 }}>
+                          Session Count
                         </Text>
-                      ))}
-                    </View>
-                  </View>
+                        <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 14 }}>
+                          Sessions started by hour &amp; day of week
+                        </Text>
+
+                        {/* Hour axis labels */}
+                        <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} scrollEnabled={false}>
+                            <View style={{ flexDirection: 'row', gap: GAP }}>
+                              {Array.from({ length: 24 }, (_, h) => {
+                                const label = h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`;
+                                return (
+                                  <Text key={h} style={{
+                                    width: CELL, color: colors.textTertiary,
+                                    fontSize: 7, textAlign: 'center',
+                                  }}>
+                                    {h % 3 === 0 ? label : ''}
+                                  </Text>
+                                );
+                              })}
+                            </View>
+                          </ScrollView>
+                        </View>
+
+                        {/* Grid */}
+                        <View style={{ flexDirection: 'row' }}>
+                          {/* Y-axis labels */}
+                          <View style={{ width: Y_WIDTH, gap: GAP }}>
+                            {DOW_LABELS.map(d => (
+                              <View key={d} style={{ height: CELL, justifyContent: 'center' }}>
+                                <Text style={{ color: colors.textTertiary, fontSize: 8 }}>{d}</Text>
+                              </View>
+                            ))}
+                          </View>
+
+                          {/* Cells — scrollable */}
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+                            <View style={{ gap: GAP }}>
+                              {dowHourData.map((row, dow) => (
+                                <View key={dow} style={{ flexDirection: 'row', gap: GAP }}>
+                                  {row.map((count, hour) => (
+                                    <View
+                                      key={hour}
+                                      style={{
+                                        width: CELL, height: CELL, borderRadius: 2,
+                                        backgroundColor: getColor(count),
+                                      }}
+                                    />
+                                  ))}
+                                </View>
+                              ))}
+                            </View>
+                          </ScrollView>
+                        </View>
+
+                        {/* Legend */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 8, flexWrap: 'wrap' }}>
+                          <Text style={{ color: colors.textTertiary, fontSize: 9, marginRight: 2 }}>Less</Text>
+                          {LEVELS.map(l => (
+                            <View key={l.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                              <View style={{
+                                width: 10, height: 10, borderRadius: 2,
+                                backgroundColor: l.color ?? colors.bgSurfaceHover,
+                                borderWidth: l.color ? 0 : 1,
+                                borderColor: colors.borderSurface,
+                              }} />
+                              <Text style={{ color: colors.textTertiary, fontSize: 9 }}>{l.label}</Text>
+                            </View>
+                          ))}
+                          <Text style={{ color: colors.textTertiary, fontSize: 9, marginLeft: 2 }}>More</Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
 
                   {/* Gap detail list */}
                   <View style={{
