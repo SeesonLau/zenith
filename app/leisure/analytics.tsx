@@ -799,76 +799,80 @@ export default function LeisureAnalyticsScreen() {
                           Sessions started by hour &amp; day of week
                         </Text>
 
-                        {/* Section headers: Day | Night */}
-                        <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
-                          {/* Day label spans cols 0–11 (12 cells + 11 gaps) */}
-                          <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
-                            <Text style={{ color: colors.warning, fontSize: 9, fontWeight: '600' }}>☀ Day</Text>
-                          </View>
-                          {/* Divider spacer */}
-                          <View style={{ width: DIVIDER_W + GAP * 2 }} />
-                          {/* Night label spans cols 12–23 (12 cells + 11 gaps) */}
-                          <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
-                            <Text style={{ color: colors.info ?? '#60a5fa', fontSize: 9, fontWeight: '600' }}>🌙 Night</Text>
-                          </View>
-                        </View>
-
-                        {/* Hour axis labels */}
-                        <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            {columns.map((col, i) =>
-                              col.kind === 'divider' ? (
-                                <View key={`div-label-${i}`} style={{ width: DIVIDER_W, marginHorizontal: GAP }} />
-                              ) : (
-                                <Text key={`lbl-${col.hour}`} style={{
-                                  width: CELL, color: colors.textTertiary,
-                                  fontSize: 7, textAlign: 'center',
-                                  marginRight: GAP,
-                                }}>
-                                  {col.col % 2 === 0 ? fmtHour(col.hour) : ''}
-                                </Text>
-                              )
-                            )}
-                          </View>
-                        </View>
-
-                        {/* Grid */}
-                        <View style={{ flexDirection: 'row' }}>
-                          {/* Y-axis day labels */}
-                          <View style={{ width: Y_WIDTH, gap: GAP }}>
-                            {DOW_LABELS.map(d => (
-                              <View key={d} style={{ height: CELL, justifyContent: 'center' }}>
-                                <Text style={{ color: colors.textTertiary, fontSize: 8 }}>{d}</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          <View>
+                            {/* Section headers: Day | Night */}
+                            <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
+                              {/* Day label spans cols 0–11 (12 cells + 11 gaps) */}
+                              <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
+                                <Text style={{ color: colors.warning, fontSize: 9, fontWeight: '600' }}>☀ Day</Text>
                               </View>
-                            ))}
-                          </View>
+                              {/* Divider spacer */}
+                              <View style={{ width: DIVIDER_W + GAP * 2 }} />
+                              {/* Night label spans cols 12–23 (12 cells + 11 gaps) */}
+                              <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
+                                <Text style={{ color: colors.info ?? '#60a5fa', fontSize: 9, fontWeight: '600' }}>🌙 Night</Text>
+                              </View>
+                            </View>
 
-                          {/* Cell rows */}
-                          <View style={{ gap: GAP }}>
-                            {dowHourData.map((row, dow) => (
-                              <View key={dow} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            {/* Hour axis labels */}
+                            <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 {columns.map((col, i) =>
                                   col.kind === 'divider' ? (
-                                    <View key={`div-${dow}-${i}`} style={{
-                                      width: DIVIDER_W, height: CELL,
-                                      backgroundColor: colors.borderSurface,
-                                      marginHorizontal: GAP, opacity: 0.6,
-                                    }} />
+                                    <View key={`div-label-${i}`} style={{ width: DIVIDER_W, marginHorizontal: GAP }} />
                                   ) : (
-                                    <View
-                                      key={`cell-${dow}-${col.hour}`}
-                                      style={{
-                                        width: CELL, height: CELL, borderRadius: 2,
-                                        backgroundColor: getColor(row[col.hour]),
-                                        marginRight: GAP,
-                                      }}
-                                    />
+                                    <Text key={`lbl-${col.hour}`} style={{
+                                      width: CELL, color: colors.textTertiary,
+                                      fontSize: 7, textAlign: 'center',
+                                      marginRight: GAP,
+                                    }}>
+                                      {col.col % 2 === 0 ? fmtHour(col.hour) : ''}
+                                    </Text>
                                   )
                                 )}
                               </View>
-                            ))}
+                            </View>
+
+                            {/* Grid */}
+                            <View style={{ flexDirection: 'row' }}>
+                              {/* Y-axis day labels */}
+                              <View style={{ width: Y_WIDTH, gap: GAP }}>
+                                {DOW_LABELS.map(d => (
+                                  <View key={d} style={{ height: CELL, justifyContent: 'center' }}>
+                                    <Text style={{ color: colors.textTertiary, fontSize: 8 }}>{d}</Text>
+                                  </View>
+                                ))}
+                              </View>
+
+                              {/* Cell rows */}
+                              <View style={{ gap: GAP }}>
+                                {dowHourData.map((row, dow) => (
+                                  <View key={dow} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    {columns.map((col, i) =>
+                                      col.kind === 'divider' ? (
+                                        <View key={`div-${dow}-${i}`} style={{
+                                          width: DIVIDER_W, height: CELL,
+                                          backgroundColor: '#0f766e',
+                                          marginHorizontal: GAP,
+                                        }} />
+                                      ) : (
+                                        <View
+                                          key={`cell-${dow}-${col.hour}`}
+                                          style={{
+                                            width: CELL, height: CELL, borderRadius: 2,
+                                            backgroundColor: getColor(row[col.hour]),
+                                            marginRight: GAP,
+                                          }}
+                                        />
+                                      )
+                                    )}
+                                  </View>
+                                ))}
+                              </View>
+                            </View>
                           </View>
-                        </View>
+                        </ScrollView>
 
                         {/* Legend */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 8, flexWrap: 'wrap' }}>
