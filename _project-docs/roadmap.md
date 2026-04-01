@@ -29,6 +29,8 @@
 ## Completed
 | ID | Description | Version | Date |
 |---|---|---|---|
+| R-11 | Leisure session edit/delete — view+edit mode on detail screen, date/time/duration editable | 0.2.2 | 2026-04-01 |
+| R-12 | Infinite scroll on Leisure, Finance, and Habit History list screens | 0.2.2 | 2026-04-01 |
 | R-04 | Fix LeisureTimerCard — use type/title/notes props instead of hardcoded fallbacks | 0.2.1 | 2026-03-29 |
 | R-08 | Wrap all console.log/error in `__DEV__` guards across sync, settings, screens | 0.2.1 | 2026-03-29 |
 | P-01 | WatermelonDB schema v6 — 7 tables, all models, migrations | 0.1.0–0.2.0 | 2026-03-28 |

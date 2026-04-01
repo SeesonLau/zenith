@@ -1,6 +1,6 @@
 # Progress — Zenith
 
-## Current Version: 0.2.1
+## Current Version: 0.2.2
 
 ## Version History
 | Version | Date | Summary |
@@ -8,6 +8,7 @@
 | 0.1.0 | 2026-03-28 | Initial scaffold — DB setup, auth wired, tabs scaffolded, habits screen functional |
 | 0.2.0 | 2026-03-28 | All 4 tab screens + all sub-screens implemented, sync layer complete, theme system working |
 | 0.2.1 | 2026-03-29 | QA pass 1 complete — 26 additional issues fixed (debug guards, calendar, leisure, analytics, a11y) |
+| 0.2.2 | 2026-04-01 | Leisure analytics expandable type breakdown, session edit/delete (finance pattern), infinite scroll on Leisure/Finance/Habit History, heatmap UX fixes, type picker collapsed by default |
 
 ## Done
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.2] — 2026-04-01
+### Added
+- Leisure Analytics — expandable By Type rows in Monthly and Overall tabs: tap type → see titles ranked by frequency, tap title → see all sessions with date/time/duration/notes
+- Leisure session edit mode on `leisure/[id].tsx` — follows Finance pattern: view mode with Edit button in header toggles full edit mode on same screen
+- Edit fields: Content Type, Title, Notes, Date (native date picker), Time (native time picker), Duration (hours + minutes inputs)
+- `updateLeisureLog` action in `leisureActions.ts` — patches type/title/notes/startedAt/duration/endedAt, marks isSynced=false
+- Infinite scroll / lazy loading on Leisure tab, Finance tab, and Habit History — 15 date-groups rendered initially, auto-loads 15 more when scroll approaches bottom (400px threshold)
+
+### Fixed
+- Leisure Analytics heatmap — wrapped in horizontal `ScrollView` so all 24 hour columns are reachable
+- Leisure Analytics heatmap Day/Night divider — dark teal (`#0f766e`) vertical line in all cell rows
+- `LeisureTypePicker` — all groups collapsed by default; no type preselected on Add or Edit
+- `complete.tsx` — Content Type now starts as `null`; Save blocked with alert if no type selected
+- Edit session form — Date & Time moved to very top of form (above Content Type)
+- Leisure tab — removed hardcoded 20-session cap; now uses `useAllLeisureLogs()` filtered to completed sessions
+
+---
+
 ## [0.2.1] — 2026-03-29
 ### Fixed
 - All production `console.log`/`console.error` calls in sync layer, settings, layout, and calendar now guarded with `if (__DEV__)`
