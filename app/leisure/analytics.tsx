@@ -11,7 +11,7 @@ import { getStartOfMonth, getEndOfMonth, addMonths } from '@/src/utils/dateHelpe
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import type { LeisureType } from '@/src/types/database.types';
 
-type TabView = 'monthly' | 'overall' | 'sessions';
+type TabView = 'monthly' | 'overall' | 'intervals';
 type ChartMode = 'time' | 'sessions';
 
 // Tailwind → hex map for leisure types (used in charts)
@@ -156,6 +156,52 @@ export default function LeisureAnalyticsScreen() {
     overallTypeBreakdown.length > 0 ? overallTypeBreakdown[0][1].seconds : 1,
   [overallTypeBreakdown]);
 
+  // Gap between consecutive sessions (sorted oldest→newest, then reversed for display)
+  const intervals = useMemo(() => {
+    if (allLogs.length < 2) return [];
+    const sorted = [...allLogs].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
+    const result: { gapSeconds: number; fromType: LeisureType; toType: LeisureType; toDate: Date }[] = [];
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const fromEnd = new Date(sorted[i].startedAt.getTime() + (sorted[i].duration ?? 0) * 1000);
+      const gapMs = sorted[i + 1].startedAt.getTime() - fromEnd.getTime();
+      if (gapMs > 0) {
+        result.push({
+          gapSeconds: Math.round(gapMs / 1000),
+          fromType: sorted[i].type as LeisureType,
+          toType: sorted[i + 1].type as LeisureType,
+          toDate: sorted[i + 1].startedAt,
+        });
+      }
+    }
+    return result.reverse();
+  }, [allLogs]);
+
+  const intervalStats = useMemo(() => {
+    if (intervals.length === 0) return null;
+    const avg = Math.round(intervals.reduce((s, g) => s + g.gapSeconds, 0) / intervals.length);
+    const min = Math.min(...intervals.map(g => g.gapSeconds));
+    const max = Math.max(...intervals.map(g => g.gapSeconds));
+    return { avg, min, max };
+  }, [intervals]);
+
+  const maxGapSeconds = useMemo(() =>
+    intervals.length > 0 ? intervals.reduce((m, g) => Math.max(m, g.gapSeconds), 1) : 1,
+  [intervals]);
+
+  // Format a gap duration including days
+  const formatGap = (seconds: number): string => {
+    if (seconds < 60) return '<1m';
+    if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+    if (seconds < 86400) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.round((seconds % 3600) / 60);
+      return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    }
+    const d = Math.floor(seconds / 86400);
+    const h = Math.round((seconds % 86400) / 3600);
+    return h > 0 ? `${d}d ${h}h` : `${d}d`;
+  };
+
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bgPrimary }}>
       <ScrollView style={{ flex: 1 }}>
@@ -176,7 +222,7 @@ export default function LeisureAnalyticsScreen() {
             borderRadius: 10, padding: 4, marginBottom: 12,
             borderWidth: 1, borderColor: colors.borderSurface,
           }}>
-            {([['monthly', 'Monthly'], ['overall', 'Overall'], ['sessions', 'Sessions']] as [TabView, string][]).map(([tab, label]) => (
+            {([['monthly', 'Monthly'], ['overall', 'Overall'], ['intervals', 'Intervals']] as [TabView, string][]).map(([tab, label]) => (
               <Pressable
                 key={tab}
                 onPress={() => setActiveTab(tab)}
@@ -195,8 +241,8 @@ export default function LeisureAnalyticsScreen() {
             ))}
           </View>
 
-          {/* Chart Mode Toggle — hidden on Sessions tab */}
-          {activeTab !== 'sessions' && (
+          {/* Chart Mode Toggle — hidden on Intervals tab */}
+          {activeTab !== 'intervals' && (
             <View style={{
               flexDirection: 'row', backgroundColor: colors.bgSurface,
               borderRadius: 8, padding: 3, marginBottom: 16,
@@ -332,6 +378,16 @@ export default function LeisureAnalyticsScreen() {
                               {chartMode === 'sessions' && day.count > 0 && (
                                 <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }}>
                                   {day.count}
+                                </Text>
+                              )}
+                              {chartMode === 'time' && day.count > 0 && (
+                                <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }} numberOfLines={1}>
+                                  {(() => {
+                                    const avg = Math.round(day.seconds / day.count);
+                                    return avg < 3600
+                                      ? `${Math.round(avg / 60)}m`
+                                      : `${Math.floor(avg / 3600)}h`;
+                                  })()}
                                 </Text>
                               )}
                               <View style={{
@@ -601,121 +657,131 @@ export default function LeisureAnalyticsScreen() {
             </View>
           )}
 
-          {/* ── SESSIONS TAB ── */}
-          {activeTab === 'sessions' && (
+          {/* ── INTERVALS TAB ── */}
+          {activeTab === 'intervals' && (
             <View>
-              {allLogs.length === 0 ? (
+              {intervals.length < 1 ? (
                 <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-                  <Ionicons name="time-outline" size={40} color={colors.textTertiary} />
+                  <Ionicons name="git-branch-outline" size={40} color={colors.textTertiary} />
                   <Text style={{ color: colors.textTertiary, marginTop: 10, fontSize: 14 }}>
-                    No sessions recorded yet
+                    Need at least 2 sessions to show gaps
                   </Text>
                 </View>
               ) : (
-                (() => {
-                  // Group by ISO date key (newest first)
-                  const grouped: Record<string, typeof allLogs> = {};
-                  allLogs.forEach(s => {
-                    const d = s.startedAt;
-                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                    if (!grouped[key]) grouped[key] = [];
-                    grouped[key].push(s);
-                  });
-                  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+                <View style={{ marginBottom: 20 }}>
+                  {/* Stats card */}
+                  {intervalStats && (
+                    <View style={{
+                      backgroundColor: colors.bgSurface,
+                      borderWidth: 1, borderColor: colors.borderSurface,
+                      borderLeftWidth: 4, borderLeftColor: colors.moduleLeisure,
+                      borderRadius: 14, padding: 18, marginBottom: 14,
+                    }}>
+                      <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '500', marginBottom: 4 }}>
+                        Gap Between Sessions
+                      </Text>
+                      <Text style={{ color: colors.moduleLeisure, fontSize: 30, fontWeight: 'bold', marginBottom: 12 }}>
+                        {formatGap(intervalStats.avg)}
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{
+                          backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                          borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                        }}>
+                          <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Avg Gap</Text>
+                          <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>{formatGap(intervalStats.avg)}</Text>
+                        </View>
+                        <View style={{
+                          backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                          borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                        }}>
+                          <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Shortest</Text>
+                          <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>{formatGap(intervalStats.min)}</Text>
+                        </View>
+                        <View style={{
+                          backgroundColor: colors.moduleLeisure + '18', borderWidth: 1,
+                          borderColor: colors.moduleLeisure + '40', borderRadius: 10, padding: 10, flex: 1,
+                        }}>
+                          <Text style={{ color: colors.textTertiary, fontSize: 10, marginBottom: 3 }}>Longest</Text>
+                          <Text style={{ color: colors.textPrimary, fontSize: 15, fontWeight: 'bold' }}>{formatGap(intervalStats.max)}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
 
-                  return (
-                    <View style={{ gap: 16, marginBottom: 20 }}>
-                      {sortedDates.map(dateKey => {
-                        const daySessions = grouped[dateKey];
-                        const dayDate = new Date(dateKey + 'T12:00:00');
-                        const dayLabel = dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
-                        const dayTotal = daySessions.reduce((s, l) => s + (l.duration ?? 0), 0);
+                  {/* Gap bar chart */}
+                  <View style={{
+                    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
+                    borderRadius: 14, padding: 16,
+                  }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 14 }}>
+                      Gap History (newest first)
+                    </Text>
+                    <View style={{ gap: 10 }}>
+                      {intervals.slice(0, 40).map((gap, i) => {
+                        const pct = maxGapSeconds > 0 ? gap.gapSeconds / maxGapSeconds : 0;
+                        const fromConfig = getLeisureConfig(gap.fromType);
+                        const toConfig = getLeisureConfig(gap.toType);
+                        const fromHex = LEISURE_HEX[gap.fromType];
+                        const toHex = LEISURE_HEX[gap.toType];
+                        const dateStr = gap.toDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        const timeStr = gap.toDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                        // Color the bar: short gaps green-tinted, long gaps red-tinted
+                        const barColor = pct < 0.25
+                          ? colors.success
+                          : pct < 0.6
+                            ? colors.moduleLeisure
+                            : colors.warning;
 
                         return (
-                          <View key={dateKey}>
-                            {/* Date header */}
-                            <View style={{
-                              flexDirection: 'row', alignItems: 'center',
-                              justifyContent: 'space-between', marginBottom: 8,
-                            }}>
-                              <Text style={{
-                                color: colors.textTertiary, fontSize: 11, fontWeight: '600',
-                                textTransform: 'uppercase', letterSpacing: 0.5,
-                              }}>
-                                {dayLabel}
+                          <View key={i}>
+                            {/* Row header: from→to type + date */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                              <Text style={{ fontSize: 13, marginRight: 4 }}>{fromConfig.emoji}</Text>
+                              <Ionicons name="arrow-forward" size={10} color={colors.textTertiary} />
+                              <Text style={{ fontSize: 13, marginLeft: 4, flex: 1 }}>{toConfig.emoji}
+                                <Text style={{ color: colors.textTertiary, fontSize: 11 }}> {gap.toType}</Text>
                               </Text>
-                              <Text style={{ color: colors.textTertiary, fontSize: 11 }}>
-                                {formatDuration(dayTotal)}
+                              <Text style={{ color: colors.textTertiary, fontSize: 10 }}>
+                                {dateStr} {timeStr}
                               </Text>
                             </View>
 
-                            {/* Session rows */}
-                            <View style={{
-                              backgroundColor: colors.bgSurface,
-                              borderWidth: 1, borderColor: colors.borderSurface,
-                              borderRadius: 12, overflow: 'hidden',
-                            }}>
-                              {daySessions.map((session, idx) => {
-                                const config = getLeisureConfig(session.type as LeisureType);
-                                const hex = LEISURE_HEX[session.type as LeisureType];
-                                const endTime = new Date(session.startedAt.getTime() + (session.duration ?? 0) * 1000);
-                                const startStr = session.startedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                                const endStr = endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                            {/* Bar row */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              {/* Type dots */}
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, width: 20 }}>
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: fromHex }} />
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: toHex }} />
+                              </View>
 
-                                return (
-                                  <View
-                                    key={session.id}
-                                    style={{
-                                      flexDirection: 'row', alignItems: 'center',
-                                      paddingHorizontal: 14, paddingVertical: 12,
-                                      borderTopWidth: idx === 0 ? 0 : 1,
-                                      borderTopColor: colors.borderSurface,
-                                    }}
-                                  >
-                                    {/* Type dot */}
-                                    <View style={{
-                                      width: 8, height: 8, borderRadius: 4,
-                                      backgroundColor: hex, marginRight: 12,
-                                    }} />
+                              {/* Bar */}
+                              <View style={{ flex: 1, height: 16, backgroundColor: colors.bgSurfaceHover, borderRadius: 4, overflow: 'hidden' }}>
+                                {pct > 0 && (
+                                  <View style={{
+                                    width: `${Math.max(pct * 100, 2)}%`, height: '100%',
+                                    backgroundColor: barColor, borderRadius: 4, opacity: 0.8,
+                                  }} />
+                                )}
+                              </View>
 
-                                    {/* Type + title */}
-                                    <View style={{ flex: 1, marginRight: 12 }}>
-                                      <Text style={{ color: colors.textPrimary, fontSize: 13, fontWeight: '600' }}>
-                                        {config.emoji} {session.type}
-                                      </Text>
-                                      {session.title ? (
-                                        <Text style={{ color: colors.textTertiary, fontSize: 11, marginTop: 1 }} numberOfLines={1}>
-                                          {session.title}
-                                        </Text>
-                                      ) : null}
-                                    </View>
-
-                                    {/* Time interval + duration */}
-                                    <View style={{ alignItems: 'flex-end' }}>
-                                      <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '500' }}>
-                                        {startStr} – {endStr}
-                                      </Text>
-                                      <View style={{
-                                        marginTop: 3,
-                                        backgroundColor: hex + '22',
-                                        borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
-                                        borderWidth: 1, borderColor: hex + '50',
-                                      }}>
-                                        <Text style={{ color: hex, fontSize: 10, fontWeight: '700' }}>
-                                          {formatDuration(session.duration ?? 0)}
-                                        </Text>
-                                      </View>
-                                    </View>
-                                  </View>
-                                );
-                              })}
+                              {/* Gap label */}
+                              <Text style={{ color: colors.textSecondary, fontSize: 11, fontWeight: '600', width: 52, textAlign: 'right' }}>
+                                {formatGap(gap.gapSeconds)}
+                              </Text>
                             </View>
                           </View>
                         );
                       })}
                     </View>
-                  );
-                })()
+                    {intervals.length > 40 && (
+                      <Text style={{ color: colors.textTertiary, fontSize: 11, marginTop: 12, textAlign: 'center' }}>
+                        Showing latest 40 of {intervals.length} gaps
+                      </Text>
+                    )}
+                  </View>
+                </View>
               )}
             </View>
           )}
