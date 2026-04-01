@@ -76,6 +76,31 @@ export async function completeLeisureSession(
   });
 }
 
+export async function updateLeisureLog(
+  logId: string,
+  updates: {
+    type: LeisureType;
+    title?: string;
+    notes?: string;
+    startedAt: Date;
+    duration: number;
+  }
+) {
+  return await database.write(async () => {
+    const log = await database.get<LeisureLog>('leisure_logs').find(logId);
+    await log.update(record => {
+      record.type = updates.type;
+      record.title = updates.title;
+      record.notes = updates.notes;
+      record.startedAt = updates.startedAt;
+      record.duration = updates.duration;
+      record.endedAt = new Date(updates.startedAt.getTime() + updates.duration * 1000);
+      record.isSynced = false;
+    });
+    return log;
+  });
+}
+
 export async function deleteLeisureLog(logId: string) {
   return await database.write(async () => {
     const log = await database.get<LeisureLog>('leisure_logs').find(logId);

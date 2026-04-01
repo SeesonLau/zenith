@@ -1,6 +1,6 @@
 // app/(tabs)/leisure.tsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Pressable, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,7 +9,7 @@ import {
   useCompletedLeisureLogs,
   useAllLeisureLogs,
 } from '@/src/database/hooks/useDatabase';
-import { startLeisureTimer } from '@/src/database/actions/leisureActions';
+import { startLeisureTimer, deleteLeisureLog } from '@/src/database/actions/leisureActions';
 import FloatingActionButton from '@/src/components/common/FloatingActionButton';
 import EmptyState from '@/src/components/common/EmptyState';
 import Button from '@/src/components/common/Button';
@@ -43,6 +43,31 @@ export default function LeisureScreen() {
     } catch (error) {
       if (__DEV__) console.error('Failed to start timer:', error);
     }
+  };
+
+  const handleEditSession = (sessionId: string) => {
+    router.push(`/leisure/edit?id=${sessionId}`);
+  };
+
+  const handleDeleteSession = (sessionId: string) => {
+    Alert.alert(
+      'Delete Session',
+      'Are you sure you want to delete this session?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteLeisureLog(sessionId);
+            } catch (error) {
+              if (__DEV__) console.error('Failed to delete session:', error);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleStopTimer = (timerId: string) => {
@@ -272,6 +297,8 @@ export default function LeisureScreen() {
                             duration={session.duration ?? 0}
                             notes={session.notes}
                             onPress={() => router.push(`/leisure/${session.id}`)}
+                            onEdit={() => handleEditSession(session.id)}
+                            onDelete={() => handleDeleteSession(session.id)}
                           />
                         ))}
                       </View>
