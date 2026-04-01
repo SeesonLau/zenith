@@ -1,6 +1,7 @@
 // app/(tabs)/leisure.tsx - COMPACT VERSION
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRunningLeisureTimers, useCompletedLeisureLogs } from '@/src/database/hooks/useDatabase';
@@ -72,10 +73,21 @@ export default function LeisureScreen() {
       >
         <View style={{ padding: 20 }}>
           {/* Header */}
-          <View style={{ marginBottom: 16, marginTop: 12 }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, marginTop: 12 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.textPrimary }}>
               {Strings.leisure.screenTitle}
             </Text>
+            <Pressable
+              onPress={() => router.push('/leisure/analytics')}
+              style={{
+                flexDirection: 'row', alignItems: 'center',
+                backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
+                borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, gap: 4,
+              }}
+            >
+              <Ionicons name="bar-chart" size={16} color={colors.moduleLeisure} />
+              <Text style={{ color: colors.moduleLeisure, fontSize: 13, fontWeight: '600' }}>Analytics</Text>
+            </Pressable>
           </View>
 
           {/* Active Sessions */}

@@ -168,6 +168,46 @@ export function useCompletedLeisureLogs(limit: number = 20) {
   return logs;
 }
 
+export function useAllLeisureLogs() {
+  const [logs, setLogs] = useState<LeisureLog[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<LeisureLog>('leisure_logs')
+      .query(
+        Q.where('ended_at', Q.notEq(null)),
+        Q.sortBy('started_at', Q.desc)
+      )
+      .observeWithColumns(['ended_at', 'duration', 'type', 'started_at'])
+      .subscribe(setLogs);
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return logs;
+}
+
+export function useLeisureLogs(startDate: Date, endDate: Date) {
+  const [logs, setLogs] = useState<LeisureLog[]>([]);
+
+  useEffect(() => {
+    const subscription = database
+      .get<LeisureLog>('leisure_logs')
+      .query(
+        Q.where('ended_at', Q.notEq(null)),
+        Q.where('started_at', Q.gte(startDate.getTime())),
+        Q.where('started_at', Q.lte(endDate.getTime())),
+        Q.sortBy('started_at', Q.desc)
+      )
+      .observe()
+      .subscribe(setLogs);
+
+    return () => subscription.unsubscribe();
+  }, [startDate, endDate]);
+
+  return logs;
+}
+
 export function useAllFinanceLogs() {
   const [logs, setLogs] = useState<FinanceLog[]>([]);
 
