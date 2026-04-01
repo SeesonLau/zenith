@@ -67,8 +67,8 @@ export async function syncWithSupabase(): Promise<SyncResult> {
         });
 
         if (error) {
-          if (__DEV__) console.error('❌ Pull error:', error);
-          throw error;
+          if (__DEV__) console.error('❌ Pull error:', error.message, '| code:', error.code, '| details:', error.details, '| hint:', error.hint);
+          throw new Error(`Pull failed: ${error.message ?? JSON.stringify(error)}`);
         }
 
         if (__DEV__) {
@@ -151,8 +151,8 @@ export async function syncWithSupabase(): Promise<SyncResult> {
         });
 
         if (error) {
-          if (__DEV__) console.error('❌ Push error:', error);
-          throw error;
+          if (__DEV__) console.error('❌ Push error:', error.message, '| code:', error.code, '| details:', error.details, '| hint:', error.hint);
+          throw new Error(`Push failed: ${error.message ?? JSON.stringify(error)}`);
         }
 
         if (__DEV__) console.log('✅ Push successful');
@@ -167,8 +167,8 @@ export async function syncWithSupabase(): Promise<SyncResult> {
       success: true,
       changes,
     };
-  } catch (error) {
-    if (__DEV__) console.error('❌ Sync failed:', error);
+  } catch (error: any) {
+    if (__DEV__) console.error('❌ Sync failed:', error?.message ?? error);
     return {
       success: false,
       error,

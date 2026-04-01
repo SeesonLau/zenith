@@ -107,10 +107,10 @@ export async function performSync(): Promise<SyncResult> {
       throw result.error;
     }
   } catch (error: any) {
-    if (__DEV__) console.error('❌ Sync error:', error);
+    if (__DEV__) console.error('❌ Sync error:', error?.message ?? error);
     return {
       success: false,
-      message: error.message || 'Sync failed',
+      message: error?.message || 'Sync failed',
       error,
     };
   } finally {
