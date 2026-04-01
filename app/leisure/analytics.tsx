@@ -755,18 +755,37 @@ export default function LeisureAnalyticsScreen() {
                     const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
                     const LEVELS = [
                       { max: 0,        color: null,      label: '0' },
-                      { max: 2,        color: '#4ade80', label: '1–2' },   // green
-                      { max: 5,        color: '#facc15', label: '3–5' },   // yellow
-                      { max: 9,        color: '#fb923c', label: '6–9' },   // orange
-                      { max: 14,       color: '#ef4444', label: '10–14' }, // red
-                      { max: Infinity, color: '#ec4899', label: '15+' },   // pink
+                      { max: 2,        color: '#4ade80', label: '1–2' },
+                      { max: 5,        color: '#facc15', label: '3–5' },
+                      { max: 9,        color: '#fb923c', label: '6–9' },
+                      { max: 14,       color: '#ef4444', label: '10–14' },
+                      { max: Infinity, color: '#ec4899', label: '15+' },
                     ];
                     const getColor = (count: number): string =>
                       count === 0 ? colors.bgSurfaceHover
                         : (LEVELS.find(l => count <= l.max)?.color ?? '#ec4899');
+
+                    // Hours starting at 6am, wrapping around: [6,7,...,23,0,1,...,5]
+                    const HOURS = Array.from({ length: 24 }, (_, i) => (i + 6) % 24);
+                    // Divider after column index 11 (hour 17 = 5pm) — splits Day | Night
+                    const DIVIDER_COL = 11;
+
+                    const fmtHour = (h: number): string =>
+                      h === 0 ? '12' : h <= 12 ? `${h}` : `${h - 12}`;
+
                     const CELL = 11;
                     const GAP = 3;
+                    const DIVIDER_W = 1;
                     const Y_WIDTH = 28;
+
+                    // Build combined label + cell columns including divider element
+                    // Each element is either { kind:'hour', hour, col } or { kind:'divider' }
+                    type Col = { kind: 'hour'; hour: number; col: number } | { kind: 'divider' };
+                    const columns: Col[] = [];
+                    HOURS.forEach((hour, col) => {
+                      columns.push({ kind: 'hour', hour, col });
+                      if (col === DIVIDER_COL) columns.push({ kind: 'divider' });
+                    });
 
                     return (
                       <View style={{
@@ -776,32 +795,46 @@ export default function LeisureAnalyticsScreen() {
                         <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 2 }}>
                           Session Count
                         </Text>
-                        <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 14 }}>
+                        <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 12 }}>
                           Sessions started by hour &amp; day of week
                         </Text>
 
+                        {/* Section headers: Day | Night */}
+                        <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
+                          {/* Day label spans cols 0–11 (12 cells + 11 gaps) */}
+                          <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
+                            <Text style={{ color: colors.warning, fontSize: 9, fontWeight: '600' }}>☀ Day</Text>
+                          </View>
+                          {/* Divider spacer */}
+                          <View style={{ width: DIVIDER_W + GAP * 2 }} />
+                          {/* Night label spans cols 12–23 (12 cells + 11 gaps) */}
+                          <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
+                            <Text style={{ color: colors.info ?? '#60a5fa', fontSize: 9, fontWeight: '600' }}>🌙 Night</Text>
+                          </View>
+                        </View>
+
                         {/* Hour axis labels */}
                         <View style={{ flexDirection: 'row', marginBottom: 4, marginLeft: Y_WIDTH }}>
-                          <ScrollView horizontal showsHorizontalScrollIndicator={false} scrollEnabled={false}>
-                            <View style={{ flexDirection: 'row', gap: GAP }}>
-                              {Array.from({ length: 24 }, (_, h) => {
-                                const label = h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`;
-                                return (
-                                  <Text key={h} style={{
-                                    width: CELL, color: colors.textTertiary,
-                                    fontSize: 7, textAlign: 'center',
-                                  }}>
-                                    {h % 3 === 0 ? label : ''}
-                                  </Text>
-                                );
-                              })}
-                            </View>
-                          </ScrollView>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            {columns.map((col, i) =>
+                              col.kind === 'divider' ? (
+                                <View key={`div-label-${i}`} style={{ width: DIVIDER_W, marginHorizontal: GAP }} />
+                              ) : (
+                                <Text key={`lbl-${col.hour}`} style={{
+                                  width: CELL, color: colors.textTertiary,
+                                  fontSize: 7, textAlign: 'center',
+                                  marginRight: GAP,
+                                }}>
+                                  {col.col % 2 === 0 ? fmtHour(col.hour) : ''}
+                                </Text>
+                              )
+                            )}
+                          </View>
                         </View>
 
                         {/* Grid */}
                         <View style={{ flexDirection: 'row' }}>
-                          {/* Y-axis labels */}
+                          {/* Y-axis day labels */}
                           <View style={{ width: Y_WIDTH, gap: GAP }}>
                             {DOW_LABELS.map(d => (
                               <View key={d} style={{ height: CELL, justifyContent: 'center' }}>
@@ -810,41 +843,47 @@ export default function LeisureAnalyticsScreen() {
                             ))}
                           </View>
 
-                          {/* Cells — scrollable */}
-                          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
-                            <View style={{ gap: GAP }}>
-                              {dowHourData.map((row, dow) => (
-                                <View key={dow} style={{ flexDirection: 'row', gap: GAP }}>
-                                  {row.map((count, hour) => (
+                          {/* Cell rows */}
+                          <View style={{ gap: GAP }}>
+                            {dowHourData.map((row, dow) => (
+                              <View key={dow} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                {columns.map((col, i) =>
+                                  col.kind === 'divider' ? (
+                                    <View key={`div-${dow}-${i}`} style={{
+                                      width: DIVIDER_W, height: CELL,
+                                      backgroundColor: colors.borderSurface,
+                                      marginHorizontal: GAP, opacity: 0.6,
+                                    }} />
+                                  ) : (
                                     <View
-                                      key={hour}
+                                      key={`cell-${dow}-${col.hour}`}
                                       style={{
                                         width: CELL, height: CELL, borderRadius: 2,
-                                        backgroundColor: getColor(count),
+                                        backgroundColor: getColor(row[col.hour]),
+                                        marginRight: GAP,
                                       }}
                                     />
-                                  ))}
-                                </View>
-                              ))}
-                            </View>
-                          </ScrollView>
+                                  )
+                                )}
+                              </View>
+                            ))}
+                          </View>
                         </View>
 
                         {/* Legend */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14, gap: 8, flexWrap: 'wrap' }}>
-                          <Text style={{ color: colors.textTertiary, fontSize: 9, marginRight: 2 }}>Less</Text>
+                          <Text style={{ color: colors.textTertiary, fontSize: 9 }}>Less</Text>
                           {LEVELS.map(l => (
                             <View key={l.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                               <View style={{
                                 width: 10, height: 10, borderRadius: 2,
                                 backgroundColor: l.color ?? colors.bgSurfaceHover,
-                                borderWidth: l.color ? 0 : 1,
-                                borderColor: colors.borderSurface,
+                                borderWidth: l.color ? 0 : 1, borderColor: colors.borderSurface,
                               }} />
                               <Text style={{ color: colors.textTertiary, fontSize: 9 }}>{l.label}</Text>
                             </View>
                           ))}
-                          <Text style={{ color: colors.textTertiary, fontSize: 9, marginLeft: 2 }}>More</Text>
+                          <Text style={{ color: colors.textTertiary, fontSize: 9 }}>More</Text>
                         </View>
                       </View>
                     );
