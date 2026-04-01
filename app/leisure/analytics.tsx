@@ -170,6 +170,15 @@ export default function LeisureAnalyticsScreen() {
     intervals.length > 0 ? intervals.reduce((m, g) => Math.max(m, g.gapSeconds), 1) : 1,
   [intervals]);
 
+  // 24-hour session frequency (index = hour 0-23)
+  const hourlyData = useMemo(() => {
+    const buckets = Array(24).fill(0) as number[];
+    allLogs.forEach(l => { buckets[l.startedAt.getHours()] += 1; });
+    return buckets;
+  }, [allLogs]);
+
+  const maxHourCount = useMemo(() => Math.max(...hourlyData, 1), [hourlyData]);
+
   // Format a gap duration including days
   const formatGap = (seconds: number): string => {
     if (seconds < 60) return '<1m';
@@ -686,7 +695,125 @@ export default function LeisureAnalyticsScreen() {
                     </View>
                   )}
 
-                  {/* Gap bar chart */}
+                  {/* Gap Trend — vertical bar chart, oldest→newest left→right */}
+                  <View style={{
+                    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
+                    borderRadius: 14, padding: 14, marginBottom: 14,
+                  }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 12 }}>
+                      Gap Trend
+                    </Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={{ flexDirection: 'row', gap: 6, paddingBottom: 4 }}>
+                        {[...intervals].reverse().slice(-40).map((gap, i) => {
+                          const pct = maxGapSeconds > 0 ? gap.gapSeconds / maxGapSeconds : 0;
+                          const barH = Math.max(pct * 72, 3);
+                          const barColor = pct < 0.25
+                            ? colors.success
+                            : pct < 0.6
+                              ? colors.moduleLeisure
+                              : colors.warning;
+                          const dateStr = gap.toDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+                          return (
+                            <View key={i} style={{ width: 32, alignItems: 'center' }}>
+                              <Text style={{ color: colors.textTertiary, fontSize: 8, marginBottom: 4 }}>
+                                {formatGap(gap.gapSeconds)}
+                              </Text>
+                              <View style={{ height: 80, justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                                <View style={{
+                                  width: 18, height: barH,
+                                  backgroundColor: barColor,
+                                  borderRadius: 3, opacity: 0.85,
+                                }} />
+                              </View>
+                              <Text style={{ color: colors.textTertiary, fontSize: 8, marginTop: 4, textAlign: 'center' }}>
+                                {dateStr}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </ScrollView>
+                    <View style={{ flexDirection: 'row', gap: 12, marginTop: 10, justifyContent: 'center' }}>
+                      {[
+                        { color: colors.success, label: 'Short' },
+                        { color: colors.moduleLeisure, label: 'Medium' },
+                        { color: colors.warning, label: 'Long' },
+                      ].map(({ color, label }) => (
+                        <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }} />
+                          <Text style={{ color: colors.textTertiary, fontSize: 10 }}>{label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Time-of-Day Heatmap */}
+                  <View style={{
+                    backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
+                    borderRadius: 14, padding: 16, marginBottom: 14,
+                  }}>
+                    <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>
+                      When Do You Usually Watch?
+                    </Text>
+                    <Text style={{ color: colors.textTertiary, fontSize: 11, marginBottom: 14 }}>
+                      Darker = more sessions started at that hour
+                    </Text>
+                    {/* 4 rows × 6 cols = 24 hours */}
+                    <View style={{ gap: 6 }}>
+                      {[0, 6, 12, 18].map(rowStart => (
+                        <View key={rowStart} style={{ flexDirection: 'row', gap: 6 }}>
+                          {Array.from({ length: 6 }, (_, col) => {
+                            const hour = rowStart + col;
+                            const count = hourlyData[hour];
+                            const intensity = count > 0 ? Math.max(count / maxHourCount, 0.12) : 0;
+                            const isPeak = count > 0 && count === maxHourCount;
+                            const label = hour === 0 ? '12a' : hour < 12 ? `${hour}a` : hour === 12 ? '12p' : `${hour - 12}p`;
+                            return (
+                              <View
+                                key={hour}
+                                style={{
+                                  flex: 1, aspectRatio: 1,
+                                  borderRadius: 8,
+                                  backgroundColor: count > 0
+                                    ? colors.moduleLeisure + Math.round(intensity * 255).toString(16).padStart(2, '0')
+                                    : colors.bgSurfaceHover,
+                                  borderWidth: isPeak ? 1 : 0,
+                                  borderColor: colors.moduleLeisure,
+                                  alignItems: 'center', justifyContent: 'center', padding: 4,
+                                }}
+                              >
+                                <Text style={{
+                                  color: intensity > 0.5 ? '#ffffff' : colors.textTertiary,
+                                  fontSize: 10, fontWeight: isPeak ? '700' : '400',
+                                }}>
+                                  {label}
+                                </Text>
+                                {count > 0 && (
+                                  <Text style={{
+                                    color: intensity > 0.5 ? 'rgba(255,255,255,0.8)' : colors.textTertiary,
+                                    fontSize: 9, fontWeight: '600',
+                                  }}>
+                                    {count}
+                                  </Text>
+                                )}
+                              </View>
+                            );
+                          })}
+                        </View>
+                      ))}
+                    </View>
+                    {/* Row labels */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingHorizontal: 2 }}>
+                      {['Midnight', 'Morning', 'Afternoon', 'Evening'].map(label => (
+                        <Text key={label} style={{ color: colors.textTertiary, fontSize: 9, flex: 1, textAlign: 'center' }}>
+                          {label}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Gap detail list */}
                   <View style={{
                     backgroundColor: colors.bgSurface, borderWidth: 1, borderColor: colors.borderSurface,
                     borderRadius: 14, padding: 16,
