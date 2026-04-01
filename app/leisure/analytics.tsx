@@ -807,10 +807,8 @@ export default function LeisureAnalyticsScreen() {
                               <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
                                 <Text style={{ color: colors.warning, fontSize: 9, fontWeight: '600' }}>☀ Day</Text>
                               </View>
-                              {/* Divider line — teal vertical */}
-                              <View style={{ width: DIVIDER_W + GAP * 2, alignItems: 'center', justifyContent: 'center' }}>
-                                <View style={{ width: DIVIDER_W, height: '100%', backgroundColor: '#0f766e' }} />
-                              </View>
+                              {/* Divider spacer */}
+                              <View style={{ width: DIVIDER_W + GAP * 2 }} />
                               {/* Night label spans cols 12–23 (12 cells + 11 gaps) */}
                               <View style={{ width: 12 * CELL + 11 * GAP, alignItems: 'center' }}>
                                 <Text style={{ color: colors.info ?? '#60a5fa', fontSize: 9, fontWeight: '600' }}>🌙 Night</Text>
@@ -822,7 +820,7 @@ export default function LeisureAnalyticsScreen() {
                               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 {columns.map((col, i) =>
                                   col.kind === 'divider' ? (
-                                    <View key={`div-label-${i}`} style={{ width: DIVIDER_W, height: CELL, backgroundColor: '#0f766e', marginHorizontal: GAP }} />
+                                    <View key={`div-label-${i}`} style={{ width: DIVIDER_W, marginHorizontal: GAP }} />
                                   ) : (
                                     <Text key={`lbl-${col.hour}`} style={{
                                       width: CELL, color: colors.textTertiary,
