@@ -382,12 +382,7 @@ export default function LeisureAnalyticsScreen() {
                               )}
                               {chartMode === 'time' && day.count > 0 && (
                                 <Text style={{ color: colors.moduleLeisure, fontSize: 8, fontWeight: 'bold', marginBottom: 2 }} numberOfLines={1}>
-                                  {(() => {
-                                    const avg = Math.round(day.seconds / day.count);
-                                    return avg < 3600
-                                      ? `${Math.round(avg / 60)}m`
-                                      : `${Math.floor(avg / 3600)}h`;
-                                  })()}
+                                  {`${Math.round(day.seconds / day.count / 60)}m`}
                                 </Text>
                               )}
                               <View style={{
